@@ -17,6 +17,7 @@ Its example commands are proposed interfaces and cannot be run yet.
   architecture, benchmark protocol, and dependency-ordered work packages.
 - [Agent instructions](AGENTS.md): repository-wide working rules.
 - [First task](docs/first-agent-task.md): the initial WP00 assignment.
+- [Execution contracts](docs/contracts.md): the first, unreviewed WP00 draft.
 - [Benchmark review checklist](docs/benchmark-review-checklist.md): review
   criteria, all initially unreviewed.
 - [Campaign template](bench/benchmark-campaign.template.yaml) and
