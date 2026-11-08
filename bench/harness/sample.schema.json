@@ -35,6 +35,26 @@
         "clock_domain": ["monotonic_start_ns", "monotonic_end_ns"]
       }
     },
+    "raw_stream": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sha256", "stored_bytes", "publication", "truncated"],
+      "properties": {
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "stored_bytes": {"type": "integer", "minimum": 0},
+        "publication": {"enum": ["created", "already_present"]},
+        "truncated": {"type": "boolean"}
+      }
+    },
+    "raw_capture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capture_mode", "limit_per_stream_bytes", "stdout", "stderr"],
+      "properties": {
+        "capture_mode": {"const": "bounded_prefix"},
+        "limit_per_stream_bytes": {"type": "integer", "minimum": 0},
+        "stdout": {"$ref": "#/$defs/raw_stream"},
+        "stderr": {"$ref": "#/$defs/raw_stream"}
+      }
+    },
     "measurement": {
       "type": "object", "additionalProperties": false,
       "required": ["status", "argv", "cwd", "elapsed_ns", "returncode", "output_complete",
@@ -53,7 +73,8 @@
         "stdout_bytes": {"type": "integer", "minimum": 0},
         "stderr_bytes": {"type": "integer", "minimum": 0},
         "stdout_sha256": {"$ref": "#/$defs/sha256"},
-        "stderr_sha256": {"$ref": "#/$defs/sha256"}
+        "stderr_sha256": {"$ref": "#/$defs/sha256"},
+        "raw_capture": {"$ref": "#/$defs/raw_capture"}
       },
       "allOf": [
         {"$ref": "#/$defs/clock_fields"},

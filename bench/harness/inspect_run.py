@@ -5,13 +5,16 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import json
+import os
 from pathlib import Path
 import re
+import stat
 import sys
 from typing import Any
 
 import jsonschema
 
+from artifact_check import _digest_status
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
@@ -132,6 +135,74 @@ def inspect_run(directory: Path) -> dict[str, Any]:
         raise InspectionError("missing arm command")
 
     expected = {"schedule.json"}
+    raw_plan = plan.get("raw_capture")
+    bundle = None
+    blob_sizes: dict[str, int] = {}
+    if raw_plan is not None:
+        if (not isinstance(raw_plan, dict)
+                or set(raw_plan) != {"enabled", "limit_per_stream_bytes", "bundle_directory"}
+                or raw_plan.get("enabled") is not True or raw_plan.get("bundle_directory") != "blobs"
+                or type(raw_plan.get("limit_per_stream_bytes")) is not int
+                or raw_plan["limit_per_stream_bytes"] < 0):
+            raise InspectionError("invalid raw capture configuration")
+        if not hasattr(os, "O_NOFOLLOW") or os.open not in os.supports_dir_fd:
+            raise InspectionError("safe blob inspection unsupported on this platform")
+        bundle = directory / "blobs"
+        if bundle.is_symlink() or not bundle.is_dir():
+            raise InspectionError("missing or unsafe blob directory")
+        expected.add("blobs")
+
+    def check_raw(measurement: dict[str, Any]) -> None:
+        capture = measurement.get("raw_capture")
+        if bundle is None:
+            if capture is not None:
+                raise InspectionError("raw capture present without schedule configuration")
+            return
+        if measurement["status"] == "launch_error":
+            if capture is not None:
+                raise InspectionError("launch error cannot contain raw capture")
+            return
+        if (not isinstance(capture, dict)
+                or set(capture) != {"capture_mode", "limit_per_stream_bytes", "stdout", "stderr"}
+                or capture.get("capture_mode") != "bounded_prefix"
+                or type(capture.get("limit_per_stream_bytes")) is not int
+                or capture["limit_per_stream_bytes"] != raw_plan["limit_per_stream_bytes"]):
+            raise InspectionError("invalid raw capture metadata")
+        limit = raw_plan["limit_per_stream_bytes"]
+        try:
+            directory_fd = os.open(bundle, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        except OSError as exc:
+            raise InspectionError("cannot safely open blob directory") from exc
+        try:
+            for stream in ("stdout", "stderr"):
+                item = capture.get(stream)
+                if (not isinstance(item, dict)
+                        or set(item) != {"sha256", "stored_bytes", "publication", "truncated"}
+                        or not isinstance(item.get("sha256"), str)
+                        or re.fullmatch(r"[0-9a-f]{64}", item["sha256"]) is None
+                        or type(item.get("stored_bytes")) is not int
+                        or type(item.get("truncated")) is not bool
+                        or item.get("publication") not in ("created", "already_present")):
+                    raise InspectionError(f"invalid {stream} raw blob metadata")
+                size, total, digest = item["stored_bytes"], measurement[f"{stream}_bytes"], item["sha256"]
+                if size != min(total, limit) or item["truncated"] != (size < total):
+                    raise InspectionError(f"inconsistent {stream} raw capture length")
+                if not item["truncated"] and digest != measurement[f"{stream}_sha256"]:
+                    raise InspectionError(f"inconsistent {stream} raw capture digest")
+                if digest in blob_sizes and blob_sizes[digest] != size:
+                    raise InspectionError("same raw digest has inconsistent sizes")
+                if digest not in blob_sizes:
+                    try:
+                        metadata = os.stat(digest, dir_fd=directory_fd, follow_symlinks=False)
+                    except OSError as exc:
+                        raise InspectionError("missing raw blob") from exc
+                    if (not stat.S_ISREG(metadata.st_mode) or metadata.st_size != size
+                            or _digest_status(directory_fd, digest) != "matched"):
+                        raise InspectionError("raw blob is invalid or does not match its digest")
+                    blob_sizes[digest] = size
+        finally:
+            os.close(directory_fd)
+
     counts: Counter[str] = Counter()
     last_end = None
     all_intervals_present = True
@@ -167,6 +238,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                 prep_record = _read(directory / prep_name)
                 prep_result = _envelope(prep_record, number, position, arm)
                 _measurement(prep_result, prep_command, cwd)
+                check_raw(prep_result)
                 check_interval(prep_result)
                 prep_ok = (prep_result["status"] == "exited_unqualified"
                            and prep_result["returncode"] == 0)
@@ -184,6 +256,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                 probe_record = _read(directory / probe_name)
                 probe_result = _envelope(probe_record, number, position, arm)
                 _measurement(probe_result, probe_command, cwd)
+                check_raw(probe_result)
                 check_interval(probe_result)
                 probe_ok = probe_result["status"] == "exited_unqualified" and probe_result["returncode"] == 0
             if has_probe_configuration or "state_probe" in record:
@@ -197,6 +270,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                     raise InspectionError("work ran after unsuccessful state probe")
             else:
                 _measurement(result, commands[arm], cwd)
+                check_raw(result)
                 check_interval(result)
             counts[result["status"]] += 1
     try:
@@ -205,6 +279,13 @@ def inspect_run(directory: Path) -> dict[str, Any]:
         raise InspectionError(str(exc)) from exc
     if actual != expected:
         raise InspectionError(f"unexpected or missing files: {sorted(actual ^ expected)}")
+    if bundle is not None:
+        try:
+            actual_blobs = {path.name for path in bundle.iterdir()}
+        except OSError as exc:
+            raise InspectionError("cannot list blob directory") from exc
+        if actual_blobs != set(blob_sizes):
+            raise InspectionError("unexpected or missing blob files")
     return {"record_consistency": "complete", "mode": "exploratory_unqualified",
             "blocks": len(schedule), "arm_status_counts": dict(sorted(counts.items())),
             "recorded_interval_order": ("nonoverlapping" if all_intervals_present else "incomplete"),

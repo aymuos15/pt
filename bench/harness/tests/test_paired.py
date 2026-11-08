@@ -13,7 +13,7 @@ PAIRED = Path(__file__).resolve().parents[1] / "paired.py"
 class ExploratoryPairsTests(unittest.TestCase):
     def invoke(self, output, baseline, candidate, blocks=2, timeout=2,
                baseline_prepare=None, candidate_prepare=None,
-               baseline_probe=None, candidate_probe=None):
+               baseline_probe=None, candidate_probe=None, capture_raw=False, raw_limit=100):
         args = [
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
             "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
@@ -27,6 +27,8 @@ class ExploratoryPairsTests(unittest.TestCase):
             args += ["--baseline-probe-json", json.dumps(baseline_probe)]
         if candidate_probe is not None:
             args += ["--candidate-probe-json", json.dumps(candidate_probe)]
+        if capture_raw:
+            args += ["--capture-raw", "--raw-limit-bytes", str(raw_limit)]
         return subprocess.run(args, capture_output=True, text=True, timeout=15)
 
     def test_schedule_and_all_arm_records_are_persisted(self):
@@ -180,6 +182,74 @@ class ExploratoryPairsTests(unittest.TestCase):
             inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
                                          str(output)], capture_output=True, text=True, timeout=15)
             self.assertEqual(inspection.returncode, 0, inspection.stderr)
+
+    @unittest.skipUnless(os.name == "posix" and hasattr(os, "O_NOFOLLOW"), "POSIX raw capture")
+    def test_raw_capture_covers_all_stages_and_inspection_detects_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            prepare = [sys.executable, "-c", "print('prep')"]
+            probe = [sys.executable, "-c", "print('probe')"]
+            baseline = [sys.executable, "-c", "print('abcdefgh')"]
+            candidate = [sys.executable, "-c", "print('ok')"]
+            result = self.invoke(output, baseline, candidate, blocks=1, baseline_prepare=prepare,
+                                 baseline_probe=probe, capture_raw=True, raw_limit=4)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            baseline_record = json.loads((output / "block-000001-baseline.json").read_text())
+            stdout = baseline_record["result"]["raw_capture"]["stdout"]
+            self.assertTrue(stdout["truncated"])
+            self.assertEqual((output / "blobs" / stdout["sha256"]).read_bytes(), b"abcd")
+            for prefix in ("preparation", "probe"):
+                stage = json.loads((output / f"{prefix}-000001-baseline.json").read_text())
+                self.assertIn("raw_capture", stage["result"])
+            inspect_command = [sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)]
+            inspection = subprocess.run(inspect_command, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
+            self.assertFalse(json.loads(inspection.stdout)["confirmatory_eligible"])
+            (output / "blobs" / stdout["sha256"]).write_bytes(b"evil")
+            inspection = subprocess.run(inspect_command, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 2)
+            self.assertIn("raw blob", inspection.stderr)
+
+    @unittest.skipUnless(os.name == "posix" and hasattr(os, "O_NOFOLLOW"), "POSIX raw capture")
+    def test_negative_raw_limit_does_not_create_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            result = self.invoke(output, command, command, blocks=1, capture_raw=True, raw_limit=-1)
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(output.exists())
+
+    @unittest.skipUnless(os.name == "posix" and hasattr(os, "O_NOFOLLOW"), "POSIX raw capture")
+    def test_raw_inspection_rejects_truncation_lies_missing_symlinks_and_extras(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "run"
+            result = self.invoke(output, [sys.executable, "-c", "print('abcdef')"],
+                                 [sys.executable, "-c", "pass"], blocks=1,
+                                 capture_raw=True, raw_limit=3)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            record_path = output / "block-000001-baseline.json"
+            original = json.loads(record_path.read_text())
+            blob = output / "blobs" / original["result"]["raw_capture"]["stdout"]["sha256"]
+            payload = blob.read_bytes()
+            inspect_command = [sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)]
+
+            lie = json.loads(json.dumps(original))
+            lie["result"]["raw_capture"]["stdout"]["truncated"] = False
+            record_path.write_text(json.dumps(lie))
+            self.assertEqual(subprocess.run(inspect_command, capture_output=True, timeout=15).returncode, 2)
+            record_path.write_text(json.dumps(original))
+
+            blob.unlink()
+            self.assertEqual(subprocess.run(inspect_command, capture_output=True, timeout=15).returncode, 2)
+            outside = root / "outside"
+            outside.write_bytes(payload)
+            blob.symlink_to(outside)
+            self.assertEqual(subprocess.run(inspect_command, capture_output=True, timeout=15).returncode, 2)
+            blob.unlink()
+            blob.write_bytes(payload)
+            (output / "blobs" / "unexpected").write_bytes(b"extra")
+            self.assertEqual(subprocess.run(inspect_command, capture_output=True, timeout=15).returncode, 2)
 
     @unittest.skipUnless(os.name == "posix", "POSIX detached descendant behavior")
     def test_uncertain_cleanup_aborts_before_later_arm(self):

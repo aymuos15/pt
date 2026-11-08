@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +42,8 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
               baseline_prepare: list[str] | None = None,
               candidate_prepare: list[str] | None = None,
               baseline_probe: list[str] | None = None,
-              candidate_probe: list[str] | None = None) -> None:
+              candidate_probe: list[str] | None = None,
+              capture_raw: bool = False, raw_limit_bytes: int = 10 * 1024 * 1024) -> None:
     """Run both arms in each ordered block and publish unqualified observations.
 
     The output directory must not already exist. Optional preparation is timed
@@ -60,11 +62,20 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     schedule = paired_schedule(blocks, seed)
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("timeout must be finite and positive")
+    if type(capture_raw) is not bool:
+        raise ValueError("capture_raw must be a boolean")
+    if capture_raw and (os.name != "posix" or not hasattr(os, "O_NOFOLLOW")):
+        raise ValueError("raw output capture requires safe POSIX blob lookup")
+    if type(raw_limit_bytes) is not int or raw_limit_bytes < 0:
+        raise ValueError("raw output limit must be a nonnegative integer")
     cwd = cwd.resolve(strict=True)
     if not cwd.is_dir():
         raise ValueError("cwd must be a directory")
     output.mkdir()  # Exclusive: never write into an existing campaign directory.
-    write_record(str(output / "schedule.json"), {
+    bundle = output / "blobs" if capture_raw else None
+    if bundle is not None:
+        bundle.mkdir()
+    plan = {
         "schema_version": 1, "mode": "exploratory_unqualified", "seed": seed,
         "cwd": str(cwd), "timeout_seconds": timeout, "schedule": schedule,
         "baseline_argv": baseline, "candidate_argv": candidate,
@@ -72,7 +83,15 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "state_probe_argv": probes,
         "host_metadata": collect_metadata(),
         "limitations": ["state not verified", "no work validation", "no confirmatory eligibility"],
-    })
+    }
+    if capture_raw:
+        plan["raw_capture"] = {"enabled": True, "limit_per_stream_bytes": raw_limit_bytes,
+                               "bundle_directory": "blobs"}
+    write_record(str(output / "schedule.json"), plan)
+
+    def measure_stage(command):
+        return measure(command, str(cwd), timeout, raw_bundle=bundle, raw_limit_bytes=raw_limit_bytes)
+
     commands = {"baseline": baseline, "candidate": candidate}
     for block in schedule:
         for position, arm in enumerate(block["order"], 1):
@@ -80,7 +99,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
             probe = None
             try:
                 if preparations[arm] is not None:
-                    preparation = measure(preparations[arm], str(cwd), timeout)
+                    preparation = measure_stage(preparations[arm])
                     write_record(str(output / f"preparation-{block['block']:06d}-{arm}.json"), {
                         "schema_version": 1, "mode": "exploratory_unqualified",
                         "block": block["block"], "position": position, "arm": arm,
@@ -88,7 +107,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                     })
                 preparation_ok = preparation is None or _successful(preparation)
                 if preparation_ok and probes[arm] is not None:
-                    probe = measure(probes[arm], str(cwd), timeout)
+                    probe = measure_stage(probes[arm])
                     write_record(str(output / f"probe-{block['block']:06d}-{arm}.json"), {
                         "schema_version": 1, "mode": "exploratory_unqualified",
                         "block": block["block"], "position": position, "arm": arm,
@@ -99,7 +118,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 elif probe is not None and not _successful(probe):
                     result = {"status": "not_run_probe_failed"}
                 else:
-                    result = measure(commands[arm], str(cwd), timeout)
+                    result = measure_stage(commands[arm])
             except (OSError, ValueError) as exc:
                 # Preserve the interruption and stop rather than silently resume
                 # after an unexpected harness failure.
@@ -133,6 +152,9 @@ def main() -> int:
     parser.add_argument("--candidate-prepare-json", help="optional preparation argv as JSON")
     parser.add_argument("--baseline-probe-json", help="optional state-probe argv as JSON")
     parser.add_argument("--candidate-probe-json", help="optional state-probe argv as JSON")
+    parser.add_argument("--capture-raw", action="store_true", help="retain bounded raw output; may contain secrets")
+    parser.add_argument("--raw-limit-bytes", type=int, default=10 * 1024 * 1024,
+                        help="maximum captured prefix per stream (default: 10 MiB)")
     parser.add_argument("--blocks", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--timeout", type=float, required=True)
@@ -147,7 +169,8 @@ def main() -> int:
                   baseline_probe=(_command(json.loads(args.baseline_probe_json))
                                   if args.baseline_probe_json is not None else None),
                   candidate_probe=(_command(json.loads(args.candidate_probe_json))
-                                   if args.candidate_probe_json is not None else None))
+                                   if args.candidate_probe_json is not None else None),
+                  capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes)
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")
     return 0

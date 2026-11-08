@@ -70,8 +70,11 @@ The standalone timer can optionally retain bounded stdout/stderr prefixes with
 `--raw-output-bundle <existing-directory> --raw-limit-bytes <per-stream-limit>`
 on POSIX. Truncation is explicit and full observed-stream hashes remain separate;
 spooling and blob publication are inside the timer, so this is instrumented
-timing, not an unmodified product benchmark. The paired driver does not yet
-support raw capture. Blob publication does not authenticate content or guarantee
+timing, not an unmodified product benchmark. The paired driver can opt in with
+`--capture-raw --raw-limit-bytes <per-stream-limit>` and stores blobs in its run
+directory for each preparation, probe, and measured arm. Inspection verifies
+referenced blob sizes and hashes but cannot authenticate the records or files.
+Blob publication does not authenticate content or guarantee
 power-loss durability. A blob-publication failure aborts the sample instead of
 publishing a successful record; previously published blobs may remain. Raw output
 can contain secrets; enable it deliberately.
