@@ -27,6 +27,13 @@
       "prefixItems": [{"type": "string", "minLength": 1}]
     },
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "clock_fields": {
+      "dependentRequired": {
+        "monotonic_start_ns": ["monotonic_end_ns", "clock_domain"],
+        "monotonic_end_ns": ["monotonic_start_ns", "clock_domain"],
+        "clock_domain": ["monotonic_start_ns", "monotonic_end_ns"]
+      }
+    },
     "measurement": {
       "type": "object", "additionalProperties": false,
       "required": ["status", "argv", "cwd", "elapsed_ns", "returncode", "output_complete",
@@ -36,6 +43,9 @@
         "argv": {"$ref": "#/$defs/argv"},
         "cwd": {"type": "string", "minLength": 1},
         "elapsed_ns": {"type": "integer", "minimum": 0},
+        "monotonic_start_ns": {"type": "integer"},
+        "monotonic_end_ns": {"type": "integer"},
+        "clock_domain": {"const": "harness_process_monotonic"},
         "returncode": {"type": ["integer", "null"]},
         "output_complete": {"type": "boolean"},
         "process_reaped": {"type": "boolean"},
@@ -45,6 +55,7 @@
         "stderr_sha256": {"$ref": "#/$defs/sha256"}
       },
       "allOf": [
+        {"$ref": "#/$defs/clock_fields"},
         {
           "if": {"properties": {"process_reaped": {"const": true}}},
           "then": {"properties": {"returncode": {"type": "integer"}}},
@@ -65,8 +76,12 @@
           "properties": {
             "status": {"const": "launch_error"}, "error": {"type": "string"},
             "argv": {"$ref": "#/$defs/argv"}, "cwd": {"type": "string", "minLength": 1},
-            "elapsed_ns": {"type": "integer", "minimum": 0}
-          }
+            "elapsed_ns": {"type": "integer", "minimum": 0},
+            "monotonic_start_ns": {"type": "integer"},
+            "monotonic_end_ns": {"type": "integer"},
+            "clock_domain": {"const": "harness_process_monotonic"}
+          },
+          "allOf": [{"$ref": "#/$defs/clock_fields"}]
         },
         {
           "type": "object", "additionalProperties": false,

@@ -24,6 +24,9 @@ class MeasureTests(unittest.TestCase):
         self.assertEqual(result["returncode"], 0)
         self.assertEqual(result["stdout_bytes"], 6)
         self.assertGreater(result["elapsed_ns"], 0)
+        self.assertEqual(result["clock_domain"], "harness_process_monotonic")
+        self.assertEqual(result["elapsed_ns"],
+                         result["monotonic_end_ns"] - result["monotonic_start_ns"])
 
     def test_nonzero_exit_is_retained_not_labeled_pass(self):
         result = pt_bench.measure([sys.executable, "-c", "raise SystemExit(7)"], ".", 5)
@@ -91,6 +94,8 @@ class MeasureTests(unittest.TestCase):
         result = pt_bench.measure(["/nonexistent/pt-bench-executable"], ".", 1)
         self.assertEqual(result["status"], "launch_error")
         self.assertIn("error", result)
+        self.assertEqual(result["elapsed_ns"],
+                         result["monotonic_end_ns"] - result["monotonic_start_ns"])
 
     def test_bad_arguments_rejected(self):
         for argv, timeout in [([], 1), ([""], 1), (["x"], 0), (["x"], float("nan"))]:

@@ -99,6 +99,12 @@ def _stream_posix(process: subprocess.Popen, timeout: float) -> dict[str, Any]:
     }
 
 
+def _timing(start: int) -> dict[str, Any]:
+    end = time.monotonic_ns()
+    return {"monotonic_start_ns": start, "monotonic_end_ns": end,
+            "clock_domain": "harness_process_monotonic", "elapsed_ns": end - start}
+
+
 def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
     """Measure one process through exit and pipe drainage, retaining all outcomes."""
     if not argv or not all(isinstance(arg, str) for arg in argv) or not argv[0]:
@@ -118,7 +124,7 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
     except OSError as exc:
         return {
             "status": "launch_error", "error": str(exc), "argv": list(argv),
-            "cwd": str(cwd_path), "elapsed_ns": time.monotonic_ns() - start,
+            "cwd": str(cwd_path), **_timing(start),
         }
 
     try:
@@ -148,7 +154,7 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
     return {
         "status": "timeout" if output.pop("timed_out") else "exited_unqualified",
         "argv": list(argv), "cwd": str(cwd_path),
-        "elapsed_ns": time.monotonic_ns() - start,
+        **_timing(start),
         "returncode": process.returncode,
         **output,
     }

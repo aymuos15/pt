@@ -40,6 +40,9 @@ The schedule records basic host and harness-Python metadata, including the
 harness executable's path and digest. It does not record environment variables,
 inspect arm interpreters, or establish machine limits. Paths and command arguments
 may contain sensitive information; review records before sharing.
+New timer records include start/end monotonic nanoseconds and their clock domain;
+only differences within the recorded harness process are meaningful. Older v1
+records without these optional fields remain readable.
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical

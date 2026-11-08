@@ -68,6 +68,12 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
     elapsed = result.get("elapsed_ns")
     if type(elapsed) is not int or elapsed < 0:
         raise InspectionError("invalid measurement elapsed_ns")
+    clock_fields = ("monotonic_start_ns", "monotonic_end_ns", "clock_domain")
+    if any(field in result for field in clock_fields):
+        start, end, domain = (result.get(field) for field in clock_fields)
+        if (type(start) is not int or type(end) is not int or end < start
+                or domain != "harness_process_monotonic" or elapsed != end - start):
+            raise InspectionError("inconsistent monotonic timing fields")
     if status == "launch_error":
         if not isinstance(result.get("error"), str):
             raise InspectionError("launch error is missing its cause")

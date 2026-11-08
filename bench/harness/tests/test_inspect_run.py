@@ -92,6 +92,27 @@ class InspectRunTests(unittest.TestCase):
             with self.subTest(field=field, value=value):
                 self.assertEqual(self.inspect().returncode, 2)
 
+    def test_timing_fields_must_agree_and_legacy_records_remain_readable(self):
+        self.make_run()
+        path = self.run_dir / "block-000001-baseline.json"
+        original = json.loads(path.read_text())
+        for change in ("wrong_elapsed", "missing_end", "wrong_domain"):
+            data = json.loads(json.dumps(original))
+            if change == "wrong_elapsed":
+                data["result"]["elapsed_ns"] += 1
+            elif change == "missing_end":
+                del data["result"]["monotonic_end_ns"]
+            else:
+                data["result"]["clock_domain"] = "other_process"
+            path.write_text(json.dumps(data))
+            with self.subTest(change=change):
+                self.assertEqual(self.inspect().returncode, 2)
+        legacy = json.loads(json.dumps(original))
+        for field in ("monotonic_start_ns", "monotonic_end_ns", "clock_domain"):
+            del legacy["result"][field]
+        path.write_text(json.dumps(legacy))
+        self.assertEqual(self.inspect().returncode, 0)
+
     def test_arm_records_must_match_exploratory_sample_schema(self):
         self.make_run()
         path = self.run_dir / "block-000001-baseline.json"
