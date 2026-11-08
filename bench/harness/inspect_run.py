@@ -10,9 +10,12 @@ import re
 import sys
 from typing import Any
 
+import jsonschema
+
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
+SAMPLE_SCHEMA_PATH = Path(__file__).resolve().parent / "sample.schema.json"
 
 
 class InspectionError(ValueError):
@@ -90,6 +93,12 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
 
 def inspect_run(directory: Path) -> dict[str, Any]:
     """Reject missing or inconsistent records; never qualify their contents."""
+    schema = _read(SAMPLE_SCHEMA_PATH)
+    try:
+        jsonschema.Draft202012Validator.check_schema(schema)
+    except jsonschema.SchemaError as exc:
+        raise InspectionError(f"invalid exploratory sample schema: {exc.message}") from exc
+    validator = jsonschema.Draft202012Validator(schema)
     plan = _read(directory / "schedule.json")
     schedule, seed, cwd = plan.get("schedule"), plan.get("seed"), plan.get("cwd")
     if (type(plan.get("schema_version")) is not int or plan["schema_version"] != 1
@@ -120,6 +129,9 @@ def inspect_run(directory: Path) -> dict[str, Any]:
             filename = f"block-{number:06d}-{arm}.json"
             expected.add(filename)
             record = _read(directory / filename)
+            schema_error = next(validator.iter_errors(record), None)
+            if schema_error is not None:
+                raise InspectionError(f"{filename}: sample schema: {schema_error.message}")
             result = _envelope(record, number, position, arm)
             prep_command = preparations[arm]
             prep_ok = True

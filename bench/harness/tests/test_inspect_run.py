@@ -92,6 +92,24 @@ class InspectRunTests(unittest.TestCase):
             with self.subTest(field=field, value=value):
                 self.assertEqual(self.inspect().returncode, 2)
 
+    def test_arm_records_must_match_exploratory_sample_schema(self):
+        self.make_run()
+        path = self.run_dir / "block-000001-baseline.json"
+        original = json.loads(path.read_text())
+        for change in ("extra_claim", "missing_preparation", "missing_digest"):
+            record = json.loads(json.dumps(original))
+            if change == "extra_claim":
+                record["confirmatory_eligible"] = True
+            elif change == "missing_preparation":
+                del record["preparation"]
+            else:
+                del record["result"]["stdout_sha256"]
+            path.write_text(json.dumps(record))
+            with self.subTest(change=change):
+                result = self.inspect()
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("sample schema", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
