@@ -20,6 +20,8 @@ profile.
 The [Click assessment](assessments/click-8abb77a.md) covers both its upstream
 pytest 9 lock and an adapted pytest 8.4.2 environment; both retained the project's
 31,000 default-deselected stress cases in the reported scope limitations.
+The [Rich assessment](assessments/rich-3a109cc.md) records distinct pytest 9
+and pytest 8 parameter IDs and the source-worktree origin of coverage.
 
 `manifest.toml` records draft file hashes and leaves all probes unassigned. The
 independent inventory checker verifies declared files only; it does not detect

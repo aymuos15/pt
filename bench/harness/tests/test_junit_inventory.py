@@ -16,6 +16,23 @@ spec.loader.exec_module(junit)
 
 
 class JUnitInventoryTests(unittest.TestCase):
+    def test_rich_profile_artifacts_preserve_differences(self):
+        root = Path(__file__).resolve().parents[2] / "corpus" / "assessments"
+        records = []
+        for label, digest in (("pytest920", "e24eafafd2f15957b9e9ba011c8a95591022fc7b5ec8bcade4200736b4608054"),
+                              ("pytest842", "4927c8e5ed82252ae3cb016938fa66d68e6e4a6c5f786f526d57e7fb87648e35")):
+            raw = (root / f"rich-3a109cc-{label}-junit-normalized.json").read_bytes()
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), digest)
+            data = json.loads(raw)
+            canonical = json.dumps(data["records"], ensure_ascii=True, separators=(",", ":")).encode()
+            self.assertEqual(hashlib.sha256(canonical).hexdigest(), data["ordered_inventory_sha256"])
+            self.assertEqual(len(data["records"]), 981)
+            records.append(data["records"])
+        self.assertEqual(sum(a != b for a, b in zip(*records)), 8)
+        lock = (root / "rich-3a109cc-pytest842.requirements.txt").read_bytes()
+        self.assertEqual(hashlib.sha256(lock).hexdigest(),
+                         "85a7f304eb2f56ddef96227429e7ad03303c62de085886dd52303fdeaba8d3ca")
+
     def parse(self, content):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "report.xml"
