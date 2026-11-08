@@ -117,9 +117,13 @@ def inspect_run(directory: Path) -> dict[str, Any]:
         raise InspectionError("schedule order or block numbering is inconsistent")
     commands = {arm: plan.get(f"{arm}_argv") for arm in ("baseline", "candidate")}
     preparations = plan.get("preparation_argv")
+    has_probe_configuration = "state_probe_argv" in plan
+    probes = plan.get("state_probe_argv", {"baseline": None, "candidate": None})
     if not isinstance(preparations, dict) or set(preparations) != set(commands):
         raise InspectionError("invalid preparation configuration")
-    for command in list(commands.values()) + list(preparations.values()):
+    if not isinstance(probes, dict) or set(probes) != set(commands):
+        raise InspectionError("invalid state-probe configuration")
+    for command in list(commands.values()) + list(preparations.values()) + list(probes.values()):
         if command is not None and (not isinstance(command, list) or not command
                                     or not all(isinstance(arg, str) for arg in command)
                                     or not command[0]):
@@ -151,10 +155,30 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                            and prep_result["returncode"] == 0)
             if record.get("preparation") != ("recorded" if prep_command is not None else "not_requested"):
                 raise InspectionError("preparation record reference mismatch")
-            if prep_ok:
+            probe_command = probes[arm]
+            probe_ok = True
+            expected_probe_reference = "not_requested"
+            if probe_command is not None and not prep_ok:
+                expected_probe_reference = "skipped_preparation_failed"
+            elif probe_command is not None:
+                expected_probe_reference = "recorded"
+                probe_name = f"probe-{number:06d}-{arm}.json"
+                expected.add(probe_name)
+                probe_record = _read(directory / probe_name)
+                probe_result = _envelope(probe_record, number, position, arm)
+                _measurement(probe_result, probe_command, cwd)
+                probe_ok = probe_result["status"] == "exited_unqualified" and probe_result["returncode"] == 0
+            if has_probe_configuration or "state_probe" in record:
+                if record.get("state_probe") != expected_probe_reference:
+                    raise InspectionError("state-probe record reference mismatch")
+            if not prep_ok:
+                if result.get("status") != "not_run_preparation_failed":
+                    raise InspectionError("work ran after unsuccessful preparation")
+            elif not probe_ok:
+                if result.get("status") != "not_run_probe_failed":
+                    raise InspectionError("work ran after unsuccessful state probe")
+            else:
                 _measurement(result, commands[arm], cwd)
-            elif result.get("status") != "not_run_preparation_failed":
-                raise InspectionError("work ran after unsuccessful preparation")
             counts[result["status"]] += 1
     try:
         actual = {path.name for path in directory.iterdir()}

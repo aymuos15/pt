@@ -42,6 +42,20 @@ class InspectRunTests(unittest.TestCase):
         self.assertEqual(summary["arm_status_counts"], {"exited_unqualified": 2})
         self.assertFalse(summary["confirmatory_eligible"])
 
+    def test_legacy_run_without_state_probes_remains_readable(self):
+        self.make_run()
+        plan_path = self.run_dir / "schedule.json"
+        plan = json.loads(plan_path.read_text())
+        del plan["state_probe_argv"]
+        plan_path.write_text(json.dumps(plan))
+        for path in self.run_dir.glob("block-*.json"):
+            record = json.loads(path.read_text())
+            del record["state_probe"]
+            path.write_text(json.dumps(record))
+        result = self.inspect()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["confirmatory_eligible"])
+
     def test_failed_preparation_is_preserved(self):
         self.make_run([sys.executable, "-c", "raise SystemExit(7)"])
         result = self.inspect()

@@ -23,6 +23,10 @@ and records; failed preparation prevents that arm from running. Preparation is
 not measured in the arm's elapsed time and is not proof of a valid reset. A zero
 exit from the paired driver means only that records were written, not that
 either command succeeded or was equivalent.
+Optional `--baseline-probe-json` and `--candidate-probe-json` commands run after
+successful preparation and before the corresponding measurement. Their output
+hashes and statuses are recorded separately; nonzero exits or timeouts skip the
+arm. A zero probe exit does not itself verify or certify equivalent state.
 If a preparation or measurement reports incomplete output drainage or an
 unreaped direct process, the runner preserves the arm record and aborts before
 starting later arms. Reaped direct processes and drained pipes still do not prove

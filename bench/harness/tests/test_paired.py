@@ -12,7 +12,8 @@ PAIRED = Path(__file__).resolve().parents[1] / "paired.py"
 
 class ExploratoryPairsTests(unittest.TestCase):
     def invoke(self, output, baseline, candidate, blocks=2, timeout=2,
-               baseline_prepare=None, candidate_prepare=None):
+               baseline_prepare=None, candidate_prepare=None,
+               baseline_probe=None, candidate_probe=None):
         args = [
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
             "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
@@ -22,6 +23,10 @@ class ExploratoryPairsTests(unittest.TestCase):
             args += ["--baseline-prepare-json", json.dumps(baseline_prepare)]
         if candidate_prepare is not None:
             args += ["--candidate-prepare-json", json.dumps(candidate_prepare)]
+        if baseline_probe is not None:
+            args += ["--baseline-probe-json", json.dumps(baseline_probe)]
+        if candidate_probe is not None:
+            args += ["--candidate-probe-json", json.dumps(candidate_probe)]
         return subprocess.run(args, capture_output=True, text=True, timeout=15)
 
     def test_schedule_and_all_arm_records_are_persisted(self):
@@ -119,6 +124,62 @@ class ExploratoryPairsTests(unittest.TestCase):
             baseline = json.loads((output / "block-000001-baseline.json").read_text())
             self.assertEqual(prep["result"]["status"], "timeout")
             self.assertEqual(baseline["result"]["status"], "not_run_preparation_failed")
+
+    def test_state_probe_follows_preparation_and_failure_blocks_work(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            marker = Path(directory) / "baseline-ran"
+            prepare = [sys.executable, "-c", "from pathlib import Path; Path('state').write_text('ready')"]
+            probe = [sys.executable, "-c", "from pathlib import Path; assert Path('state').read_text() == 'ready'; raise SystemExit(5)"]
+            baseline = [sys.executable, "-c", f"from pathlib import Path; Path({str(marker)!r}).touch()"]
+            result = self.invoke(output, baseline, [sys.executable, "-c", "pass"], blocks=1,
+                                 baseline_prepare=prepare, baseline_probe=probe)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(marker.exists())
+            probe_record = json.loads((output / "probe-000001-baseline.json").read_text())
+            baseline_record = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertEqual(probe_record["result"]["returncode"], 5)
+            self.assertEqual(baseline_record["state_probe"], "recorded")
+            self.assertEqual(baseline_record["result"]["status"], "not_run_probe_failed")
+            inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                         str(output)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
+            self.assertFalse(json.loads(inspection.stdout)["confirmatory_eligible"])
+            probe_path = output / "probe-000001-baseline.json"
+            probe_record["result"]["returncode"] = 0
+            probe_path.write_text(json.dumps(probe_record))
+            inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                         str(output)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 2)
+            probe_path.unlink()
+            inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                         str(output)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 2)
+
+    def test_successful_state_probe_allows_work_but_is_unqualified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            result = self.invoke(output, command, command, blocks=1, baseline_probe=command)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            baseline = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertEqual(baseline["state_probe"], "recorded")
+            self.assertEqual(baseline["result"]["returncode"], 0)
+            self.assertEqual(baseline["mode"], "exploratory_unqualified")
+
+    def test_failed_preparation_skips_configured_probe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            result = self.invoke(output, command, command, blocks=1, baseline_probe=command,
+                                 baseline_prepare=[sys.executable, "-c", "raise SystemExit(3)"])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            baseline = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertEqual(baseline["state_probe"], "skipped_preparation_failed")
+            self.assertFalse((output / "probe-000001-baseline.json").exists())
+            inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                         str(output)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
 
     @unittest.skipUnless(os.name == "posix", "POSIX detached descendant behavior")
     def test_uncertain_cleanup_aborts_before_later_arm(self):

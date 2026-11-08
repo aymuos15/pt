@@ -12,6 +12,7 @@
     "position": {"type": "integer", "minimum": 1, "maximum": 2},
     "arm": {"enum": ["baseline", "candidate"]},
     "preparation": {"enum": ["not_requested", "recorded"]},
+    "state_probe": {"enum": ["not_requested", "recorded", "skipped_preparation_failed"]},
     "result": {"$ref": "#/$defs/result"}
   },
   "allOf": [
@@ -91,7 +92,7 @@
         {
           "type": "object", "additionalProperties": false,
           "required": ["status"],
-          "properties": {"status": {"const": "not_run_preparation_failed"}}
+          "properties": {"status": {"enum": ["not_run_preparation_failed", "not_run_probe_failed"]}}
         }
       ]
     }

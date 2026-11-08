@@ -31,10 +31,17 @@ def _cleanup_uncertain(result: dict[str, Any] | None) -> bool:
                  or result.get("output_complete") is not True))
 
 
+def _successful(result: dict[str, Any]) -> bool:
+    return (result.get("status") == "exited_unqualified" and result.get("returncode") == 0
+            and result.get("output_complete") is True and result.get("process_reaped") is True)
+
+
 def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
               blocks: int, seed: int, timeout: float, *,
               baseline_prepare: list[str] | None = None,
-              candidate_prepare: list[str] | None = None) -> None:
+              candidate_prepare: list[str] | None = None,
+              baseline_probe: list[str] | None = None,
+              candidate_probe: list[str] | None = None) -> None:
     """Run both arms in each ordered block and publish unqualified observations.
 
     The output directory must not already exist. Optional preparation is timed
@@ -45,6 +52,10 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     preparations = {
         "baseline": _command(baseline_prepare) if baseline_prepare is not None else None,
         "candidate": _command(candidate_prepare) if candidate_prepare is not None else None,
+    }
+    probes = {
+        "baseline": _command(baseline_probe) if baseline_probe is not None else None,
+        "candidate": _command(candidate_probe) if candidate_probe is not None else None,
     }
     schedule = paired_schedule(blocks, seed)
     if not math.isfinite(timeout) or timeout <= 0:
@@ -58,6 +69,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "cwd": str(cwd), "timeout_seconds": timeout, "schedule": schedule,
         "baseline_argv": baseline, "candidate_argv": candidate,
         "preparation_argv": preparations,
+        "state_probe_argv": probes,
         "host_metadata": collect_metadata(),
         "limitations": ["state not verified", "no work validation", "no confirmatory eligibility"],
     })
@@ -65,6 +77,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     for block in schedule:
         for position, arm in enumerate(block["order"], 1):
             preparation = None
+            probe = None
             try:
                 if preparations[arm] is not None:
                     preparation = measure(preparations[arm], str(cwd), timeout)
@@ -73,14 +86,20 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                         "block": block["block"], "position": position, "arm": arm,
                         "result": preparation,
                     })
-                preparation_ok = preparation is None or (
-                    preparation["status"] == "exited_unqualified"
-                    and preparation["returncode"] == 0
-                    and preparation["output_complete"]
-                    and preparation["process_reaped"]
-                )
-                result = (measure(commands[arm], str(cwd), timeout) if preparation_ok
-                          else {"status": "not_run_preparation_failed"})
+                preparation_ok = preparation is None or _successful(preparation)
+                if preparation_ok and probes[arm] is not None:
+                    probe = measure(probes[arm], str(cwd), timeout)
+                    write_record(str(output / f"probe-{block['block']:06d}-{arm}.json"), {
+                        "schema_version": 1, "mode": "exploratory_unqualified",
+                        "block": block["block"], "position": position, "arm": arm,
+                        "result": probe,
+                    })
+                if not preparation_ok:
+                    result = {"status": "not_run_preparation_failed"}
+                elif probe is not None and not _successful(probe):
+                    result = {"status": "not_run_probe_failed"}
+                else:
+                    result = measure(commands[arm], str(cwd), timeout)
             except (OSError, ValueError) as exc:
                 # Preserve the interruption and stop rather than silently resume
                 # after an unexpected harness failure.
@@ -94,9 +113,11 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 "schema_version": 1, "mode": "exploratory_unqualified",
                 "block": block["block"], "position": position, "arm": arm,
                 "preparation": "not_requested" if preparation is None else "recorded",
+                "state_probe": ("not_requested" if probes[arm] is None else
+                                "recorded" if probe is not None else "skipped_preparation_failed"),
                 "result": result,
             })
-            if _cleanup_uncertain(preparation) or _cleanup_uncertain(result):
+            if any(_cleanup_uncertain(item) for item in (preparation, probe, result)):
                 raise RunAbortedError(
                     f"block {block['block']} {arm}: cleanup uncertain; remaining arms not run"
                 )
@@ -110,6 +131,8 @@ def main() -> int:
     parser.add_argument("--candidate-json", required=True, help="command argv as a JSON array")
     parser.add_argument("--baseline-prepare-json", help="optional preparation argv as JSON")
     parser.add_argument("--candidate-prepare-json", help="optional preparation argv as JSON")
+    parser.add_argument("--baseline-probe-json", help="optional state-probe argv as JSON")
+    parser.add_argument("--candidate-probe-json", help="optional state-probe argv as JSON")
     parser.add_argument("--blocks", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--timeout", type=float, required=True)
@@ -120,7 +143,11 @@ def main() -> int:
                   baseline_prepare=(_command(json.loads(args.baseline_prepare_json))
                                     if args.baseline_prepare_json is not None else None),
                   candidate_prepare=(_command(json.loads(args.candidate_prepare_json))
-                                     if args.candidate_prepare_json is not None else None))
+                                     if args.candidate_prepare_json is not None else None),
+                  baseline_probe=(_command(json.loads(args.baseline_probe_json))
+                                  if args.baseline_probe_json is not None else None),
+                  candidate_probe=(_command(json.loads(args.candidate_probe_json))
+                                   if args.candidate_probe_json is not None else None))
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")
     return 0
