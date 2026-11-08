@@ -46,3 +46,12 @@ def check_observation(result: Mapping[str, Any], *, expected_exit_code: int,
         "limitations": ["sentinels do not prove equal work", "generation not checked",
                         "environment and artifacts not qualified"],
     }
+
+
+def validate_expectations(value: Any) -> dict[str, Any]:
+    """Validate an explicit expectation without interpreting a sample as valid."""
+    fields = {"expected_exit_code", "expected_stdout_bytes", "expected_stdout_sha256"}
+    if not isinstance(value, dict) or set(value) != fields:
+        raise ValueError("observation guard must contain exactly the three expected fields")
+    check_observation({}, **value)
+    return value.copy()

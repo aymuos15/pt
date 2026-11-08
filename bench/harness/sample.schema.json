@@ -13,6 +13,17 @@
     "arm": {"enum": ["baseline", "candidate"]},
     "preparation": {"enum": ["not_requested", "recorded"]},
     "state_probe": {"enum": ["not_requested", "recorded", "skipped_preparation_failed"]},
+    "observation_guard": {
+      "type": "object", "additionalProperties": false,
+      "required": ["matched_expected_observations", "mismatches", "mode", "confirmatory_eligible", "limitations"],
+      "properties": {
+        "matched_expected_observations": {"type": "boolean"},
+        "mismatches": {"type": "array", "items": {"type": "string"}},
+        "mode": {"const": "exploratory_unqualified"},
+        "confirmatory_eligible": {"const": false},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
     "result": {"$ref": "#/$defs/result"}
   },
   "allOf": [

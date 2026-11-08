@@ -12,6 +12,7 @@ from typing import Any
 from pt_bench import measure, write_record
 from schedule import paired_schedule
 from metadata import collect_metadata
+from guards import check_observation, validate_expectations
 
 
 class RunAbortedError(RuntimeError):
@@ -43,6 +44,8 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
               candidate_prepare: list[str] | None = None,
               baseline_probe: list[str] | None = None,
               candidate_probe: list[str] | None = None,
+              baseline_guard: dict[str, Any] | None = None,
+              candidate_guard: dict[str, Any] | None = None,
               capture_raw: bool = False, raw_limit_bytes: int = 10 * 1024 * 1024) -> None:
     """Run both arms in each ordered block and publish unqualified observations.
 
@@ -58,6 +61,10 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     probes = {
         "baseline": _command(baseline_probe) if baseline_probe is not None else None,
         "candidate": _command(candidate_probe) if candidate_probe is not None else None,
+    }
+    guard_expectations = {
+        "baseline": validate_expectations(baseline_guard) if baseline_guard is not None else None,
+        "candidate": validate_expectations(candidate_guard) if candidate_guard is not None else None,
     }
     schedule = paired_schedule(blocks, seed)
     if not math.isfinite(timeout) or timeout <= 0:
@@ -81,6 +88,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "baseline_argv": baseline, "candidate_argv": candidate,
         "preparation_argv": preparations,
         "state_probe_argv": probes,
+        "guard_expectations": guard_expectations,
         "host_metadata": collect_metadata(),
         "limitations": ["state not verified", "no work validation", "no confirmatory eligibility"],
     }
@@ -128,14 +136,17 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                     "result": {"status": "harness_error", "error": str(exc)},
                 })
                 raise
-            write_record(str(output / f"block-{block['block']:06d}-{arm}.json"), {
+            record = {
                 "schema_version": 1, "mode": "exploratory_unqualified",
                 "block": block["block"], "position": position, "arm": arm,
                 "preparation": "not_requested" if preparation is None else "recorded",
                 "state_probe": ("not_requested" if probes[arm] is None else
                                 "recorded" if probe is not None else "skipped_preparation_failed"),
                 "result": result,
-            })
+            }
+            if guard_expectations[arm] is not None:
+                record["observation_guard"] = check_observation(result, **guard_expectations[arm])
+            write_record(str(output / f"block-{block['block']:06d}-{arm}.json"), record)
             if any(_cleanup_uncertain(item) for item in (preparation, probe, result)):
                 raise RunAbortedError(
                     f"block {block['block']} {arm}: cleanup uncertain; remaining arms not run"
@@ -152,6 +163,8 @@ def main() -> int:
     parser.add_argument("--candidate-prepare-json", help="optional preparation argv as JSON")
     parser.add_argument("--baseline-probe-json", help="optional state-probe argv as JSON")
     parser.add_argument("--candidate-probe-json", help="optional state-probe argv as JSON")
+    parser.add_argument("--baseline-guard-json", help="optional expected exit and stdout sentinel as JSON")
+    parser.add_argument("--candidate-guard-json", help="optional expected exit and stdout sentinel as JSON")
     parser.add_argument("--capture-raw", action="store_true", help="retain bounded raw output; may contain secrets")
     parser.add_argument("--raw-limit-bytes", type=int, default=10 * 1024 * 1024,
                         help="maximum captured prefix per stream (default: 10 MiB)")
@@ -170,6 +183,10 @@ def main() -> int:
                                   if args.baseline_probe_json is not None else None),
                   candidate_probe=(_command(json.loads(args.candidate_probe_json))
                                    if args.candidate_probe_json is not None else None),
+                  baseline_guard=(validate_expectations(json.loads(args.baseline_guard_json))
+                                  if args.baseline_guard_json is not None else None),
+                  candidate_guard=(validate_expectations(json.loads(args.candidate_guard_json))
+                                   if args.candidate_guard_json is not None else None),
                   capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes)
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")

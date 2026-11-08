@@ -15,6 +15,7 @@ from typing import Any
 import jsonschema
 
 from artifact_check import _digest_status
+from guards import check_observation, validate_expectations
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
@@ -122,10 +123,16 @@ def inspect_run(directory: Path) -> dict[str, Any]:
     preparations = plan.get("preparation_argv")
     has_probe_configuration = "state_probe_argv" in plan
     probes = plan.get("state_probe_argv", {"baseline": None, "candidate": None})
+    guard_expectations = plan.get("guard_expectations", {"baseline": None, "candidate": None})
     if not isinstance(preparations, dict) or set(preparations) != set(commands):
         raise InspectionError("invalid preparation configuration")
     if not isinstance(probes, dict) or set(probes) != set(commands):
         raise InspectionError("invalid state-probe configuration")
+    if not isinstance(guard_expectations, dict) or set(guard_expectations) != set(commands):
+        raise InspectionError("invalid observation-guard configuration")
+    for expectation in guard_expectations.values():
+        if expectation is not None:
+            validate_expectations(expectation)
     for command in list(commands.values()) + list(preparations.values()) + list(probes.values()):
         if command is not None and (not isinstance(command, list) or not command
                                     or not all(isinstance(arg, str) for arg in command)
@@ -204,6 +211,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
             os.close(directory_fd)
 
     counts: Counter[str] = Counter()
+    guard_counts: Counter[str] = Counter()
     last_end = None
     all_intervals_present = True
 
@@ -272,6 +280,16 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                 _measurement(result, commands[arm], cwd)
                 check_raw(result)
                 check_interval(result)
+            expectation = guard_expectations[arm]
+            if expectation is None:
+                if "observation_guard" in record:
+                    raise InspectionError("observation guard present without expectation")
+                guard_counts["not_requested"] += 1
+            else:
+                verdict = check_observation(result, **expectation)
+                if record.get("observation_guard") != verdict:
+                    raise InspectionError("observation guard does not match recorded result")
+                guard_counts["matched" if verdict["matched_expected_observations"] else "mismatched"] += 1
             counts[result["status"]] += 1
     try:
         actual = {path.name for path in directory.iterdir()}
@@ -288,6 +306,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
             raise InspectionError("unexpected or missing blob files")
     return {"record_consistency": "complete", "mode": "exploratory_unqualified",
             "blocks": len(schedule), "arm_status_counts": dict(sorted(counts.items())),
+            "observation_guard_counts": dict(sorted(guard_counts.items())),
             "recorded_interval_order": ("nonoverlapping" if all_intervals_present else "incomplete"),
             "confirmatory_eligible": False,
             "limitations": ["record authenticity not established", "work and reset not validated",

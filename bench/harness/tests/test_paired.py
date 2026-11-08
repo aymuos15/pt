@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -13,7 +14,8 @@ PAIRED = Path(__file__).resolve().parents[1] / "paired.py"
 class ExploratoryPairsTests(unittest.TestCase):
     def invoke(self, output, baseline, candidate, blocks=2, timeout=2,
                baseline_prepare=None, candidate_prepare=None,
-               baseline_probe=None, candidate_probe=None, capture_raw=False, raw_limit=100):
+               baseline_probe=None, candidate_probe=None, baseline_guard=None, candidate_guard=None,
+               capture_raw=False, raw_limit=100):
         args = [
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
             "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
@@ -27,6 +29,10 @@ class ExploratoryPairsTests(unittest.TestCase):
             args += ["--baseline-probe-json", json.dumps(baseline_probe)]
         if candidate_probe is not None:
             args += ["--candidate-probe-json", json.dumps(candidate_probe)]
+        if baseline_guard is not None:
+            args += ["--baseline-guard-json", json.dumps(baseline_guard)]
+        if candidate_guard is not None:
+            args += ["--candidate-guard-json", json.dumps(candidate_guard)]
         if capture_raw:
             args += ["--capture-raw", "--raw-limit-bytes", str(raw_limit)]
         return subprocess.run(args, capture_output=True, text=True, timeout=15)
@@ -168,6 +174,63 @@ class ExploratoryPairsTests(unittest.TestCase):
             self.assertEqual(baseline["state_probe"], "recorded")
             self.assertEqual(baseline["result"]["returncode"], 0)
             self.assertEqual(baseline["mode"], "exploratory_unqualified")
+
+    def test_guard_mismatch_is_preserved_and_inspector_recomputes_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            sentinel = b"executed\n"
+            expectation = {"expected_exit_code": 0, "expected_stdout_bytes": len(sentinel),
+                           "expected_stdout_sha256": hashlib.sha256(sentinel).hexdigest()}
+            result = self.invoke(output, [sys.executable, "-c", "print('executed')"],
+                                 [sys.executable, "-c", "pass"], blocks=1,
+                                 baseline_guard=expectation, candidate_guard=expectation)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            baseline = json.loads((output / "block-000001-baseline.json").read_text())
+            candidate_path = output / "block-000001-candidate.json"
+            candidate = json.loads(candidate_path.read_text())
+            self.assertTrue(baseline["observation_guard"]["matched_expected_observations"])
+            self.assertFalse(candidate["observation_guard"]["matched_expected_observations"])
+            self.assertIn("stdout_digest", candidate["observation_guard"]["mismatches"])
+            command = [sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)]
+            inspection = subprocess.run(command, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
+            summary = json.loads(inspection.stdout)
+            self.assertEqual(summary["observation_guard_counts"], {"matched": 1, "mismatched": 1})
+            self.assertFalse(summary["confirmatory_eligible"])
+            candidate["observation_guard"]["matched_expected_observations"] = True
+            candidate_path.write_text(json.dumps(candidate))
+            inspection = subprocess.run(command, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 2)
+            self.assertIn("observation guard", inspection.stderr)
+
+    def test_invalid_guard_is_rejected_before_creating_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            result = self.invoke(output, command, command, blocks=1,
+                                 baseline_guard={"expected_exit_code": 0, "expected_stdout_bytes": 0,
+                                                 "expected_stdout_sha256": "invalid"})
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(output.exists())
+
+    def test_skipped_guarded_work_remains_an_explicit_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            expectation = {"expected_exit_code": 0, "expected_stdout_bytes": 0,
+                           "expected_stdout_sha256": hashlib.sha256(b"").hexdigest()}
+            result = self.invoke(output, command, command, blocks=1, baseline_guard=expectation,
+                                 baseline_prepare=[sys.executable, "-c", "raise SystemExit(2)"])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            record = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertEqual(record["result"]["status"], "not_run_preparation_failed")
+            self.assertFalse(record["observation_guard"]["matched_expected_observations"])
+            self.assertIn("not_completed", record["observation_guard"]["mismatches"])
+            inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                         str(output)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
+            self.assertEqual(json.loads(inspection.stdout)["observation_guard_counts"],
+                             {"mismatched": 1, "not_requested": 1})
 
     def test_failed_preparation_skips_configured_probe(self):
         with tempfile.TemporaryDirectory() as directory:

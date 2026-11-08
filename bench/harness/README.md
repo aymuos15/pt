@@ -42,6 +42,10 @@ out-of-order stages; legacy records with missing intervals are labelled
 isolation or rule out detached descendants.
 `guards.py` compares a timer result to an expected exit and stdout sentinel;
 even a match cannot prove equal work, correct generation, or artifact validity.
+The paired driver accepts `--baseline-guard-json` and `--candidate-guard-json`
+with explicit `expected_exit_code`, `expected_stdout_bytes`, and
+`expected_stdout_sha256` fields. It retains matching and mismatching outcomes;
+inspection recomputes guard verdicts rather than trusting recorded booleans.
 `sample.schema.json` describes the current exploratory arm-record structure; it
 is not the complete WP01 raw-evidence format and does not establish validity.
 The schedule records basic host and harness-Python metadata, including the
