@@ -74,6 +74,9 @@ uv run --locked --project bench/harness --python 3.12.12 python bench/harness/ma
 ```
 
 The check creates two disposable environments, installs the lock from local uv
-cache, and compares Python/distribution versions and phase-probe occurrences.
-It deletes only its own temporary directory. It does not verify installed file
-hashes, create an immutable source snapshot, or qualify the full corpus.
+cache, and compares Python/distribution versions, interpreter bytes, and
+phase-probe occurrences. It verifies hashed distribution RECORD entries before
+and after the probe, compares non-entrypoint file inventories, and lists unhashed
+entries and generated entrypoints excluded from cross-directory comparison.
+It deletes only its own temporary directory. It does not authenticate RECORD,
+check unlisted files, create an immutable snapshot, or qualify the full corpus.

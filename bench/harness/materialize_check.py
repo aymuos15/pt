@@ -64,12 +64,16 @@ def materialize_and_probe(root: Path) -> dict:
         _run(["uv", "sync", "--offline", "--locked", "--active", "--project", str(HARNESS)],
              env=base_env, cwd=root)
         python = environment / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        with python.open("rb") as binary:
+            interpreter_sha256 = hashlib.file_digest(binary, "sha256").hexdigest()
         identity_code = (
             "import importlib.metadata as m,json,sys; "
             "print(json.dumps({'python':list(sys.version_info[:3]),"
             "'distributions':sorted((d.metadata['Name'],d.version) for d in m.distributions())}))"
         )
         identity = json.loads(_run([str(python), "-c", identity_code], env=base_env, cwd=root).stdout)
+        installed = json.loads(_run([str(python), str(HARNESS / "installed_inventory.py")],
+                                    env=base_env, cwd=root).stdout)
         report = root / f"phase-{index}.xml"
         pytest = subprocess.run(
             [str(python), "-m", "pytest", "-p", "no:cacheprovider", "-q", str(PROBE),
@@ -83,7 +87,13 @@ def materialize_and_probe(root: Path) -> dict:
             raise ValueError(f"probe {index}: unexpected occurrences or adverse outcomes")
         if identity["python"] != [3, 12, 12]:
             raise ValueError(f"probe {index}: unexpected Python version")
-        observations.append({"identity": identity, "exit_code": pytest.returncode,
+        installed_after = json.loads(_run([str(python), str(HARNESS / "installed_inventory.py")],
+                                          env=base_env, cwd=root).stdout)
+        if installed != installed_after:
+            raise ValueError(f"probe {index}: installed-file inventory changed during execution")
+        observations.append({"identity": identity, "interpreter_sha256": interpreter_sha256,
+                             "installed_file_check": installed,
+                             "exit_code": pytest.returncode,
                              "occurrences": observed})
     if observations[0] != observations[1]:
         raise ValueError("clean environments produced different inventories or outcomes")
@@ -93,7 +103,8 @@ def materialize_and_probe(root: Path) -> dict:
     return {"status": "local_smoke_only", "environments": len(observations),
             "lock_sha256": lock_sha256, "observation": observations[0],
             "confirmatory_eligible": False,
-            "limitations": ["no immutable source snapshot", "installed file hashes not verified",
+            "limitations": ["no immutable source or environment snapshot", "RECORD provenance not verified",
+                            "unhashed and unlisted files not verified",
                             "one synthetic probe", "no full corpus or platform qualification"]}
 
 
