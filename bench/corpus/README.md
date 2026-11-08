@@ -17,3 +17,8 @@ The probe alone does not prove a comparator can distinguish the phases. Future
 oracle tests must verify actual phase reports, multiplicity, and exit status,
 including broken-runner negative controls. Direct pytest behavior must be pinned
 and qualified before use in a confirmatory campaign.
+
+The harness test suite includes a smoke check of these probes using pinned
+pytest, with external plugin autoload disabled for this controlled check. It
+inspects JUnit output and expected exits; it is not a detailed phase oracle,
+qualification of external plugins, or a benchmark baseline configuration.

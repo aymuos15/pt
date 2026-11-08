@@ -5,5 +5,8 @@ description = "Independent, incomplete PT benchmark harness prototype"
 requires-python = ">=3.10"
 dependencies = ["jsonschema==4.25.1", "PyYAML==6.0.3"]
 
+[dependency-groups]
+dev = ["pytest==8.4.2"]
+
 [tool.uv]
 package = false
