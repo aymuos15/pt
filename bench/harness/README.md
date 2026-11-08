@@ -27,6 +27,8 @@ records, verify unobserved work or state, or qualify a benchmark; it rejects
 partial runs and unexpected files rather than silently excluding them.
 `guards.py` compares a timer result to an expected exit and stdout sentinel;
 even a match cannot prove equal work, correct generation, or artifact validity.
+`sample.schema.json` describes the current exploratory arm-record structure; it
+is not the complete WP01 raw-evidence format and does not establish validity.
 The schedule records basic host and harness-Python metadata, including the
 harness executable's path and digest. It does not record environment variables,
 inspect arm interpreters, or establish machine limits. Paths and command arguments
