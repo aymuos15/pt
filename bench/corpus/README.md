@@ -80,9 +80,11 @@ uv run --locked --project bench/harness --python 3.12.12 python bench/harness/ma
 ```
 
 The check creates two disposable environments, installs the lock from local uv
-cache, and compares Python/distribution versions, interpreter bytes, and
-phase-probe occurrences. It verifies hashed distribution RECORD entries before
+cache, and compares Python/distribution versions, interpreter bytes, the current
+synthetic corpus smoke-suite outcomes, and phase-probe occurrences. It verifies hashed distribution RECORD entries before
 and after the probe, compares non-entrypoint file inventories, and lists unhashed
 entries and generated entrypoints excluded from cross-directory comparison.
 It deletes only its own temporary directory. It does not authenticate RECORD,
-check unlisted files, create an immutable snapshot, or qualify the full corpus.
+check unlisted files, create an immutable snapshot, or qualify a representative
+or holdout corpus. Any skipped or failed smoke test fails the materialization
+check rather than being silently omitted.

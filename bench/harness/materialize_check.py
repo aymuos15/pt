@@ -87,13 +87,23 @@ def materialize_and_probe(root: Path) -> dict:
             raise ValueError(f"probe {index}: unexpected occurrences or adverse outcomes")
         if identity["python"] != [3, 12, 12]:
             raise ValueError(f"probe {index}: unexpected Python version")
+        suite_run = subprocess.run(
+            [str(python), str(HARNESS / "corpus_smoke_suite.py")], cwd=root, env=base_env,
+            text=True, capture_output=True, timeout=120,
+        )
+        if suite_run.returncode != 0:
+            raise ValueError(f"environment {index}: corpus smoke suite failed: "
+                             f"{suite_run.stdout}\n{suite_run.stderr}")
+        suite = json.loads(suite_run.stdout)
+        if suite.get("status") != "passed" or not suite.get("outcomes"):
+            raise ValueError(f"environment {index}: corpus smoke suite incomplete")
         installed_after = json.loads(_run([str(python), str(HARNESS / "installed_inventory.py")],
                                           env=base_env, cwd=root).stdout)
         if installed != installed_after:
             raise ValueError(f"probe {index}: installed-file inventory changed during execution")
         observations.append({"identity": identity, "interpreter_sha256": interpreter_sha256,
                              "installed_file_check": installed,
-                             "exit_code": pytest.returncode,
+                             "exit_code": pytest.returncode, "corpus_smoke_suite": suite,
                              "occurrences": observed})
     if observations[0] != observations[1]:
         raise ValueError("clean environments produced different inventories or outcomes")
@@ -105,7 +115,7 @@ def materialize_and_probe(root: Path) -> dict:
             "confirmatory_eligible": False,
             "limitations": ["no immutable source or environment snapshot", "RECORD provenance not verified",
                             "unhashed and unlisted files not verified",
-                            "one synthetic probe", "no full corpus or platform qualification"]}
+                            "only current synthetic smoke cases", "no representative corpus or platform qualification"]}
 
 
 def main() -> int:
