@@ -37,6 +37,11 @@ Optional `--baseline-probe-guard-json` and `--candidate-probe-guard-json` also
 compare probe stdout to an explicit expected byte count and SHA-256; a mismatch
 skips the arm even if the probe exited zero. Guarded probes must expect exit zero.
 This is an observation check, not proof of equivalent starting state.
+`state_probe.py --root <directory> --file <relative-path> [...]` hashes explicit
+regular files, rejecting symlinks in listed paths and the root's final component.
+It emits deterministic JSON suitable for a probe guard, but does not inspect
+undeclared inputs, reject symlinks in ancestors of the supplied root, or provide
+an atomic snapshot. File names and even hashes may disclose sensitive information.
 If a preparation or measurement reports incomplete output drainage or an
 unreaped direct process, the runner preserves the arm record and aborts before
 starting later arms. Reaped direct processes and drained pipes still do not prove
