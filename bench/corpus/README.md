@@ -5,6 +5,15 @@ compatibility. They are initial material for WP02 and WP03. They have no frozen
 training, confirmatory, or holdout assignments; no environment locks or reset
 contracts have been established.
 
+`candidates.toml` is a shortlist of twelve external repositories with HEAD
+revisions observed through `git ls-remote` on the recorded date. The dimensions
+are workload hypotheses, not verified properties of those revisions. All
+eligibility decisions and training/confirmatory/holdout allocations remain
+unassessed. No repository has been installed or qualified by this shortlist.
+`candidate_inventory.py` checks the declarations offline; it does not re-fetch
+commits or validate artifact availability, licenses, workload coverage, or
+compatibility. Preserve exclusions and reasons when assessment begins.
+
 `manifest.toml` records draft file hashes and leaves all probes unassigned. The
 independent inventory checker verifies declared files only; it does not detect
 unlisted files, establish an immutable snapshot, or qualify probe behavior:

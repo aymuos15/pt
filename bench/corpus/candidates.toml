@@ -1,0 +1,115 @@
+schema_version = 1
+status = "unqualified_shortlist"
+observation_completed_at_utc = "2026-11-08T18:02:58Z"
+observation_method = "git ls-remote --symref <url> HEAD"
+
+# These are observed candidate revisions, not installability, workload, license,
+# semantic-compatibility, or benchmark-eligibility claims. All remain unassigned.
+
+[[candidates]]
+id = "python-attrs/attrs"
+url = "https://github.com/python-attrs/attrs.git"
+observed_head_ref = "refs/heads/main"
+revision = "9d9f94a043de7fc4012459853a4ed597a5577855"
+anticipated_dimensions = ["library", "object-model"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "pallets/click"
+url = "https://github.com/pallets/click.git"
+observed_head_ref = "refs/heads/main"
+revision = "8abb77a8432e03ed14a95f972b44f905279415a7"
+anticipated_dimensions = ["library", "command-line"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "textualize/rich"
+url = "https://github.com/Textualize/rich.git"
+observed_head_ref = "refs/heads/main"
+revision = "3a109ccdffe5b2d0e30684a304fbd388e99ce57b"
+anticipated_dimensions = ["library", "terminal-output"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "psf/requests"
+url = "https://github.com/psf/requests.git"
+observed_head_ref = "refs/heads/main"
+revision = "3c7baaa05ab4aa49cc819ce3a819d260de19c157"
+anticipated_dimensions = ["library", "http-client"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "encode/httpx"
+url = "https://github.com/encode/httpx.git"
+observed_head_ref = "refs/heads/master"
+revision = "b5addb64f0161ff6bfe94c124ef76f6a1fba5254"
+anticipated_dimensions = ["http-client", "async"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "pallets/flask"
+url = "https://github.com/pallets/flask.git"
+observed_head_ref = "refs/heads/main"
+revision = "49943b5a94413a530761350f04e896f76e8d620e"
+anticipated_dimensions = ["web", "application-framework"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "fastapi/fastapi"
+url = "https://github.com/fastapi/fastapi.git"
+observed_head_ref = "refs/heads/master"
+revision = "ba47d6d71b3e806900c8471f2f661781b8c43ec4"
+anticipated_dimensions = ["web", "async"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "django/django"
+url = "https://github.com/django/django.git"
+observed_head_ref = "refs/heads/main"
+revision = "a1f2b45ce5a327f42437bdb620a817839d0bd067"
+anticipated_dimensions = ["web", "database"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "sqlalchemy/sqlalchemy"
+url = "https://github.com/sqlalchemy/sqlalchemy.git"
+observed_head_ref = "refs/heads/main"
+revision = "cfc856e3e6b90fb477177d0bff68dcfb7dc08cd9"
+anticipated_dimensions = ["database", "native-extension"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "numpy/numpy"
+url = "https://github.com/numpy/numpy.git"
+observed_head_ref = "refs/heads/main"
+revision = "80049a0ec1e2be8e0c96725067a7c80d1a8e77f0"
+anticipated_dimensions = ["numerical", "native-extension"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "python-trio/trio"
+url = "https://github.com/python-trio/trio.git"
+observed_head_ref = "refs/heads/main"
+revision = "3cb6acd0d611b3c589e45a4d08a86327bb5b90d5"
+anticipated_dimensions = ["async", "concurrency"]
+eligibility = "unassessed"
+allocation = "unassigned"
+
+[[candidates]]
+id = "pytest-dev/pytest"
+url = "https://github.com/pytest-dev/pytest.git"
+observed_head_ref = "refs/heads/main"
+revision = "bc14038c406563b18a03e15453a10b9eee969e42"
+anticipated_dimensions = ["test-framework", "plugin-heavy"]
+eligibility = "unassessed"
+allocation = "unassigned"
