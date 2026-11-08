@@ -4,6 +4,8 @@ This is an independent command timer and supporting prototype. It does **not**
 qualify outcomes, compare work, capture resource totals, semantically validate campaign
 manifests, reset state, retain raw output, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
+Known-delay regression tests cover process startup, shutdown, and pipe drainage;
+they do not validate every product or campaign timing boundary.
 On POSIX, output is hashed and counted in bounded-memory chunks; it is not
 retained. Timeout cleanup kills the process group and bounds pipe drainage.
 Detached descendants may escape cleanup, and incomplete drainage is reported
