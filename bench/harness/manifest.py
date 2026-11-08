@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 import sys
 from typing import Any
@@ -42,6 +43,19 @@ class StrictLoader(yaml.SafeLoader):
         return result
 
 
+def _reject_nonfinite(value: Any) -> None:
+    """Reject YAML numeric values that cannot be represented in JSON records."""
+    pending = [value]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, float) and not math.isfinite(item):
+            raise ManifestError("non-finite numeric values are not permitted")
+        if isinstance(item, dict):
+            pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
+
+
 def check_structure(path: Path) -> dict[str, Any]:
     """Check syntax and JSON Schema structure, without validating real artifacts."""
     try:
@@ -50,9 +64,11 @@ def check_structure(path: Path) -> dict[str, Any]:
         if len(raw) > MAX_MANIFEST_BYTES:
             raise ManifestError("manifest exceeds size limit")
         data = yaml.load(raw.decode("utf-8"), Loader=StrictLoader)
+        _reject_nonfinite(data)
         schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
         jsonschema.Draft202012Validator.check_schema(schema)
-        errors = sorted(jsonschema.Draft202012Validator(schema).iter_errors(data),
+        validator = jsonschema.Draft202012Validator(schema)
+        errors = sorted(validator.iter_errors(data),
                         key=lambda error: list(map(str, error.absolute_path)))
     except (OSError, UnicodeError, RecursionError, yaml.YAMLError,
             json.JSONDecodeError, jsonschema.SchemaError) as exc:
@@ -61,7 +77,11 @@ def check_structure(path: Path) -> dict[str, Any]:
         error = errors[0]
         location = ".".join(map(str, error.absolute_path)) or "<root>"
         raise ManifestError(f"{location}: {error.message}")
+    hypothetical_frozen = dict(data, status="frozen")
+    freeze_errors = sorted({".".join(map(str, error.absolute_path)) or "<root>"
+                            for error in validator.iter_errors(hypothetical_frozen)})
     return {"structure": "valid", "declared_status": data["status"],
+            "frozen_structure_error_paths": freeze_errors,
             "confirmatory_eligible": False,
             "reason": "semantic, artifact, reset, eligibility and independence checks are not implemented"}
 

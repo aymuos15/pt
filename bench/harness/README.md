@@ -38,6 +38,8 @@ adequacy, or publication gates; calculated intervals are not release evidence.
 `manifest.py` checks YAML syntax and the supplied JSON Schema. Even a structurally
 valid frozen manifest is always reported ineligible for confirmation: artifact,
 reset, eligibility, independence, and other semantic checks are not implemented.
+For drafts it also lists paths that fail frozen-schema requirements; this is a
+structural preview, not verification of the referenced files or hashes.
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):
