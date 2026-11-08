@@ -13,8 +13,12 @@ capture still uses in-memory pipes and process-tree cleanup is not covered.
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not establish independent observations. `paired.py` can run those
 orders sequentially and preserve individual unqualified observations. It does
-not reset state or validate work; a zero exit from the paired driver means only
-that records were written, not that either command succeeded or was equivalent.
+not verify state or work. Optional per-arm `--baseline-prepare-json` and
+`--candidate-prepare-json` commands run before each arm, with separate timing
+and records; failed preparation prevents that arm from running. Preparation is
+not measured in the arm's elapsed time and is not proof of a valid reset. A zero
+exit from the paired driver means only that records were written, not that
+either command succeeded or was equivalent.
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
