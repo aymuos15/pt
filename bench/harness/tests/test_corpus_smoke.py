@@ -56,6 +56,36 @@ class CorpusSmokeTests(unittest.TestCase):
         self.assertIsNotNone(xpass)
         self.assertIn("XPASS(strict)", xpass.get("message", ""))
 
+    def test_dynamic_collection_and_fixture_lifetimes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            events = Path(directory) / "events.txt"
+            report = Path(directory) / "report.xml"
+            env = os.environ.copy()
+            env.pop("PYTEST_ADDOPTS", None)
+            env.pop("PYTEST_PLUGINS", None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PT_PROBE_EVENT_FILE"] = str(events)
+            base = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q",
+                    "-o", "disable_test_id_escaping_and_forfeit_all_rights_to_community_support=True",
+                    str(CORPUS / "lifecycle_cases.py")]
+            collected = subprocess.run(base + ["--collect-only"], cwd=directory, env=env,
+                                       capture_output=True, text=True, timeout=30)
+            self.assertEqual(collected.returncode, 0, collected.stdout + collected.stderr)
+            self.assertIn("test_lifecycle[α]", collected.stdout)
+            self.assertIn("test_lifecycle[β]", collected.stdout)
+            self.assertFalse(events.exists(), "collection must not execute fixtures")
+
+            run = subprocess.run(base + [f"--junitxml={report}"], cwd=directory, env=env,
+                                 capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            cases = ET.parse(report).getroot().findall(".//testcase")
+            self.assertEqual([case.get("name") for case in cases],
+                             ["test_lifecycle[α]", "test_lifecycle[β]"])
+            self.assertEqual(events.read_text().splitlines(), [
+                "session setup", "setup alpha", "call alpha", "teardown alpha",
+                "setup beta", "call beta", "teardown beta", "session teardown",
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()

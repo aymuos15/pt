@@ -22,3 +22,10 @@ The harness test suite includes a smoke check of these probes using pinned
 pytest, with external plugin autoload disabled for this controlled check. It
 inspects JUnit output and expected exits; it is not a detailed phase oracle,
 qualification of external plugins, or a benchmark baseline configuration.
+
+`probes/lifecycle_cases.py` uses collection-time parametrization with Unicode IDs
+and records session/function fixture setup, calls, and teardown to the path in
+`PT_PROBE_EVENT_FILE`. Its smoke check confirms collection does not execute
+fixtures and checks exact event order. Collection and execution are deliberately
+separate invocations **only for this corpus check**; a PT run must not add a
+hidden preflight collection invocation.
