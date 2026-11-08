@@ -120,6 +120,10 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
             for block in schedule) or schedule != paired_schedule(len(schedule), seed)):
         raise InspectionError("schedule order or block numbering is inconsistent")
     commands = {arm: plan.get(f"{arm}_argv") for arm in ("baseline", "candidate")}
+    arm_cwds = plan.get("arm_cwds", {"baseline": cwd, "candidate": cwd})
+    if (not isinstance(arm_cwds, dict) or set(arm_cwds) != set(commands)
+            or any(not isinstance(path, str) or not path for path in arm_cwds.values())):
+        raise InspectionError("invalid arm working-directory configuration")
     preparations = plan.get("preparation_argv")
     has_probe_configuration = "state_probe_argv" in plan
     probes = plan.get("state_probe_argv", {"baseline": None, "candidate": None})
@@ -253,7 +257,7 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
                 expected.add(prep_name)
                 prep_record = _read(directory / prep_name)
                 prep_result = _envelope(prep_record, number, position, arm)
-                _measurement(prep_result, prep_command, cwd)
+                _measurement(prep_result, prep_command, arm_cwds[arm])
                 check_raw(prep_result)
                 check_interval(prep_result)
                 prep_ok = (prep_result["status"] == "exited_unqualified"
@@ -271,7 +275,7 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
                 expected.add(probe_name)
                 probe_record = _read(directory / probe_name)
                 probe_result = _envelope(probe_record, number, position, arm)
-                _measurement(probe_result, probe_command, cwd)
+                _measurement(probe_result, probe_command, arm_cwds[arm])
                 check_raw(probe_result)
                 check_interval(probe_result)
                 probe_ok = probe_result["status"] == "exited_unqualified" and probe_result["returncode"] == 0
@@ -298,7 +302,7 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
                 if result.get("status") != "not_run_probe_failed":
                     raise InspectionError("work ran after unsuccessful state probe")
             else:
-                _measurement(result, commands[arm], cwd)
+                _measurement(result, commands[arm], arm_cwds[arm])
                 check_raw(result)
                 check_interval(result)
             expectation = guard_expectations[arm]

@@ -23,6 +23,9 @@ and records; failed preparation prevents that arm from running. Preparation is
 not measured in the arm's elapsed time and is not proof of a valid reset. A zero
 exit from the paired driver means only that records were written, not that
 either command succeeded or was equivalent.
+Optional `--baseline-cwd` and `--candidate-cwd` choose separate working
+directories for each arm's preparation, probe, and measurement; otherwise both
+use `--cwd`. Separate paths do not prove isolated or equivalent input states.
 Optional `--baseline-probe-json` and `--candidate-probe-json` commands run after
 successful preparation and before the corresponding measurement. Their output
 hashes and statuses are recorded separately; nonzero exits or timeouts skip the

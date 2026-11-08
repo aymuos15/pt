@@ -48,6 +48,8 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
               candidate_probe_guard: dict[str, Any] | None = None,
               baseline_guard: dict[str, Any] | None = None,
               candidate_guard: dict[str, Any] | None = None,
+              baseline_cwd: Path | None = None,
+              candidate_cwd: Path | None = None,
               capture_raw: bool = False, raw_limit_bytes: int = 10 * 1024 * 1024) -> None:
     """Run both arms in each ordered block and publish unqualified observations.
 
@@ -88,6 +90,12 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     cwd = cwd.resolve(strict=True)
     if not cwd.is_dir():
         raise ValueError("cwd must be a directory")
+    arm_cwds = {
+        "baseline": baseline_cwd.resolve(strict=True) if baseline_cwd is not None else cwd,
+        "candidate": candidate_cwd.resolve(strict=True) if candidate_cwd is not None else cwd,
+    }
+    if not all(path.is_dir() for path in arm_cwds.values()):
+        raise ValueError("each arm cwd must be a directory")
     output.mkdir()  # Exclusive: never write into an existing campaign directory.
     bundle = output / "blobs" if capture_raw else None
     if bundle is not None:
@@ -106,10 +114,12 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     if capture_raw:
         plan["raw_capture"] = {"enabled": True, "limit_per_stream_bytes": raw_limit_bytes,
                                "bundle_directory": "blobs"}
+    if baseline_cwd is not None or candidate_cwd is not None:
+        plan["arm_cwds"] = {arm: str(path) for arm, path in arm_cwds.items()}
     write_record(str(output / "schedule.json"), plan)
 
-    def measure_stage(command):
-        return measure(command, str(cwd), timeout, raw_bundle=bundle, raw_limit_bytes=raw_limit_bytes)
+    def measure_stage(command, arm):
+        return measure(command, str(arm_cwds[arm]), timeout, raw_bundle=bundle, raw_limit_bytes=raw_limit_bytes)
 
     commands = {"baseline": baseline, "candidate": candidate}
     for block in schedule:
@@ -119,7 +129,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
             probe_verdict = None
             try:
                 if preparations[arm] is not None:
-                    preparation = measure_stage(preparations[arm])
+                    preparation = measure_stage(preparations[arm], arm)
                     write_record(str(output / f"preparation-{block['block']:06d}-{arm}.json"), {
                         "schema_version": 1, "mode": "exploratory_unqualified",
                         "block": block["block"], "position": position, "arm": arm,
@@ -127,7 +137,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                     })
                 preparation_ok = preparation is None or _successful(preparation)
                 if preparation_ok and probes[arm] is not None:
-                    probe = measure_stage(probes[arm])
+                    probe = measure_stage(probes[arm], arm)
                     probe_record = {
                         "schema_version": 1, "mode": "exploratory_unqualified",
                         "block": block["block"], "position": position, "arm": arm,
@@ -144,7 +154,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                                               not probe_verdict["matched_expected_observations"])):
                     result = {"status": "not_run_probe_failed"}
                 else:
-                    result = measure_stage(commands[arm])
+                    result = measure_stage(commands[arm], arm)
             except (OSError, ValueError) as exc:
                 # Preserve the interruption and stop rather than silently resume
                 # after an unexpected harness failure.
@@ -175,6 +185,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--cwd", type=Path, required=True)
+    parser.add_argument("--baseline-cwd", type=Path, help="optional baseline working directory")
+    parser.add_argument("--candidate-cwd", type=Path, help="optional candidate working directory")
     parser.add_argument("--baseline-json", required=True, help="command argv as a JSON array")
     parser.add_argument("--candidate-json", required=True, help="command argv as a JSON array")
     parser.add_argument("--baseline-prepare-json", help="optional preparation argv as JSON")
@@ -211,6 +223,7 @@ def main() -> int:
                                   if args.baseline_guard_json is not None else None),
                   candidate_guard=(validate_expectations(json.loads(args.candidate_guard_json))
                                    if args.candidate_guard_json is not None else None),
+                  baseline_cwd=args.baseline_cwd, candidate_cwd=args.candidate_cwd,
                   capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes)
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")

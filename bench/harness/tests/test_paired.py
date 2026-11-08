@@ -16,7 +16,7 @@ class ExploratoryPairsTests(unittest.TestCase):
                baseline_prepare=None, candidate_prepare=None,
                baseline_probe=None, candidate_probe=None, baseline_probe_guard=None,
                candidate_probe_guard=None, baseline_guard=None, candidate_guard=None,
-               capture_raw=False, raw_limit=100):
+               baseline_cwd=None, candidate_cwd=None, capture_raw=False, raw_limit=100):
         args = [
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
             "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
@@ -38,6 +38,10 @@ class ExploratoryPairsTests(unittest.TestCase):
             args += ["--baseline-guard-json", json.dumps(baseline_guard)]
         if candidate_guard is not None:
             args += ["--candidate-guard-json", json.dumps(candidate_guard)]
+        if baseline_cwd is not None:
+            args += ["--baseline-cwd", str(baseline_cwd)]
+        if candidate_cwd is not None:
+            args += ["--candidate-cwd", str(candidate_cwd)]
         if capture_raw:
             args += ["--capture-raw", "--raw-limit-bytes", str(raw_limit)]
         return subprocess.run(args, capture_output=True, text=True, timeout=15)
@@ -80,6 +84,51 @@ class ExploratoryPairsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "run"
             result = self.invoke(output, [], [sys.executable, "-c", "pass"])
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(output.exists())
+
+    def test_per_arm_working_directories_cover_all_stages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "run"
+            baseline_dir, candidate_dir = root / "baseline", root / "candidate"
+            baseline_dir.mkdir()
+            candidate_dir.mkdir()
+            for target, value in ((baseline_dir, "base"), (candidate_dir, "candidate")):
+                (target / "identity").write_text(value)
+
+            def command(expected):
+                return [sys.executable, "-c",
+                        f"from pathlib import Path; assert Path('identity').read_text() == {expected!r}"]
+
+            result = self.invoke(output, command("base"), command("candidate"), blocks=1,
+                                 baseline_cwd=baseline_dir, candidate_cwd=candidate_dir,
+                                 baseline_prepare=command("base"), candidate_prepare=command("candidate"),
+                                 baseline_probe=command("base"), candidate_probe=command("candidate"))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            plan = json.loads((output / "schedule.json").read_text())
+            for arm, target in (("baseline", baseline_dir), ("candidate", candidate_dir)):
+                self.assertEqual(plan["arm_cwds"][arm], str(target.resolve()))
+                for prefix in ("preparation", "probe", "block"):
+                    record = json.loads((output / f"{prefix}-000001-{arm}.json").read_text())
+                    self.assertEqual(record["result"]["cwd"], str(target.resolve()))
+                    self.assertEqual(record["result"]["returncode"], 0)
+            inspect = [sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)]
+            inspection = subprocess.run(inspect, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 0, inspection.stderr)
+            baseline_path = output / "preparation-000001-baseline.json"
+            record = json.loads(baseline_path.read_text())
+            record["result"]["cwd"] = str(candidate_dir.resolve())
+            baseline_path.write_text(json.dumps(record))
+            inspection = subprocess.run(inspect, capture_output=True, text=True, timeout=15)
+            self.assertEqual(inspection.returncode, 2)
+
+    def test_missing_arm_working_directory_does_not_create_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "run"
+            command = [sys.executable, "-c", "pass"]
+            result = self.invoke(output, command, command, blocks=1, baseline_cwd=root / "missing")
             self.assertEqual(result.returncode, 2)
             self.assertFalse(output.exists())
 
