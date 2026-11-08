@@ -6,10 +6,10 @@ pytest's semantics. Correctness and independent measurement come before speed.
 
 ## Status
 
-This repository contains the initial handoff only. There is **no runner,
-benchmark harness, support matrix, or measured performance claim yet**. The
+The project is in early development. There is **no PT runner, qualified support
+profile, complete benchmark harness, or measured performance claim yet**. The
 specification is a design proposal, not evidence of implementation or support.
-Its example commands are proposed interfaces and cannot be run yet.
+Its example PT commands are proposed interfaces and cannot be run yet.
 
 ## Start here
 
@@ -18,6 +18,11 @@ Its example commands are proposed interfaces and cannot be run yet.
 - [Agent instructions](AGENTS.md): repository-wide working rules.
 - [First task](docs/first-agent-task.md): the initial WP00 assignment.
 - [Execution contracts](docs/contracts.md): the first, unreviewed WP00 draft.
+- [Proposed support matrix](support-matrix.toml), [protocol](docs/protocol-draft.md),
+  [threat model](docs/threat-model.md), [benchmark charter](docs/benchmark-charter.md),
+  and [architecture decisions](docs/adr/README.md): unreviewed WP00 drafts.
+- [Exploratory harness prototype](bench/harness/README.md) and
+  [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
 - [Benchmark review checklist](docs/benchmark-review-checklist.md): review
   criteria, all initially unreviewed.
 - [Campaign template](bench/benchmark-campaign.template.yaml) and
@@ -26,11 +31,11 @@ Its example commands are proposed interfaces and cannot be run yet.
 
 ## Development setup
 
-Git is sufficient to read and review the handoff. Rust, Python, pytest, and
-other versions are **not yet pinned**: WP00 must decide the initial support
-matrix before an implementation environment and CI are established. No build
-or test commands are available yet. Subsequent work should document reproducible
-setup and checks alongside the code that introduces them.
+Git is sufficient to read and review the handoff. The support matrix proposes
+CPython 3.12.12 and pytest 8.4.2 on Linux x86-64, but no profile is qualified
+and no reproducible implementation environment or CI is established yet.
+The harness prototype has standard-library tests; see its README. Subsequent
+work must document reproducible setup and checks alongside the code.
 
 ## Initial sequence
 
