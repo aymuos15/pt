@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -165,6 +166,39 @@ class CorpusSmokeTests(unittest.TestCase):
                 reports[label] = json.loads(output.read_text())
             self.assertEqual(reports["module"], {"cwd_in_sys_path": True, "first_path_is_cwd": True})
             self.assertEqual(reports["console"], {"cwd_in_sys_path": False, "first_path_is_cwd": False})
+
+    def test_dynamic_fixture_override_and_autouse_lifecycle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "test_fixture_lookup.py"
+            shutil.copyfile(CORPUS / "fixture_lookup_cases.py", source)
+            (root / "conftest.py").write_text(
+                "import os\nfrom pathlib import Path\nimport pytest\n"
+                "def record(event):\n"
+                "    with Path(os.environ['PT_PROBE_FIXTURE_EVENTS']).open('a', encoding='utf-8') as f:\n"
+                "        f.write(event + '\\n')\n"
+                "@pytest.fixture\ndef target():\n"
+                "    record('base setup')\n    yield 'base'\n    record('base teardown')\n"
+            )
+            events = root / "events.txt"
+            report = root / "report.xml"
+            env = os.environ.copy()
+            env.pop("PYTEST_ADDOPTS", None)
+            env.pop("PYTEST_PLUGINS", None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PT_PROBE_FIXTURE_EVENTS"] = str(events)
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q", str(source),
+                 f"--junitxml={report}"], cwd=root, env=env, capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            cases = ET.parse(report).getroot().findall(".//testcase")
+            self.assertEqual([case.get("name") for case in cases], ["test_dynamic_fixture_lookup"])
+            self.assertEqual(len(cases[0]), 0)
+            self.assertEqual(events.read_text().splitlines(), [
+                "autouse setup", "base setup", "override setup", "call base-override",
+                "override teardown", "base teardown", "autouse teardown",
+            ])
 
 
 if __name__ == "__main__":

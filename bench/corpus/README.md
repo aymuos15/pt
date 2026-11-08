@@ -61,6 +61,11 @@ plugin autoload disabled and an otherwise empty temporary working directory.
 It checks the observed distinction on this profile; it does not claim all
 plugins or environments behave identically.
 
+`probes/fixture_lookup_cases.py` is copied into a temporary project with a
+test-owned `conftest.py`. Its smoke check exercises dynamic fixture lookup,
+autouse fixtures, an overridden fixture, and the exact setup/teardown sequence.
+The temporary project is a synthetic probe, not full pytest conformance evidence.
+
 For an optional offline local reproducibility smoke check, first populate uv's
 cache with the documented locked setup, then run:
 
