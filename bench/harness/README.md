@@ -10,6 +10,9 @@ descendants and non-POSIX process trees are not covered.
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not run them or establish independent observations.
+`analysis.py` implements only the paired geometric point estimator for
+caller-qualified samples; it rejects invalid or incomplete blocks but cannot
+verify qualification, independence, confidence intervals, or publication gates.
 
 Run tests from the repository root:
 
