@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
@@ -73,6 +74,15 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
     code = result.get("returncode")
     if code is not None and type(code) is not int:
         raise InspectionError("invalid return code")
+    if result["process_reaped"] != (code is not None):
+        raise InspectionError("process-reaped and return-code fields conflict")
+    for stream in ("stdout", "stderr"):
+        size = result.get(f"{stream}_bytes")
+        digest = result.get(f"{stream}_sha256")
+        if type(size) is not int or size < 0:
+            raise InspectionError(f"invalid {stream} byte count")
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            raise InspectionError(f"invalid {stream} digest")
     if status == "exited_unqualified" and (code is None or not result["process_reaped"]
                                             or not result["output_complete"]):
         raise InspectionError("exited measurement has incomplete cleanup")

@@ -22,7 +22,7 @@ not measured in the arm's elapsed time and is not proof of a valid reset. A zero
 exit from the paired driver means only that records were written, not that
 either command succeeded or was equivalent.
 `inspect_run.py <run-directory>` checks planned block order, record presence,
-arm identities, and preparation/result consistency. It cannot authenticate
+arm identities, output metadata shape, and preparation/result consistency. It cannot authenticate
 records, verify unobserved work or state, or qualify a benchmark; it rejects
 partial runs and unexpected files rather than silently excluding them.
 `guards.py` compares a timer result to an expected exit and stdout sentinel;

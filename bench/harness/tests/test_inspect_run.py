@@ -76,6 +76,22 @@ class InspectRunTests(unittest.TestCase):
             with self.subTest(mutation=mutation):
                 self.assertEqual(self.inspect().returncode, 2)
 
+    def test_malformed_output_and_reaping_fields_fail(self):
+        self.make_run()
+        path = self.run_dir / "block-000001-baseline.json"
+        original = json.loads(path.read_text())
+        mutations = [
+            ("stdout_bytes", -1), ("stdout_bytes", True), ("stderr_bytes", None),
+            ("stdout_sha256", "not-a-digest"), ("stderr_sha256", "A" * 64),
+            ("returncode", None), ("process_reaped", False),
+        ]
+        for field, value in mutations:
+            data = json.loads(json.dumps(original))
+            data["result"][field] = value
+            path.write_text(json.dumps(data))
+            with self.subTest(field=field, value=value):
+                self.assertEqual(self.inspect().returncode, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
