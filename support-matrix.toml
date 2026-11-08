@@ -1,0 +1,18 @@
+schema_version = 1
+status = "proposed-unqualified"
+policy = "No profile is supported until its conformance evidence is reviewed."
+
+[[profile]]
+id = "linux-x86_64-cpython312-pytest842"
+status = "proposed"
+os = "linux"
+architecture = "x86_64"
+interpreter = "CPython 3.12.12 (GIL-enabled)"
+pytest = "8.4.2"
+backend = "serial real pytest"
+invocation_profiles = ["python -m pytest", "pytest console entrypoint"]
+evidence = "none"
+
+[unsupported]
+default = "Report unsupported or require explicit passthrough; do not claim conformance."
+examples = ["Other versions and operating systems pending qualification", "Free-threaded Python", "Alternative Python implementations"]
