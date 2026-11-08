@@ -1,0 +1,94 @@
+# PT benchmark campaign template — NOT AN EXECUTABLE BENCHMARK
+# Status: draft. No revisions, hashes, durations, or outcomes have been measured.
+# Fill every required pin and policy from real artifacts, then validate and freeze.
+# The JSON Schema validates structure; the harness must also validate semantics,
+# artifact contents, cache-reset evidence, eligibility, and dependency assumptions.
+# Do not change status to frozen merely to bypass review.
+schema_version: 1
+status: draft
+campaign_id: null
+hypothesis: Equal-work serial overhead stays within the agreed budget.
+claim_family: equal_work
+primary_endpoint: request_to_complete_valid_result
+candidate:
+  kind: pt
+  revision: null
+  binary_sha256: null
+  environment_lock_sha256: null
+  interpreter_sha256: null
+  argv: null
+  cwd: null
+  reset_script_sha256: null
+  state_probe_sha256: null
+baseline:
+  kind: pytest_console
+  revision: null
+  binary_sha256: null
+  environment_lock_sha256: null
+  interpreter_sha256: null
+  argv: null
+  cwd: null
+  reset_script_sha256: null
+  state_probe_sha256: null
+scenario:
+  id: serial-full-first-run-warm-fs
+  repository: null
+  source_revision: null
+  scope: full
+  contract_id: serial-pytest-v1
+  workers: 1
+  cache_state:
+    coordinator: absent
+    framework_seed: absent
+    pt_metadata: absent
+    python_bytecode: valid
+    filesystem_cache: warm-procedure
+    application_service: absent
+    dependency_observations: absent
+    source: unchanged
+  generation_assurance: immutable_snapshot
+  coverage: none
+  coverage_config_sha256: null
+  expected_inventory_sha256: null
+  expected_outcome_artifact_sha256: null
+  expected_exit_code: 0
+  output_profile: null
+  reset_policy_document_sha256: null
+  snapshot_cost_inside_timer: true
+machine:
+  profile_sha256: null
+  cpu_budget: 1
+  memory_budget_bytes: null
+  native_library_threads: 1
+  accounting_scope: all_owned_processes_and_persistent_services
+  memory_metric: null
+experiment:
+  paired_blocks: 30
+  minimum_time_windows: 3
+  order: balanced_randomized
+  random_seed: 42017
+  sample_unit: complete_invocation
+  analysis_unit: independent_paired_block
+  warmup_policy: declared_state_preparation_only
+  timeout_seconds: null
+  exclusion_policy_sha256: null
+  pilot_report_sha256: null
+  fixed_sample_count_before_confirmation: true
+analysis:
+  primary_estimator: exp_mean_paired_log_ratio
+  ratio_direction: baseline_over_candidate
+  confidence_level: 0.95
+  resampling_unit: independent_paired_block
+  bootstrap_resamples: 10000
+  bootstrap_seed: 42018
+  dependence_review_required: true
+  practical_relative_gain: 0.05
+  practical_absolute_gain_seconds: null
+  multiplicity_policy: one_primary_endpoint_secondary_cells_exploratory
+  analysis_code_sha256: null
+publication:
+  require_correctness_qualification: true
+  preserve_failed_and_excluded_samples: true
+  publish_eligible_and_total_denominators: true
+  include_idle_memory_and_session_cost: true
+  allow_confirmatory_with_unresolved_fields: false
