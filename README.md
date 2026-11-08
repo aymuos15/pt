@@ -22,6 +22,8 @@ Its example PT commands are proposed interfaces and cannot be run yet.
   [threat model](docs/threat-model.md), [benchmark charter](docs/benchmark-charter.md),
   and [architecture decisions](docs/adr/README.md): unreviewed WP00 drafts.
 - [WP00 review register](docs/wp00-review.md): outstanding decisions and evidence.
+- [Development environment](docs/development.md): provisional toolchain pins
+  and reproducible prototype checks.
 - [Invariant review map](docs/invariant-review.md): adverse evidence still
   required for C01–C12.
 - [Capability policy](docs/capability-policy.md): proposed transformation

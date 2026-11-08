@@ -52,9 +52,9 @@ Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):
 
 ```sh
-uv sync --locked --project bench/harness
-uv run --locked --project bench/harness python -m unittest discover -s bench/harness/tests -v
-uv run --locked --project bench/harness python bench/harness/manifest.py bench/benchmark-campaign.template.yaml
+uv sync --locked --project bench/harness --python 3.12.12
+uv run --locked --project bench/harness --python 3.12.12 python -m unittest discover -s bench/harness/tests -v
+uv run --locked --project bench/harness --python 3.12.12 python bench/harness/manifest.py bench/benchmark-campaign.template.yaml
 ```
 
 Example exploratory observation (write output outside the repository):
