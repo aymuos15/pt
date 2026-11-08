@@ -86,6 +86,31 @@ class CorpusSmokeTests(unittest.TestCase):
                 "setup beta", "call beta", "teardown beta", "session teardown",
             ])
 
+    def test_import_probe_detects_extra_collection_session(self):
+        with tempfile.TemporaryDirectory() as directory:
+            events = Path(directory) / "imports.txt"
+            env = os.environ.copy()
+            env.pop("PYTEST_ADDOPTS", None)
+            env.pop("PYTEST_PLUGINS", None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PT_PROBE_IMPORT_EVENTS"] = str(events)
+            command = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q",
+                       str(CORPUS / "import_effect_cases.py")]
+
+            def invoke(extra):
+                result = subprocess.run(command + extra, cwd=directory, env=env,
+                                        capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+            invoke([])
+            self.assertEqual(events.read_text().splitlines(), ["module import", "test call"])
+            # Negative control: a separate preflight collection visibly adds an import.
+            invoke(["--collect-only"])
+            invoke([])
+            self.assertEqual(events.read_text().splitlines(), [
+                "module import", "test call", "module import", "module import", "test call",
+            ])
+
 
 if __name__ == "__main__":
     unittest.main()

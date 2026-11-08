@@ -37,3 +37,8 @@ and records session/function fixture setup, calls, and teardown to the path in
 fixtures and checks exact event order. Collection and execution are deliberately
 separate invocations **only for this corpus check**; a PT run must not add a
 hidden preflight collection invocation.
+
+`probes/import_effect_cases.py` appends an import sentinel and a test-call
+sentinel to `PT_PROBE_IMPORT_EVENTS`. Its smoke check includes a negative control
+showing that separate collection and execution cause an additional import. This
+validates the probe against pytest, not PT's future same-session behavior.

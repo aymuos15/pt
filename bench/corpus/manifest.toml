@@ -10,6 +10,13 @@ expected_exit_code = 0
 allocation = "unassigned"
 
 [[probes]]
+id = "import-side-effect"
+path = "probes/import_effect_cases.py"
+sha256 = "de2f61bc7853d6d06bc6eac9d5b444a147c2ed1b79234c1cfb5addb6f3dac920"
+expected_exit_code = 0
+allocation = "unassigned"
+
+[[probes]]
 id = "phase-failures"
 path = "probes/phase_cases.py"
 sha256 = "98214288d20267be234e4e9e27c87e0295534cb6db11814c70a902e890444199"
