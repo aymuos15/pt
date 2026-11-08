@@ -8,11 +8,72 @@ import json
 import math
 import os
 from pathlib import Path
+import selectors
 import signal
 import subprocess
 import tempfile
 import time
 from typing import Any, Sequence
+
+
+def _stream_posix(process: subprocess.Popen, timeout: float) -> dict[str, Any]:
+    """Drain both pipes without retaining output, with bounded timeout cleanup."""
+    deadline = time.monotonic() + timeout
+    cleanup_deadline = None
+    timed_out = False
+    complete = True
+    digests = {name: hashlib.sha256() for name in ("stdout", "stderr")}
+    sizes = {name: 0 for name in digests}
+    with selectors.DefaultSelector() as selector:
+        for name in digests:
+            stream = getattr(process, name)
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, name)
+        try:
+            while selector.get_map() or process.poll() is None:
+                now = time.monotonic()
+                if not timed_out and now >= deadline:
+                    timed_out = True
+                    cleanup_deadline = now + 1.0
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                if timed_out and now >= cleanup_deadline:
+                    complete = False
+                    break
+                limit = cleanup_deadline if timed_out else deadline
+                if not selector.get_map():
+                    try:
+                        process.wait(timeout=max(0, limit - now))
+                    except subprocess.TimeoutExpired:
+                        pass
+                    continue
+                for key, _ in selector.select(timeout=max(0, limit - now)):
+                    try:
+                        chunk = os.read(key.fileobj.fileno(), 65536)
+                    except BlockingIOError:
+                        continue
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        key.fileobj.close()
+                    else:
+                        digests[key.data].update(chunk)
+                        sizes[key.data] += len(chunk)
+        finally:
+            for key in list(selector.get_map().values()):
+                selector.unregister(key.fileobj)
+                key.fileobj.close()
+        # Even when descendant-held pipes outlive the deadline, reap the leader
+        # if it has exited; a closed pipe is not itself proof of process exit.
+        process.poll()
+    return {
+        "timed_out": timed_out, "output_complete": complete,
+        "process_reaped": process.returncode is not None,
+        "stdout_bytes": sizes["stdout"], "stderr_bytes": sizes["stderr"],
+        "stdout_sha256": digests["stdout"].hexdigest(),
+        "stderr_sha256": digests["stderr"].hexdigest(),
+    }
 
 
 def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
@@ -37,28 +98,32 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
             "cwd": str(cwd_path), "elapsed_ns": time.monotonic_ns() - start,
         }
 
-    timed_out = False
-    try:
-        stdout, stderr = process.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        if os.name == "posix":
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        else:
+    if os.name == "posix":
+        output = _stream_posix(process, timeout)
+    else:
+        # The original prototype path does not provide bounded memory or
+        # process-tree cleanup on non-POSIX systems.
+        timed_out = False
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed_out = True
             process.kill()
-        stdout, stderr = process.communicate()
+            stdout, stderr = process.communicate()
+        output = {
+            "timed_out": timed_out, "output_complete": True,
+            "process_reaped": process.returncode is not None,
+            "stdout_bytes": len(stdout), "stderr_bytes": len(stderr),
+            "stdout_sha256": hashlib.sha256(stdout).hexdigest(),
+            "stderr_sha256": hashlib.sha256(stderr).hexdigest(),
+        }
 
     return {
-        "status": "timeout" if timed_out else "exited_unqualified",
+        "status": "timeout" if output.pop("timed_out") else "exited_unqualified",
         "argv": list(argv), "cwd": str(cwd_path),
         "elapsed_ns": time.monotonic_ns() - start,
         "returncode": process.returncode,
-        "stdout_bytes": len(stdout), "stderr_bytes": len(stderr),
-        "stdout_sha256": hashlib.sha256(stdout).hexdigest(),
-        "stderr_sha256": hashlib.sha256(stderr).hexdigest(),
+        **output,
     }
 
 

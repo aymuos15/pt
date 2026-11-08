@@ -1,5 +1,7 @@
 import importlib.util
+import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -38,6 +40,30 @@ class MeasureTests(unittest.TestCase):
         result = pt_bench.measure([sys.executable, "-c", "import time; time.sleep(5)"], ".", 0.1)
         self.assertEqual(result["status"], "timeout")
         self.assertIsNotNone(result["returncode"])
+
+    @unittest.skipUnless(os.name == "posix", "POSIX streaming implementation")
+    def test_large_output_is_streamed_with_exact_hashes(self):
+        program = "import os; os.write(1, b'a' * 2000000); os.write(2, b'b' * 1000000)"
+        result = pt_bench.measure([sys.executable, "-c", program], ".", 5)
+        self.assertTrue(result["output_complete"])
+        self.assertEqual(result["stdout_bytes"], 2000000)
+        self.assertEqual(result["stderr_bytes"], 1000000)
+        self.assertEqual(result["stdout_sha256"], hashlib.sha256(b"a" * 2000000).hexdigest())
+        self.assertEqual(result["stderr_sha256"], hashlib.sha256(b"b" * 1000000).hexdigest())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX process groups")
+    def test_detached_pipe_holder_cannot_block_timeout_cleanup(self):
+        program = (
+            "import subprocess, sys; "
+            "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(1.6)'], "
+            "start_new_session=True)"
+        )
+        result = pt_bench.measure([sys.executable, "-c", program], ".", 0.2)
+        self.assertEqual(result["status"], "timeout")
+        self.assertFalse(result["output_complete"])
+        self.assertTrue(result["process_reaped"])
+        self.assertEqual(result["returncode"], 0)
+        self.assertLess(result["elapsed_ns"], 1_500_000_000)
 
     def test_missing_executable_is_recorded(self):
         result = pt_bench.measure(["/nonexistent/pt-bench-executable"], ".", 1)

@@ -4,9 +4,11 @@ This is an independent command timer and supporting prototype. It does **not**
 qualify outcomes, compare work, capture resource totals, semantically validate campaign
 manifests, reset state, execute paired blocks, retain raw output, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
-The current capture uses in-memory pipes and is unsuitable for output-heavy or
-untrusted commands. Timeout cleanup uses a POSIX process group; escaped
-descendants and non-POSIX process trees are not covered.
+On POSIX, output is hashed and counted in bounded-memory chunks; it is not
+retained. Timeout cleanup kills the process group and bounds pipe drainage.
+Detached descendants may escape cleanup, and incomplete drainage is reported
+as `output_complete: false`; the timer is not a sandbox. On non-POSIX systems
+capture still uses in-memory pipes and process-tree cleanup is not covered.
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not run them or establish independent observations.
