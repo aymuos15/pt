@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -60,6 +61,20 @@ class JUnitInventoryTests(unittest.TestCase):
             self.assertFalse(report["matched"])
             self.assertFalse(report["confirmatory_eligible"])
             self.assertEqual(report["first"]["occurrences"], report["second"]["occurrences"])
+
+    def test_committed_attrs_normalization_is_self_consistent(self):
+        path = (Path(__file__).resolve().parents[2] / "corpus" / "assessments" /
+                "attrs-9d9f94a-junit-normalized.json")
+        raw = path.read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         "ef92e0548b603c94380cb62e0cbbd824a44dfc7d6b9aa91d00a954fe33b105db")
+        result = json.loads(raw)
+        canonical = json.dumps(result["records"], ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+        self.assertEqual(result["occurrences"], len(result["records"]))
+        self.assertEqual(result["occurrences"], 1412)
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(), result["ordered_inventory_sha256"])
+        self.assertEqual(result["mode"], "limited_junit_observation")
+
 
 if __name__ == "__main__":
     unittest.main()

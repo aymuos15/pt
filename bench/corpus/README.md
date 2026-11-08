@@ -13,6 +13,10 @@ unassessed. No repository has been installed or qualified by this shortlist.
 `candidate_inventory.py` checks the declarations offline; it does not re-fetch
 commits or validate artifact availability, licenses, workload coverage, or
 compatibility. Preserve exclusions and reasons when assessment begins.
+The first local feasibility assessment is
+[`assessments/attrs-9d9f94a.md`](assessments/attrs-9d9f94a.md); it identifies a
+pytest-version conflict and does not qualify the candidate for the proposed PT
+profile.
 
 `manifest.toml` records draft file hashes and leaves all probes unassigned. The
 independent inventory checker verifies declared files only; it does not detect
