@@ -31,6 +31,7 @@ class ExploratoryPairsTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             schedule = json.loads((output / "schedule.json").read_text())
             self.assertEqual(schedule["mode"], "exploratory_unqualified")
+            self.assertEqual(schedule["host_metadata"]["status"], "incomplete_unqualified")
             self.assertEqual(len(schedule["schedule"]), 2)
             samples = [json.loads(path.read_text()) for path in output.glob("block-*.json")]
             self.assertEqual(len(samples), 4)

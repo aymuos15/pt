@@ -10,6 +10,7 @@ from typing import Any
 
 from pt_bench import measure, write_record
 from schedule import paired_schedule
+from metadata import collect_metadata
 
 
 def _command(value: Any) -> list[str]:
@@ -47,6 +48,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "cwd": str(cwd), "timeout_seconds": timeout, "schedule": schedule,
         "baseline_argv": baseline, "candidate_argv": candidate,
         "preparation_argv": preparations,
+        "host_metadata": collect_metadata(),
         "limitations": ["state not verified", "no work validation", "no confirmatory eligibility"],
     })
     commands = {"baseline": baseline, "candidate": candidate}

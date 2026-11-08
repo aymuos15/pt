@@ -19,6 +19,10 @@ and records; failed preparation prevents that arm from running. Preparation is
 not measured in the arm's elapsed time and is not proof of a valid reset. A zero
 exit from the paired driver means only that records were written, not that
 either command succeeded or was equivalent.
+The schedule records basic host and harness-Python metadata, including the
+harness executable's path and digest. It does not record environment variables,
+inspect arm interpreters, or establish machine limits. Paths and command arguments
+may contain sensitive information; review records before sharing.
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
