@@ -21,6 +21,10 @@ and records; failed preparation prevents that arm from running. Preparation is
 not measured in the arm's elapsed time and is not proof of a valid reset. A zero
 exit from the paired driver means only that records were written, not that
 either command succeeded or was equivalent.
+`inspect_run.py <run-directory>` checks planned block order, record presence,
+arm identities, and preparation/result consistency. It cannot authenticate
+records, verify unobserved work or state, or qualify a benchmark; it rejects
+partial runs and unexpected files rather than silently excluding them.
 The schedule records basic host and harness-Python metadata, including the
 harness executable's path and digest. It does not record environment variables,
 inspect arm interpreters, or establish machine limits. Paths and command arguments
