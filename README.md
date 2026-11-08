@@ -21,6 +21,7 @@ Its example PT commands are proposed interfaces and cannot be run yet.
 - [Proposed support matrix](support-matrix.toml), [protocol](docs/protocol-draft.md),
   [threat model](docs/threat-model.md), [benchmark charter](docs/benchmark-charter.md),
   and [architecture decisions](docs/adr/README.md): unreviewed WP00 drafts.
+- [WP00 review register](docs/wp00-review.md): outstanding decisions and evidence.
 - [Exploratory harness prototype](bench/harness/README.md) and
   [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
 - [Benchmark review checklist](docs/benchmark-review-checklist.md): review
