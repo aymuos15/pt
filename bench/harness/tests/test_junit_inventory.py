@@ -75,6 +75,22 @@ class JUnitInventoryTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(canonical).hexdigest(), result["ordered_inventory_sha256"])
         self.assertEqual(result["mode"], "limited_junit_observation")
 
+    def test_committed_click_observation_and_adapted_lock_are_self_consistent(self):
+        root = Path(__file__).resolve().parents[2] / "corpus" / "assessments"
+        raw = (root / "click-8abb77a-junit-normalized.json").read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         "dfa85b9d0c5ecc3cf6483e833590a3c8785e33dc51209a322b931ffd74260634")
+        result = json.loads(raw)
+        canonical = json.dumps(result["records"], ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+        self.assertEqual(result["occurrences"], len(result["records"]))
+        self.assertEqual(result["occurrences"], 2648)
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(), result["ordered_inventory_sha256"])
+        self.assertEqual(result["outcome_tags"], {"no_junit_failure_or_skip": 2623,
+                                                 "skipped:pytest.skip": 24, "skipped:pytest.xfail": 1})
+        requirements = (root / "click-8abb77a-pytest842.requirements.txt").read_bytes()
+        self.assertEqual(hashlib.sha256(requirements).hexdigest(),
+                         "fdcf1aa3905b569bf05d170acfe795dfd87c63e43ee6bc67afa9301cfca3d5d8")
+
 
 if __name__ == "__main__":
     unittest.main()
