@@ -17,6 +17,9 @@ The first local feasibility assessment is
 [`assessments/attrs-9d9f94a.md`](assessments/attrs-9d9f94a.md); it identifies a
 pytest-version conflict and does not qualify the candidate for the proposed PT
 profile.
+The [Click assessment](assessments/click-8abb77a.md) covers both its upstream
+pytest 9 lock and an adapted pytest 8.4.2 environment; both retained the project's
+31,000 default-deselected stress cases in the reported scope limitations.
 
 `manifest.toml` records draft file hashes and leaves all probes unassigned. The
 independent inventory checker verifies declared files only; it does not detect
