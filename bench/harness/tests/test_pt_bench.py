@@ -65,6 +65,28 @@ class MeasureTests(unittest.TestCase):
         self.assertEqual(result["returncode"], 0)
         self.assertLess(result["elapsed_ns"], 1_500_000_000)
 
+    @unittest.skipUnless(os.name == "posix", "POSIX streaming implementation")
+    def test_unexpected_stream_failure_terminates_and_reaps_child(self):
+        original_popen = pt_bench.subprocess.Popen
+        processes = []
+
+        def track_process(*args, **kwargs):
+            process = original_popen(*args, **kwargs)
+            processes.append(process)
+            return process
+
+        for failure in (OSError("injected pipe failure"), KeyboardInterrupt()):
+            with self.subTest(failure=type(failure).__name__):
+                with mock.patch.object(pt_bench.subprocess, "Popen", side_effect=track_process):
+                    with mock.patch.object(pt_bench, "_stream_posix", side_effect=failure):
+                        with self.assertRaises(type(failure)):
+                            pt_bench.measure([sys.executable, "-c", "import time; time.sleep(30)"],
+                                             ".", 5)
+                process = processes[-1]
+                self.assertIsNotNone(process.poll())
+                self.assertTrue(process.stdout.closed)
+                self.assertTrue(process.stderr.closed)
+
     def test_missing_executable_is_recorded(self):
         result = pt_bench.measure(["/nonexistent/pt-bench-executable"], ".", 1)
         self.assertEqual(result["status"], "launch_error")

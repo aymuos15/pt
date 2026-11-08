@@ -16,6 +16,29 @@ import time
 from typing import Any, Sequence
 
 
+def _abort_process(process: subprocess.Popen) -> None:
+    """Best-effort termination after an unexpected harness error or interrupt."""
+    try:
+        if os.name == "posix":
+            os.killpg(process.pid, signal.SIGKILL)
+        elif process.poll() is None:
+            process.kill()
+    except OSError:
+        # Preserve the original exception; process ownership is unverified.
+        pass
+    for pipe in (process.stdout, process.stderr):
+        if pipe is not None and not pipe.closed:
+            try:
+                pipe.close()
+            except OSError:
+                pass
+    try:
+        process.wait(timeout=1)
+    except (OSError, subprocess.TimeoutExpired):
+        # Do not hang indefinitely or pretend that cleanup succeeded.
+        pass
+
+
 def _stream_posix(process: subprocess.Popen, timeout: float) -> dict[str, Any]:
     """Drain both pipes without retaining output, with bounded timeout cleanup."""
     deadline = time.monotonic() + timeout
@@ -98,25 +121,29 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
             "cwd": str(cwd_path), "elapsed_ns": time.monotonic_ns() - start,
         }
 
-    if os.name == "posix":
-        output = _stream_posix(process, timeout)
-    else:
-        # The original prototype path does not provide bounded memory or
-        # process-tree cleanup on non-POSIX systems.
-        timed_out = False
-        try:
-            stdout, stderr = process.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            process.kill()
-            stdout, stderr = process.communicate()
-        output = {
-            "timed_out": timed_out, "output_complete": True,
-            "process_reaped": process.returncode is not None,
-            "stdout_bytes": len(stdout), "stderr_bytes": len(stderr),
-            "stdout_sha256": hashlib.sha256(stdout).hexdigest(),
-            "stderr_sha256": hashlib.sha256(stderr).hexdigest(),
-        }
+    try:
+        if os.name == "posix":
+            output = _stream_posix(process, timeout)
+        else:
+            # The original prototype path does not provide bounded memory or
+            # process-tree cleanup on non-POSIX systems.
+            timed_out = False
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                process.kill()
+                stdout, stderr = process.communicate()
+            output = {
+                "timed_out": timed_out, "output_complete": True,
+                "process_reaped": process.returncode is not None,
+                "stdout_bytes": len(stdout), "stderr_bytes": len(stderr),
+                "stdout_sha256": hashlib.sha256(stdout).hexdigest(),
+                "stderr_sha256": hashlib.sha256(stderr).hexdigest(),
+            }
+    except BaseException:
+        _abort_process(process)
+        raise
 
     return {
         "status": "timeout" if output.pop("timed_out") else "exited_unqualified",

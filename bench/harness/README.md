@@ -9,6 +9,8 @@ retained. Timeout cleanup kills the process group and bounds pipe drainage.
 Detached descendants may escape cleanup, and incomplete drainage is reported
 as `output_complete: false`; the timer is not a sandbox. On non-POSIX systems
 capture still uses in-memory pipes and process-tree cleanup is not covered.
+Unexpected harness errors and interruptions trigger bounded, best-effort child
+termination; cleanup is not guaranteed if OS process control fails.
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not establish independent observations. `paired.py` can run those
