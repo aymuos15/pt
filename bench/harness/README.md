@@ -25,6 +25,8 @@ either command succeeded or was equivalent.
 arm identities, and preparation/result consistency. It cannot authenticate
 records, verify unobserved work or state, or qualify a benchmark; it rejects
 partial runs and unexpected files rather than silently excluding them.
+`guards.py` compares a timer result to an expected exit and stdout sentinel;
+even a match cannot prove equal work, correct generation, or artifact validity.
 The schedule records basic host and harness-Python metadata, including the
 harness executable's path and digest. It does not record environment variables,
 inspect arm interpreters, or establish machine limits. Paths and command arguments
