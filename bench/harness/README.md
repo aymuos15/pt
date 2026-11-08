@@ -65,6 +65,9 @@ artifact digests against regular files named by SHA-256 in a supplied local
 bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolved
 or mismatched fields. It cannot verify revisions, provenance, semantic content,
 reset equivalence, or a stable snapshot; even all matches remain unqualified.
+`blob_store.py` provides bounded, content-addressed, no-overwrite publication
+for a caller-provided byte stream. It is not yet connected to timer output;
+it does not authenticate content or guarantee power-loss durability.
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):
