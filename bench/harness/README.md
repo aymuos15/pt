@@ -56,6 +56,11 @@ valid frozen manifest is always reported ineligible for confirmation: artifact,
 reset, eligibility, independence, and other semantic checks are not implemented.
 For drafts it also lists paths that fail frozen-schema requirements; this is a
 structural preview, not verification of the referenced files or hashes.
+`artifact_check.py <manifest> <bundle>` separately checks the manifest's listed
+artifact digests against regular files named by SHA-256 in a supplied local
+bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolved
+or mismatched fields. It cannot verify revisions, provenance, semantic content,
+reset equivalence, or a stable snapshot; even all matches remain unqualified.
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):

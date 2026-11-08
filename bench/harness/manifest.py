@@ -56,8 +56,8 @@ def _reject_nonfinite(value: Any) -> None:
             pending.extend(item)
 
 
-def check_structure(path: Path) -> dict[str, Any]:
-    """Check syntax and JSON Schema structure, without validating real artifacts."""
+def load_structural_manifest(path: Path) -> tuple[dict[str, Any], Any]:
+    """Load one schema-valid manifest, without validating referenced artifacts."""
     try:
         with path.open("rb") as file:
             raw = file.read(MAX_MANIFEST_BYTES + 1)
@@ -77,6 +77,12 @@ def check_structure(path: Path) -> dict[str, Any]:
         error = errors[0]
         location = ".".join(map(str, error.absolute_path)) or "<root>"
         raise ManifestError(f"{location}: {error.message}")
+    return data, validator
+
+
+def check_structure(path: Path) -> dict[str, Any]:
+    """Check syntax and JSON Schema structure, without validating real artifacts."""
+    data, validator = load_structural_manifest(path)
     hypothetical_frozen = dict(data, status="frozen")
     freeze_errors = sorted({".".join(map(str, error.absolute_path)) or "<root>"
                             for error in validator.iter_errors(hypothetical_frozen)})
