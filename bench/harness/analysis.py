@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 import math
+import random
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 
-def paired_geometric_ratio(samples: Sequence[Mapping[str, Any]]) -> float:
-    """Calculate exp(mean(log(baseline / candidate))) over complete blocks.
-
-    Samples must already be independently qualified by the caller. This checks
-    record shape and completeness, not their provenance or correctness. It never
-    silently drops invalid, duplicate, or incomplete observations.
-    """
+def _paired_log_ratios(samples: Sequence[Mapping[str, Any]]) -> list[float]:
+    """Validate and return log ratios in stable block-identifier order."""
     if not samples:
         raise ValueError("at least one complete block is required")
     blocks: dict[str, dict[str, int]] = {}
@@ -34,8 +30,63 @@ def paired_geometric_ratio(samples: Sequence[Mapping[str, Any]]) -> float:
         block_samples[arm] = duration
 
     ratios = []
-    for arms in blocks.values():
+    for block in sorted(blocks):
+        arms = blocks[block]
         if set(arms) != {"baseline", "candidate"}:
             raise ValueError("incomplete block")
         ratios.append(math.log(arms["baseline"]) - math.log(arms["candidate"]))
+    return ratios
+
+
+def paired_geometric_ratio(samples: Sequence[Mapping[str, Any]]) -> float:
+    """Calculate exp(mean(log(baseline / candidate))) over complete blocks.
+
+    Samples must already be independently qualified by the caller. This checks
+    record shape and completeness, not their provenance or correctness. It never
+    silently drops invalid, duplicate, or incomplete observations.
+    """
+    ratios = _paired_log_ratios(samples)
     return math.exp(math.fsum(ratios) / len(ratios))
+
+
+def bootstrap_paired_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int,
+                           resamples: int, confidence: float = 0.95) -> dict[str, Any]:
+    """Return exploratory percentile intervals resampling complete paired blocks.
+
+    The caller must establish qualification and independence; this calculation
+    cannot detect correlated blocks or justify an inferential claim. It uses
+    linear interpolation between sorted bootstrap replicates for quantiles.
+    """
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed must be an integer")
+    if isinstance(resamples, bool) or not isinstance(resamples, int) or resamples < 2:
+        raise ValueError("resamples must be an integer of at least two")
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+        raise ValueError("confidence must be a number strictly between zero and one")
+    if not math.isfinite(confidence) or not 0 < confidence < 1:
+        raise ValueError("confidence must be a number strictly between zero and one")
+    logs = _paired_log_ratios(samples)
+    if len(logs) < 2:
+        raise ValueError("at least two paired blocks are required")
+
+    rng = random.Random(seed)
+    estimates = sorted(
+        math.exp(math.fsum(rng.choice(logs) for _ in logs) / len(logs))
+        for _ in range(resamples)
+    )
+
+    def quantile(probability: float) -> float:
+        position = probability * (len(estimates) - 1)
+        lower = math.floor(position)
+        upper = math.ceil(position)
+        return estimates[lower] + (estimates[upper] - estimates[lower]) * (position - lower)
+
+    tail = (1 - confidence) / 2
+    return {
+        "mode": "exploratory_unqualified", "ratio_direction": "baseline_over_candidate",
+        "point_estimate": math.exp(math.fsum(logs) / len(logs)),
+        "interval_method": "percentile_whole_paired_blocks_linear_quantile",
+        "confidence_level": confidence, "interval_lower": quantile(tail),
+        "interval_upper": quantile(1 - tail), "blocks": len(logs),
+        "bootstrap_resamples": resamples, "bootstrap_seed": seed,
+    }

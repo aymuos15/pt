@@ -38,6 +38,43 @@ class PairedRatioTests(unittest.TestCase):
             with self.subTest(samples=samples), self.assertRaises(ValueError):
                 analysis.paired_geometric_ratio(samples)
 
+    def test_bootstrap_resamples_pairs_reproducibly(self):
+        # Baseline and candidate each vary tenfold, but every paired ratio is 2.
+        samples = [sample("b", "baseline", 20), sample("b", "candidate", 10),
+                   sample("a", "baseline", 200), sample("a", "candidate", 100)]
+        result = analysis.bootstrap_paired_ratio(samples, seed=4, resamples=100)
+        self.assertEqual(result, analysis.bootstrap_paired_ratio(
+            list(reversed(samples)), seed=4, resamples=100))
+        self.assertAlmostEqual(result["point_estimate"], 2)
+        self.assertAlmostEqual(result["interval_lower"], 2)
+        self.assertAlmostEqual(result["interval_upper"], 2)
+        self.assertEqual(result["mode"], "exploratory_unqualified")
+        self.assertEqual(result["ratio_direction"], "baseline_over_candidate")
+
+    def test_bootstrap_rejects_invalid_inputs_and_incomplete_blocks(self):
+        one = [sample("1", "baseline", 1), sample("1", "candidate", 1)]
+        two = one + [sample("2", "baseline", 1), sample("2", "candidate", 1)]
+        for samples, options in [
+            (one, {"seed": 1, "resamples": 10}),
+            (two[:-1], {"seed": 1, "resamples": 10}),
+            (two, {"seed": True, "resamples": 10}),
+            (two, {"seed": 1, "resamples": 1}),
+            (two, {"seed": 1, "resamples": True}),
+            (two, {"seed": 1, "resamples": 10, "confidence": float("nan")}),
+            (two, {"seed": 1, "resamples": 10, "confidence": 1}),
+        ]:
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                analysis.bootstrap_paired_ratio(samples, **options)
+
+    def test_bootstrap_covers_distinct_block_ratios(self):
+        samples = [sample("1", "baseline", 1), sample("1", "candidate", 1),
+                   sample("2", "baseline", 4), sample("2", "candidate", 1)]
+        result = analysis.bootstrap_paired_ratio(samples, seed=1, resamples=1000,
+                                                 confidence=0.8)
+        self.assertAlmostEqual(result["point_estimate"], 2)
+        self.assertAlmostEqual(result["interval_lower"], 1)
+        self.assertAlmostEqual(result["interval_upper"], 4)
+
 
 if __name__ == "__main__":
     unittest.main()

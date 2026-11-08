@@ -15,9 +15,10 @@ it does not establish independent observations. `paired.py` can run those
 orders sequentially and preserve individual unqualified observations. It does
 not reset state or validate work; a zero exit from the paired driver means only
 that records were written, not that either command succeeded or was equivalent.
-`analysis.py` implements only the paired geometric point estimator for
-caller-qualified samples; it rejects invalid or incomplete blocks but cannot
-verify qualification, independence, confidence intervals, or publication gates.
+`analysis.py` implements a paired geometric point estimator and exploratory
+whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
+or incomplete blocks but cannot verify qualification, independence, statistical
+adequacy, or publication gates; calculated intervals are not release evidence.
 `manifest.py` checks YAML syntax and the supplied JSON Schema. Even a structurally
 valid frozen manifest is always reported ineligible for confirmation: artifact,
 reset, eligibility, independence, and other semantic checks are not implemented.
