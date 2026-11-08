@@ -4,6 +4,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from unittest import mock
 
 
 spec = importlib.util.spec_from_file_location(
@@ -55,6 +57,34 @@ class MeasureTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 pt_bench.write_record(path, {"status": "second"})
             self.assertEqual(json.loads(Path(path).read_text())["status"], "first")
+
+    def test_serialization_and_publication_failure_leave_no_record(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.json"
+            with self.assertRaises(ValueError):
+                pt_bench.write_record(str(path), {"invalid": float("nan")})
+            self.assertFalse(path.exists())
+            with mock.patch.object(pt_bench.os, "link", side_effect=OSError("disk error")):
+                with self.assertRaises(OSError):
+                    pt_bench.write_record(str(path), {"status": "ready"})
+            self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_concurrent_publication_never_overwrites(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "sample.json")
+
+            def publish(value):
+                try:
+                    pt_bench.write_record(path, {"value": value})
+                    return True
+                except FileExistsError:
+                    return False
+
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                outcomes = list(pool.map(publish, range(8)))
+            self.assertEqual(sum(outcomes), 1)
+            self.assertIn(json.loads(Path(path).read_text())["value"], range(8))
+            self.assertEqual(len(list(Path(directory).iterdir())), 1)
 
 
 if __name__ == "__main__":

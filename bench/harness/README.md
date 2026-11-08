@@ -35,3 +35,7 @@ python3 bench/harness/pt_bench.py --cwd . --timeout 5 --output /tmp/pt-sample.js
 An `exited_unqualified` observation means only that the process exited; even a
 zero exit is not evidence that expected work happened. Output hashes and sizes
 are recorded instead of content, so this prototype does not preserve raw output.
+Records are published via a same-filesystem hard link after serialization and
+file synchronization, without overwriting existing paths. A crash can leave a
+hidden temporary file, and directory entries are not synced for power-loss
+durability. Filesystems without hard-link support reject publication.

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import tempfile
 import time
 from typing import Any, Sequence
 
@@ -62,10 +63,30 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
 
 
 def write_record(path: str, record: dict[str, Any]) -> None:
-    """Create a record once; never overwrite earlier evidence."""
-    with open(path, "x", encoding="utf-8") as output:
-        json.dump(record, output, indent=2, sort_keys=True, allow_nan=False)
-        output.write("\n")
+    """Publish a complete record without replacing an existing destination.
+
+    The temporary file is on the destination filesystem so a hard link can
+    atomically publish it. A crash may leave a hidden temporary file, but never
+    exposes it as the destination before serialization and file synchronization.
+    Filesystems without hard-link support fail closed rather than overwriting.
+    This does not promise persistence across a power loss (no directory fsync).
+    """
+    destination = Path(path)
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", prefix=f".{destination.name}.",
+            suffix=".tmp", dir=destination.parent, delete=False,
+        ) as output:
+            temp_path = Path(output.name)
+            json.dump(record, output, indent=2, sort_keys=True, allow_nan=False)
+            output.write("\n")
+            output.flush()
+            os.fsync(output.fileno())
+        os.link(temp_path, destination)
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 def main() -> int:
