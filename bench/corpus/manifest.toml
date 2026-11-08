@@ -3,6 +3,13 @@ status = "draft_unqualified"
 description = "Initial synthetic probes; no training/holdout allocation or confirmatory qualification."
 
 [[probes]]
+id = "pytest-invocation-profiles"
+path = "probes/invocation_profile_plugin.py"
+sha256 = "2d99df4c2f460c9d7c0c749657a75e32de8061fdeb79fe9783ca41bbeeafb7bc"
+expected_exit_code = 5
+allocation = "unassigned"
+
+[[probes]]
 id = "bytecode-integrity"
 path = "probes/bytecode_integrity_probe.py"
 sha256 = "dcb9d0a130dc491bb664b2c84450d391964ce656325e4837fea99e35287ace5f"

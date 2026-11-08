@@ -54,6 +54,13 @@ own temporary directory. On the tested CPython profile its timestamp-based pyc
 negative control loads stale code, while a checked-hash pyc detects the edit.
 It does not purge shared caches, establish a benchmark reset policy, or test PT.
 
+`probes/invocation_profile_plugin.py` records whether the current directory is
+on `sys.path` at pytest session start. A controlled Linux smoke test loads it
+explicitly for both `python -m pytest` and the pytest console script, with
+plugin autoload disabled and an otherwise empty temporary working directory.
+It checks the observed distinction on this profile; it does not claim all
+plugins or environments behave identically.
+
 For an optional offline local reproducibility smoke check, first populate uv's
 cache with the documented locked setup, then run:
 

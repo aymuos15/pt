@@ -1,5 +1,6 @@
 """Check initial corpus probes against pytest, not against PT."""
 
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -139,6 +140,31 @@ class CorpusSmokeTests(unittest.TestCase):
             failure = cases[2].find("failure")
             self.assertIsNotNone(failure)
             self.assertIn("PT_CUSTOM_COLLECTOR_EXPECTED_FAILURE", "".join(failure.itertext()))
+
+    @unittest.skipUnless(os.name == "posix", "initial Linux console-entrypoint profile")
+    def test_console_and_module_entrypoints_have_distinct_import_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            console = Path(sys.executable).parent / "pytest"
+            self.assertTrue(console.is_file(), "locked environment must provide pytest console script")
+            env = os.environ.copy()
+            for name in ("PYTEST_ADDOPTS", "PYTEST_PLUGINS", "PYTHONHOME", "PYTHONSAFEPATH"):
+                env.pop(name, None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PYTHONPATH"] = str(CORPUS)
+            common = ["-p", "no:cacheprovider", "-p", "invocation_profile_plugin",
+                      "-q", "--collect-only"]
+            reports = {}
+            for label, prefix in (("module", [sys.executable, "-m", "pytest"]),
+                                  ("console", [str(console)])):
+                output = root / f"{label}.json"
+                env["PT_PROBE_PROFILE_OUTPUT"] = str(output)
+                result = subprocess.run(prefix + common, cwd=root, env=env,
+                                        capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+                reports[label] = json.loads(output.read_text())
+            self.assertEqual(reports["module"], {"cwd_in_sys_path": True, "first_path_is_cwd": True})
+            self.assertEqual(reports["console"], {"cwd_in_sys_path": False, "first_path_is_cwd": False})
 
 
 if __name__ == "__main__":
