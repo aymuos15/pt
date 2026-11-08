@@ -40,6 +40,7 @@ class InspectRunTests(unittest.TestCase):
         summary = json.loads(result.stdout)
         self.assertEqual(summary["record_consistency"], "complete")
         self.assertEqual(summary["arm_status_counts"], {"exited_unqualified": 2})
+        self.assertEqual(summary["recorded_interval_order"], "nonoverlapping")
         self.assertFalse(summary["confirmatory_eligible"])
 
     def test_legacy_run_without_state_probes_remains_readable(self):
@@ -125,7 +126,37 @@ class InspectRunTests(unittest.TestCase):
         for field in ("monotonic_start_ns", "monotonic_end_ns", "clock_domain"):
             del legacy["result"][field]
         path.write_text(json.dumps(legacy))
-        self.assertEqual(self.inspect().returncode, 0)
+        result = self.inspect()
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout)["recorded_interval_order"], "incomplete")
+
+    def test_overlapping_recorded_arms_are_rejected(self):
+        self.make_run()
+        plan = json.loads((self.run_dir / "schedule.json").read_text())
+        first_arm, second_arm = plan["schedule"][0]["order"]
+        first = json.loads((self.run_dir / f"block-000001-{first_arm}.json").read_text())
+        second_path = self.run_dir / f"block-000001-{second_arm}.json"
+        second = json.loads(second_path.read_text())
+        duration = second["result"]["elapsed_ns"]
+        second["result"]["monotonic_start_ns"] = first["result"]["monotonic_end_ns"] - 1
+        second["result"]["monotonic_end_ns"] = second["result"]["monotonic_start_ns"] + duration
+        second_path.write_text(json.dumps(second))
+        result = self.inspect()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("overlap", result.stderr)
+
+    def test_overlapping_preparation_and_measurement_are_rejected(self):
+        self.make_run([sys.executable, "-c", "pass"])
+        prep_path = self.run_dir / "preparation-000001-baseline.json"
+        prep = json.loads(prep_path.read_text())
+        measurement = json.loads((self.run_dir / "block-000001-baseline.json").read_text())
+        prep["result"]["monotonic_end_ns"] = measurement["result"]["monotonic_start_ns"] + 1
+        prep["result"]["elapsed_ns"] = (prep["result"]["monotonic_end_ns"]
+                                       - prep["result"]["monotonic_start_ns"])
+        prep_path.write_text(json.dumps(prep))
+        result = self.inspect()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("overlap", result.stderr)
 
     def test_arm_records_must_match_exploratory_sample_schema(self):
         self.make_run()

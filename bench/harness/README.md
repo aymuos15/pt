@@ -36,6 +36,10 @@ arm identities, arm-record schema, output metadata shape, and preparation/result
 consistency. It cannot authenticate
 records, verify unobserved work or state, or qualify a benchmark; it rejects
 partial runs and unexpected files rather than silently excluding them.
+When all stage intervals are available, inspection rejects recorded overlap or
+out-of-order stages; legacy records with missing intervals are labelled
+`incomplete` for that check. Recorded non-overlap cannot prove actual resource
+isolation or rule out detached descendants.
 `guards.py` compares a timer result to an expected exit and stdout sentinel;
 even a match cannot prove equal work, correct generation, or artifact validity.
 `sample.schema.json` describes the current exploratory arm-record structure; it

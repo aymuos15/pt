@@ -133,6 +133,22 @@ def inspect_run(directory: Path) -> dict[str, Any]:
 
     expected = {"schedule.json"}
     counts: Counter[str] = Counter()
+    last_end = None
+    all_intervals_present = True
+
+    def check_interval(measurement: dict[str, Any]) -> None:
+        nonlocal last_end, all_intervals_present
+        if "monotonic_start_ns" not in measurement:
+            # Older records are still readable, but no ordering assertion can
+            # cross an interval whose boundaries were not recorded.
+            all_intervals_present = False
+            last_end = None
+            return
+        start = measurement["monotonic_start_ns"]
+        if last_end is not None and start < last_end:
+            raise InspectionError("recorded intervals overlap or are out of scheduled order")
+        last_end = measurement["monotonic_end_ns"]
+
     for block in schedule:
         for position, arm in enumerate(block["order"], 1):
             number = block["block"]
@@ -151,6 +167,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                 prep_record = _read(directory / prep_name)
                 prep_result = _envelope(prep_record, number, position, arm)
                 _measurement(prep_result, prep_command, cwd)
+                check_interval(prep_result)
                 prep_ok = (prep_result["status"] == "exited_unqualified"
                            and prep_result["returncode"] == 0)
             if record.get("preparation") != ("recorded" if prep_command is not None else "not_requested"):
@@ -167,6 +184,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                 probe_record = _read(directory / probe_name)
                 probe_result = _envelope(probe_record, number, position, arm)
                 _measurement(probe_result, probe_command, cwd)
+                check_interval(probe_result)
                 probe_ok = probe_result["status"] == "exited_unqualified" and probe_result["returncode"] == 0
             if has_probe_configuration or "state_probe" in record:
                 if record.get("state_probe") != expected_probe_reference:
@@ -179,6 +197,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                     raise InspectionError("work ran after unsuccessful state probe")
             else:
                 _measurement(result, commands[arm], cwd)
+                check_interval(result)
             counts[result["status"]] += 1
     try:
         actual = {path.name for path in directory.iterdir()}
@@ -188,6 +207,7 @@ def inspect_run(directory: Path) -> dict[str, Any]:
         raise InspectionError(f"unexpected or missing files: {sorted(actual ^ expected)}")
     return {"record_consistency": "complete", "mode": "exploratory_unqualified",
             "blocks": len(schedule), "arm_status_counts": dict(sorted(counts.items())),
+            "recorded_interval_order": ("nonoverlapping" if all_intervals_present else "incomplete"),
             "confirmatory_eligible": False,
             "limitations": ["record authenticity not established", "work and reset not validated",
                             "machine and input identities not qualified"]}
