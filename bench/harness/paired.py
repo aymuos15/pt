@@ -44,6 +44,8 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
               candidate_prepare: list[str] | None = None,
               baseline_probe: list[str] | None = None,
               candidate_probe: list[str] | None = None,
+              baseline_probe_guard: dict[str, Any] | None = None,
+              candidate_probe_guard: dict[str, Any] | None = None,
               baseline_guard: dict[str, Any] | None = None,
               candidate_guard: dict[str, Any] | None = None,
               capture_raw: bool = False, raw_limit_bytes: int = 10 * 1024 * 1024) -> None:
@@ -62,6 +64,14 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "baseline": _command(baseline_probe) if baseline_probe is not None else None,
         "candidate": _command(candidate_probe) if candidate_probe is not None else None,
     }
+    probe_guards = {
+        "baseline": validate_expectations(baseline_probe_guard) if baseline_probe_guard is not None else None,
+        "candidate": validate_expectations(candidate_probe_guard) if candidate_probe_guard is not None else None,
+    }
+    for arm in probes:
+        if probe_guards[arm] is not None:
+            if probes[arm] is None or probe_guards[arm]["expected_exit_code"] != 0:
+                raise ValueError("a state-probe guard requires a probe and expected exit code zero")
     guard_expectations = {
         "baseline": validate_expectations(baseline_guard) if baseline_guard is not None else None,
         "candidate": validate_expectations(candidate_guard) if candidate_guard is not None else None,
@@ -88,6 +98,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         "baseline_argv": baseline, "candidate_argv": candidate,
         "preparation_argv": preparations,
         "state_probe_argv": probes,
+        "state_probe_guards": probe_guards,
         "guard_expectations": guard_expectations,
         "host_metadata": collect_metadata(),
         "limitations": ["state not verified", "no work validation", "no confirmatory eligibility"],
@@ -105,6 +116,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         for position, arm in enumerate(block["order"], 1):
             preparation = None
             probe = None
+            probe_verdict = None
             try:
                 if preparations[arm] is not None:
                     preparation = measure_stage(preparations[arm])
@@ -116,14 +128,20 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 preparation_ok = preparation is None or _successful(preparation)
                 if preparation_ok and probes[arm] is not None:
                     probe = measure_stage(probes[arm])
-                    write_record(str(output / f"probe-{block['block']:06d}-{arm}.json"), {
+                    probe_record = {
                         "schema_version": 1, "mode": "exploratory_unqualified",
                         "block": block["block"], "position": position, "arm": arm,
                         "result": probe,
-                    })
+                    }
+                    if probe_guards[arm] is not None:
+                        probe_verdict = check_observation(probe, **probe_guards[arm])
+                        probe_record["observation_guard"] = probe_verdict
+                    write_record(str(output / f"probe-{block['block']:06d}-{arm}.json"), probe_record)
                 if not preparation_ok:
                     result = {"status": "not_run_preparation_failed"}
-                elif probe is not None and not _successful(probe):
+                elif probe is not None and (not _successful(probe) or
+                                             (probe_verdict is not None and
+                                              not probe_verdict["matched_expected_observations"])):
                     result = {"status": "not_run_probe_failed"}
                 else:
                     result = measure_stage(commands[arm])
@@ -163,6 +181,8 @@ def main() -> int:
     parser.add_argument("--candidate-prepare-json", help="optional preparation argv as JSON")
     parser.add_argument("--baseline-probe-json", help="optional state-probe argv as JSON")
     parser.add_argument("--candidate-probe-json", help="optional state-probe argv as JSON")
+    parser.add_argument("--baseline-probe-guard-json", help="optional expected probe output as JSON")
+    parser.add_argument("--candidate-probe-guard-json", help="optional expected probe output as JSON")
     parser.add_argument("--baseline-guard-json", help="optional expected exit and stdout sentinel as JSON")
     parser.add_argument("--candidate-guard-json", help="optional expected exit and stdout sentinel as JSON")
     parser.add_argument("--capture-raw", action="store_true", help="retain bounded raw output; may contain secrets")
@@ -183,6 +203,10 @@ def main() -> int:
                                   if args.baseline_probe_json is not None else None),
                   candidate_probe=(_command(json.loads(args.candidate_probe_json))
                                    if args.candidate_probe_json is not None else None),
+                  baseline_probe_guard=(validate_expectations(json.loads(args.baseline_probe_guard_json))
+                                        if args.baseline_probe_guard_json is not None else None),
+                  candidate_probe_guard=(validate_expectations(json.loads(args.candidate_probe_guard_json))
+                                         if args.candidate_probe_guard_json is not None else None),
                   baseline_guard=(validate_expectations(json.loads(args.baseline_guard_json))
                                   if args.baseline_guard_json is not None else None),
                   candidate_guard=(validate_expectations(json.loads(args.candidate_guard_json))

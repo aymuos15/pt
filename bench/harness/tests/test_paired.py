@@ -14,7 +14,8 @@ PAIRED = Path(__file__).resolve().parents[1] / "paired.py"
 class ExploratoryPairsTests(unittest.TestCase):
     def invoke(self, output, baseline, candidate, blocks=2, timeout=2,
                baseline_prepare=None, candidate_prepare=None,
-               baseline_probe=None, candidate_probe=None, baseline_guard=None, candidate_guard=None,
+               baseline_probe=None, candidate_probe=None, baseline_probe_guard=None,
+               candidate_probe_guard=None, baseline_guard=None, candidate_guard=None,
                capture_raw=False, raw_limit=100):
         args = [
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
@@ -29,6 +30,10 @@ class ExploratoryPairsTests(unittest.TestCase):
             args += ["--baseline-probe-json", json.dumps(baseline_probe)]
         if candidate_probe is not None:
             args += ["--candidate-probe-json", json.dumps(candidate_probe)]
+        if baseline_probe_guard is not None:
+            args += ["--baseline-probe-guard-json", json.dumps(baseline_probe_guard)]
+        if candidate_probe_guard is not None:
+            args += ["--candidate-probe-guard-json", json.dumps(candidate_probe_guard)]
         if baseline_guard is not None:
             args += ["--baseline-guard-json", json.dumps(baseline_guard)]
         if candidate_guard is not None:
@@ -174,6 +179,71 @@ class ExploratoryPairsTests(unittest.TestCase):
             self.assertEqual(baseline["state_probe"], "recorded")
             self.assertEqual(baseline["result"]["returncode"], 0)
             self.assertEqual(baseline["mode"], "exploratory_unqualified")
+
+    def test_zero_exit_probe_with_wrong_sentinel_blocks_work(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            marker = Path(directory) / "baseline-ran"
+            command = [sys.executable, "-c", f"from pathlib import Path; Path({str(marker)!r}).touch()"]
+            expectation = {"expected_exit_code": 0, "expected_stdout_bytes": 6,
+                           "expected_stdout_sha256": hashlib.sha256(b"ready\n").hexdigest()}
+            result = self.invoke(output, command, [sys.executable, "-c", "pass"], blocks=1,
+                                 baseline_probe=[sys.executable, "-c", "print('wrong')"],
+                                 baseline_probe_guard=expectation)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(marker.exists())
+            probe_path = output / "probe-000001-baseline.json"
+            probe = json.loads(probe_path.read_text())
+            arm = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertEqual(probe["result"]["returncode"], 0)
+            self.assertFalse(probe["observation_guard"]["matched_expected_observations"])
+            self.assertEqual(arm["result"]["status"], "not_run_probe_failed")
+            inspect = [sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)]
+            result = subprocess.run(inspect, capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            probe["observation_guard"]["matched_expected_observations"] = True
+            probe_path.write_text(json.dumps(probe))
+            result = subprocess.run(inspect, capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("state-probe guard", result.stderr)
+            probe["observation_guard"]["matched_expected_observations"] = 0
+            probe_path.write_text(json.dumps(probe))
+            result = subprocess.run(inspect, capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 2)
+
+    def test_matching_state_probe_guard_allows_unqualified_work(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            expectation = {"expected_exit_code": 0, "expected_stdout_bytes": 6,
+                           "expected_stdout_sha256": hashlib.sha256(b"ready\n").hexdigest()}
+            result = self.invoke(output, command, command, blocks=1,
+                                 baseline_probe=[sys.executable, "-c", "print('ready')"],
+                                 baseline_probe_guard=expectation)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            probe = json.loads((output / "probe-000001-baseline.json").read_text())
+            arm = json.loads((output / "block-000001-baseline.json").read_text())
+            self.assertTrue(probe["observation_guard"]["matched_expected_observations"])
+            self.assertFalse(probe["observation_guard"]["confirmatory_eligible"])
+            self.assertEqual(arm["result"]["status"], "exited_unqualified")
+            result = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"), str(output)],
+                                    capture_output=True, text=True, timeout=15)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_probe_guard_without_probe_is_rejected_before_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "run"
+            command = [sys.executable, "-c", "pass"]
+            expectation = {"expected_exit_code": 0, "expected_stdout_bytes": 0,
+                           "expected_stdout_sha256": hashlib.sha256(b"").hexdigest()}
+            result = self.invoke(output, command, command, blocks=1, baseline_probe_guard=expectation)
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(output.exists())
+            expectation["expected_exit_code"] = 1
+            result = self.invoke(output, command, command, blocks=1, baseline_probe=command,
+                                 baseline_probe_guard=expectation)
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(output.exists())
 
     def test_guard_mismatch_is_preserved_and_inspector_recomputes_it(self):
         with tempfile.TemporaryDirectory() as directory:

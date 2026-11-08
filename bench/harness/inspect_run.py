@@ -123,11 +123,19 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
     preparations = plan.get("preparation_argv")
     has_probe_configuration = "state_probe_argv" in plan
     probes = plan.get("state_probe_argv", {"baseline": None, "candidate": None})
+    probe_guards = plan.get("state_probe_guards", {"baseline": None, "candidate": None})
     guard_expectations = plan.get("guard_expectations", {"baseline": None, "candidate": None})
     if not isinstance(preparations, dict) or set(preparations) != set(commands):
         raise InspectionError("invalid preparation configuration")
     if not isinstance(probes, dict) or set(probes) != set(commands):
         raise InspectionError("invalid state-probe configuration")
+    if not isinstance(probe_guards, dict) or set(probe_guards) != set(commands):
+        raise InspectionError("invalid state-probe guard configuration")
+    for arm, expectation in probe_guards.items():
+        if expectation is not None:
+            validate_expectations(expectation)
+            if probes[arm] is None or expectation["expected_exit_code"] != 0:
+                raise InspectionError("state-probe guard requires a probe and expected exit code zero")
     if not isinstance(guard_expectations, dict) or set(guard_expectations) != set(commands):
         raise InspectionError("invalid observation-guard configuration")
     for expectation in guard_expectations.values():
@@ -267,6 +275,19 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
                 check_raw(probe_result)
                 check_interval(probe_result)
                 probe_ok = probe_result["status"] == "exited_unqualified" and probe_result["returncode"] == 0
+                probe_expectation = probe_guards[arm]
+                if probe_expectation is None:
+                    if "observation_guard" in probe_record:
+                        raise InspectionError("state-probe guard present without expectation")
+                else:
+                    verdict = check_observation(probe_result, **probe_expectation)
+                    recorded_guard = probe_record.get("observation_guard")
+                    if (not isinstance(recorded_guard, dict)
+                            or type(recorded_guard.get("matched_expected_observations")) is not bool
+                            or type(recorded_guard.get("confirmatory_eligible")) is not bool
+                            or recorded_guard != verdict):
+                        raise InspectionError("state-probe guard does not match recorded result")
+                    probe_ok = probe_ok and verdict["matched_expected_observations"]
             if has_probe_configuration or "state_probe" in record:
                 if record.get("state_probe") != expected_probe_reference:
                     raise InspectionError("state-probe record reference mismatch")

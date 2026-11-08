@@ -27,6 +27,10 @@ Optional `--baseline-probe-json` and `--candidate-probe-json` commands run after
 successful preparation and before the corresponding measurement. Their output
 hashes and statuses are recorded separately; nonzero exits or timeouts skip the
 arm. A zero probe exit does not itself verify or certify equivalent state.
+Optional `--baseline-probe-guard-json` and `--candidate-probe-guard-json` also
+compare probe stdout to an explicit expected byte count and SHA-256; a mismatch
+skips the arm even if the probe exited zero. Guarded probes must expect exit zero.
+This is an observation check, not proof of equivalent starting state.
 If a preparation or measurement reports incomplete output drainage or an
 unreaped direct process, the runner preserves the arm record and aborts before
 starting later arms. Reaped direct processes and drained pipes still do not prove
