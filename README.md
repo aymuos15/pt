@@ -34,8 +34,8 @@ Its example PT commands are proposed interfaces and cannot be run yet.
 Git is sufficient to read and review the handoff. The support matrix proposes
 CPython 3.12.12 and pytest 8.4.2 on Linux x86-64, but no profile is qualified
 and no reproducible implementation environment or CI is established yet.
-The harness prototype has standard-library tests; see its README. Subsequent
-work must document reproducible setup and checks alongside the code.
+The harness prototype has tests and a locked dependency environment; see its
+README. Subsequent work must document setup and checks alongside the code.
 
 ## Initial sequence
 

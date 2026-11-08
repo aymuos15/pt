@@ -1,0 +1,9 @@
+[project]
+name = "pt-bench-exploratory"
+version = "0.0.0"
+description = "Independent, incomplete PT benchmark harness prototype"
+requires-python = ">=3.10"
+dependencies = ["jsonschema==4.25.1", "PyYAML==6.0.3"]
+
+[tool.uv]
+package = false
