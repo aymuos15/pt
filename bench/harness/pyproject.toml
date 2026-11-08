@@ -3,7 +3,7 @@ name = "pt-bench-exploratory"
 version = "0.0.0"
 description = "Independent, incomplete PT benchmark harness prototype"
 requires-python = ">=3.10"
-dependencies = ["jsonschema==4.25.1", "PyYAML==6.0.3"]
+dependencies = ["jsonschema==4.25.1", "PyYAML==6.0.3", "tomli==2.5.0; python_version < '3.11'"]
 
 [dependency-groups]
 dev = ["pytest==8.4.2"]

@@ -1,0 +1,24 @@
+schema_version = 1
+status = "draft_unqualified"
+description = "Initial synthetic probes; no training/holdout allocation or confirmatory qualification."
+
+[[probes]]
+id = "noop"
+path = "probes/noop_cases.py"
+sha256 = "88235ce9707144e841b5b690bf0b2d02ad4f4493d5cf6fd58ffd057d96f7d917"
+expected_exit_code = 0
+allocation = "unassigned"
+
+[[probes]]
+id = "phase-failures"
+path = "probes/phase_cases.py"
+sha256 = "98214288d20267be234e4e9e27c87e0295534cb6db11814c70a902e890444199"
+expected_exit_code = 1
+allocation = "unassigned"
+
+[[probes]]
+id = "fixture-lifecycle"
+path = "probes/lifecycle_cases.py"
+sha256 = "cc11557689273a4bce642bcde373305e642ce99b3ffbc6590112efefc6990559"
+expected_exit_code = 0
+allocation = "unassigned"

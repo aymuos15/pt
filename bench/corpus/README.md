@@ -5,6 +5,14 @@ compatibility. They are initial material for WP02 and WP03. They have no frozen
 training, confirmatory, or holdout assignments; no environment locks or reset
 contracts have been established.
 
+`manifest.toml` records draft file hashes and leaves all probes unassigned. The
+independent inventory checker verifies declared files only; it does not detect
+unlisted files, establish an immutable snapshot, or qualify probe behavior:
+
+```sh
+uv run --locked --project bench/harness python bench/harness/corpus_inventory.py bench/corpus/manifest.toml
+```
+
 `probes/noop_cases.py` contains one successful test. `probes/phase_cases.py` is
 intentionally nonzero: it includes a passing test, setup failure, teardown
 failure after a passing call, and strict XPASS. Run it explicitly, for example:
