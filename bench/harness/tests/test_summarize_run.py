@@ -34,8 +34,8 @@ class ExploratorySummaryTests(unittest.TestCase):
         result = subprocess.run(command, capture_output=True, text=True, timeout=20)
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def summarize(self):
-        return subprocess.run([sys.executable, str(SUMMARY), str(self.output)],
+    def summarize(self, *arguments):
+        return subprocess.run([sys.executable, str(SUMMARY), str(self.output), *arguments],
                               capture_output=True, text=True, timeout=15)
 
     def test_all_guarded_records_produce_only_exploratory_estimate(self):
@@ -48,15 +48,44 @@ class ExploratorySummaryTests(unittest.TestCase):
         self.assertEqual(report["observation_guard_counts"], {"matched": 4})
         self.assertEqual(report["ratio_direction"], "baseline_over_candidate")
         self.assertGreater(report["ratio"], 0)
+        absolute = report["absolute_latency_ns"]
+        self.assertGreater(absolute["baseline_mean"], 0)
+        self.assertGreater(absolute["candidate_mean"], 0)
+        self.assertAlmostEqual(absolute["mean_paired_baseline_minus_candidate"],
+                               absolute["baseline_mean"] - absolute["candidate_mean"], places=5)
+        self.assertIsNone(report["bootstrap"])
         self.assertFalse(report["confirmatory_eligible"])
+
+    def test_optional_bootstrap_is_reproducible_and_unqualified(self):
+        self.make_run([sys.executable, "-c", "print('executed')"])
+        arguments = ("--bootstrap-resamples", "100", "--bootstrap-seed", "7")
+        first, second = self.summarize(*arguments), self.summarize(*arguments)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        report, repeated = json.loads(first.stdout), json.loads(second.stdout)
+        self.assertEqual(report["bootstrap"], repeated["bootstrap"])
+        self.assertEqual(report["bootstrap"]["bootstrap_resamples"], 100)
+        self.assertEqual(report["bootstrap"]["blocks"], 2)
+        self.assertEqual(report["bootstrap"]["mode"], "exploratory_unqualified")
+        self.assertIn("independence not established", report["limitations"])
+        self.assertFalse(report["confirmatory_eligible"])
+
+    def test_bootstrap_requires_both_valid_options(self):
+        self.make_run([sys.executable, "-c", "print('executed')"])
+        for args in (("--bootstrap-resamples", "100"), ("--bootstrap-seed", "7"),
+                     ("--bootstrap-resamples", "1", "--bootstrap-seed", "7")):
+            with self.subTest(args=args):
+                self.assertEqual(self.summarize(*args).returncode, 2)
 
     def test_wrong_work_and_missing_guards_block_without_dropping_pairs(self):
         self.make_run([sys.executable, "-c", "pass"])
-        result = self.summarize()
+        result = self.summarize("--bootstrap-resamples", "100", "--bootstrap-seed", "7")
         self.assertEqual(result.returncode, 1, result.stderr)
         report = json.loads(result.stdout)
         self.assertEqual(report["blocks"], 2)
         self.assertIsNone(report["ratio"])
+        self.assertIsNone(report["absolute_latency_ns"])
+        self.assertIsNone(report["bootstrap"])
         self.assertEqual(len(report["blockers"]), 2)
         self.assertTrue(all("guard_mismatch" in item["reasons"] for item in report["blockers"]))
 

@@ -64,6 +64,19 @@ def bootstrap_paired_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int,
     cannot detect correlated blocks or justify an inferential claim. It uses
     linear interpolation between sorted bootstrap replicates for quantiles.
     """
+    return _bootstrap_ratio(samples, seed=seed, resamples=resamples, confidence=confidence,
+                            required_status="valid_expected_outcome")
+
+
+def guarded_exploratory_bootstrap(samples: Sequence[Mapping[str, Any]], *, seed: int,
+                                  resamples: int, confidence: float = 0.95) -> dict[str, Any]:
+    """Bootstrap guard-matched observations without calling them qualified."""
+    return _bootstrap_ratio(samples, seed=seed, resamples=resamples, confidence=confidence,
+                            required_status="guard_matched_unqualified")
+
+
+def _bootstrap_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int, resamples: int,
+                     confidence: float, required_status: str) -> dict[str, Any]:
     if isinstance(seed, bool) or not isinstance(seed, int):
         raise ValueError("seed must be an integer")
     if isinstance(resamples, bool) or not isinstance(resamples, int) or resamples < 2:
@@ -72,7 +85,7 @@ def bootstrap_paired_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int,
         raise ValueError("confidence must be a number strictly between zero and one")
     if not math.isfinite(confidence) or not 0 < confidence < 1:
         raise ValueError("confidence must be a number strictly between zero and one")
-    logs = _paired_log_ratios(samples)
+    logs = _paired_log_ratios(samples, required_status=required_status)
     if len(logs) < 2:
         raise ValueError("at least two paired blocks are required")
 

@@ -69,6 +69,10 @@ missing guard, mismatch, or failed measurement blocks the estimate instead of
 dropping pairs. Missing interval ordering or explicitly truncated raw captures
 also block the estimate. A matching sentinel still does not establish equal work, and
 the summary is neither authenticated nor confirmatory.
+The summary includes absolute mean arm latencies and can optionally run a
+whole-block percentile bootstrap using `--bootstrap-resamples N --bootstrap-seed
+S`. These values remain exploratory: input independence, equal work, sample
+adequacy, and release criteria are not established by the calculation.
 `sample.schema.json` describes the current exploratory arm-record structure; it
 is not the complete WP01 raw-evidence format and does not establish validity.
 The schedule records basic host and harness-Python metadata, including the
