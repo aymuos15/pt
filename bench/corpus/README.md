@@ -66,6 +66,12 @@ test-owned `conftest.py`. Its smoke check exercises dynamic fixture lookup,
 autouse fixtures, an overridden fixture, and the exact setup/teardown sequence.
 The temporary project is a synthetic probe, not full pytest conformance evidence.
 
+`probes/dynamic_plugin_probe.py` is explicitly loaded for a controlled smoke
+check and registers another plugin during collection. The test records its later
+setup and teardown hooks. A negative control omits the plugin and still returns
+zero, demonstrating why the exit code alone is insufficient. This does not yet
+test PT capability fallback or plugin preservation.
+
 For an optional offline local reproducibility smoke check, first populate uv's
 cache with the documented locked setup, then run:
 

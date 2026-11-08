@@ -200,6 +200,38 @@ class CorpusSmokeTests(unittest.TestCase):
                 "override teardown", "base teardown", "autouse teardown",
             ])
 
+    def test_plugin_registered_during_collection_is_observable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            test_file = root / "test_dynamic_plugin.py"
+            test_file.write_text(
+                "import os\nfrom pathlib import Path\n"
+                "def test_probe():\n"
+                "    with Path(os.environ['PT_PROBE_DYNAMIC_EVENTS']).open('a', encoding='utf-8') as f:\n"
+                "        f.write('test call\\n')\n"
+            )
+            events = root / "events.txt"
+            env = os.environ.copy()
+            for name in ("PYTEST_ADDOPTS", "PYTEST_PLUGINS", "PYTHONHOME"):
+                env.pop(name, None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PYTHONPATH"] = str(CORPUS)
+            env["PT_PROBE_DYNAMIC_EVENTS"] = str(events)
+            command = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-q", str(test_file)]
+            with_plugin = subprocess.run(command + ["-p", "dynamic_plugin_probe"], cwd=root, env=env,
+                                         capture_output=True, text=True, timeout=30)
+            self.assertEqual(with_plugin.returncode, 0, with_plugin.stdout + with_plugin.stderr)
+            self.assertEqual(events.read_text().splitlines(), [
+                "collection hook", "late plugin registered", "late setup test_probe",
+                "test call", "late teardown test_probe",
+            ])
+            # Negative control: a zero pytest exit alone cannot reveal the plugin was omitted.
+            events.write_text("")
+            without_plugin = subprocess.run(command, cwd=root, env=env,
+                                            capture_output=True, text=True, timeout=30)
+            self.assertEqual(without_plugin.returncode, 0, without_plugin.stdout + without_plugin.stderr)
+            self.assertEqual(events.read_text().splitlines(), ["test call"])
+
 
 if __name__ == "__main__":
     unittest.main()

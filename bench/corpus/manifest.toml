@@ -3,6 +3,13 @@ status = "draft_unqualified"
 description = "Initial synthetic probes; no training/holdout allocation or confirmatory qualification."
 
 [[probes]]
+id = "dynamic-plugin-registration"
+path = "probes/dynamic_plugin_probe.py"
+sha256 = "5ed4811db66aa3cef6fb4f5ee7e02090cbf6521868902d38b63bdef006b283f4"
+expected_exit_code = 0
+allocation = "unassigned"
+
+[[probes]]
 id = "dynamic-fixture-override"
 path = "probes/fixture_lookup_cases.py"
 sha256 = "e280c415cb378ed880fe8b57a460b61bfcbb0a09f93a4162882c0a57cfcea347"
