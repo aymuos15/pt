@@ -53,3 +53,15 @@ This remains an isolated synthetic case, not ecosystem qualification.
 own temporary directory. On the tested CPython profile its timestamp-based pyc
 negative control loads stale code, while a checked-hash pyc detects the edit.
 It does not purge shared caches, establish a benchmark reset policy, or test PT.
+
+For an optional offline local reproducibility smoke check, first populate uv's
+cache with the documented locked setup, then run:
+
+```sh
+uv run --locked --project bench/harness --python 3.12.12 python bench/harness/materialize_check.py --temp-root /tmp/opencode
+```
+
+The check creates two disposable environments, installs the lock from local uv
+cache, and compares Python/distribution versions and phase-probe occurrences.
+It deletes only its own temporary directory. It does not verify installed file
+hashes, create an immutable source snapshot, or qualify the full corpus.

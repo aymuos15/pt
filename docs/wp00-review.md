@@ -9,7 +9,7 @@ specification.
 |---|---|---|
 | Execution contracts and C01–C12 | `contracts.md` sketches the conservative contract | Review each invariant against specific observable behavior and adverse cases; resolve typed outcomes and complete all exit paths. |
 | Support matrix | `../support-matrix.toml` proposes Linux x86-64, CPython 3.12.12, pytest 8.4.2 | Verify installation artifacts and both entrypoint profiles; run conformance; distinguish explicitly tested plugins and unsupported cases; review before any support claim. |
-| Toolchain | `development.md` records provisional Rust and Python choices; harness dependencies are locked | Verify toolchain and interpreter artifact digests, clean materialization and platform identity. Pins alone are not verified benchmark artifacts. |
+| Toolchain | `development.md` records provisional Rust and Python choices; harness dependencies are locked. An optional offline check compares two disposable environments on one synthetic probe. | Verify toolchain and interpreter artifact digests, installed files, complete corpus materialization and platform identity. Pins alone are not verified benchmark artifacts. |
 | Protocol v0 | `protocol-draft.md` defines candidate framing and envelope | Specify exact event schemas, version negotiation, failure handling, authentication, backpressure, limits, platform transport, and compatibility tests. |
 | Threat model | `threat-model.md` identifies trust boundaries and unresolved items | Review adversaries, IPC credentials, path races, artifact retention, resource limits, and supported platform mitigations. |
 | ADR001–ADR006 | `adr/` records proposed architecture | Review decisions, alternatives, consequences, and unresolved integration risks; retain later changes in history. |
