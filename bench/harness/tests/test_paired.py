@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -118,6 +119,40 @@ class ExploratoryPairsTests(unittest.TestCase):
             baseline = json.loads((output / "block-000001-baseline.json").read_text())
             self.assertEqual(prep["result"]["status"], "timeout")
             self.assertEqual(baseline["result"]["status"], "not_run_preparation_failed")
+
+    @unittest.skipUnless(os.name == "posix", "POSIX detached descendant behavior")
+    def test_uncertain_cleanup_aborts_before_later_arm(self):
+        detached = [sys.executable, "-c", (
+            "import subprocess, sys; "
+            "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(2.5)'], "
+            "start_new_session=True)"
+        )]
+        for phase in ("preparation", "measurement"):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as directory:
+                output = Path(directory) / "run"
+                marker = Path(directory) / "candidate-ran"
+                candidate = [sys.executable, "-c",
+                             f"from pathlib import Path; Path({str(marker)!r}).touch()"]
+                baseline = detached if phase == "measurement" else [sys.executable, "-c", "pass"]
+                prepare = detached if phase == "preparation" else None
+                # seed=3 schedules baseline first for one block.
+                result = self.invoke(output, baseline, candidate, blocks=1, timeout=0.2,
+                                     baseline_prepare=prepare)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("cleanup uncertain", result.stderr)
+                self.assertFalse(marker.exists())
+                self.assertFalse((output / "block-000001-candidate.json").exists())
+                inspection = subprocess.run([sys.executable, str(PAIRED.parent / "inspect_run.py"),
+                                             str(output)], capture_output=True, text=True, timeout=15)
+                self.assertEqual(inspection.returncode, 2)
+                baseline_record = json.loads((output / "block-000001-baseline.json").read_text())
+                if phase == "preparation":
+                    prep = json.loads((output / "preparation-000001-baseline.json").read_text())
+                    self.assertFalse(prep["result"]["output_complete"])
+                    self.assertEqual(baseline_record["result"]["status"], "not_run_preparation_failed")
+                else:
+                    self.assertEqual(baseline_record["result"]["status"], "timeout")
+                    self.assertFalse(baseline_record["result"]["output_complete"])
 
 
 if __name__ == "__main__":

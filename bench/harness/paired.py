@@ -13,12 +13,22 @@ from schedule import paired_schedule
 from metadata import collect_metadata
 
 
+class RunAbortedError(RuntimeError):
+    """Further arms must not run after cleanup becomes visibly uncertain."""
+
+
 def _command(value: Any) -> list[str]:
     if not isinstance(value, list) or not value or not all(isinstance(x, str) for x in value):
         raise ValueError("each command must be a nonempty array of strings")
     if not value[0]:
         raise ValueError("command executable cannot be empty")
     return value.copy()
+
+
+def _cleanup_uncertain(result: dict[str, Any] | None) -> bool:
+    return (result is not None and result.get("status") in ("exited_unqualified", "timeout")
+            and (result.get("process_reaped") is not True
+                 or result.get("output_complete") is not True))
 
 
 def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
@@ -86,6 +96,10 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 "preparation": "not_requested" if preparation is None else "recorded",
                 "result": result,
             })
+            if _cleanup_uncertain(preparation) or _cleanup_uncertain(result):
+                raise RunAbortedError(
+                    f"block {block['block']} {arm}: cleanup uncertain; remaining arms not run"
+                )
 
 
 def main() -> int:
@@ -107,7 +121,7 @@ def main() -> int:
                                     if args.baseline_prepare_json is not None else None),
                   candidate_prepare=(_command(json.loads(args.candidate_prepare_json))
                                      if args.candidate_prepare_json is not None else None))
-    except (ValueError, OSError) as exc:
+    except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")
     return 0
 
