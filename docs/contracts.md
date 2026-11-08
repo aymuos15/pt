@@ -48,6 +48,32 @@ Default pytest output should remain available, with structured reporting
 additive. Capture, TTY, color, warnings, and output destinations are part of the
 invocation contract; exact supported behavior remains an open WP00 decision.
 
+### Proposed terminal outcome mapping
+
+This table is a draft to review and test, not implemented behavior. A pytest exit
+code is preserved only after all PT completion checks relevant to the result
+pass. In particular, a backend zero cannot override incomplete reporting, failed
+cleanup, or uncertain/superseded generation integrity.
+
+| Condition | Proposed terminal category | Proposed process exit |
+|---|---|---|
+| Completed pytest session with valid accounting and finalization | `backend_completed` with original backend code | Preserve pytest's code: 0 success, 1 tests failed, 2 interrupted, 3 internal error, 4 usage error, 5 no tests collected. |
+| Invalid PT configuration or unsupported required profile before execution | `configuration_error` | 4 (usage error). |
+| PT bridge/protocol failure, missing reports, failed required artifact commit, or failed required cleanup | `infrastructure_error` with typed cause | 3 (internal error), even if pytest returned 0. |
+| Relevant source generation superseded or integrity uncertain | `generation_invalid` with assurance and cause | 3; never current full-run success. |
+| PT-enforced timeout | `timeout` with phase, interrupted work, cleanup and teardown limitations | 3, unless a documented platform signal policy applies. |
+| Explicit cancellation or user interruption | `interrupted` with origin and cleanup status | 2 when represented as an ordinary exit; platform signal termination remains distinct. |
+| Child terminated by signal or an undocumented backend status | `backend_terminated` with raw status and signal when available | Platform-appropriate propagation is unresolved; must not become success. |
+
+An affected run that completes successfully may return 0, but its typed result
+must label the scope and cannot update full-suite success. A completed pytest
+no-tests exit stays 5; missing accounting must not be mistaken for no tests.
+Configuration failure and timeout mappings need compatibility review. If a
+completed backend error and a PT infrastructure error both occur, preserve both
+in the structured result; the user-facing exit follows the reviewed precedence
+policy, not a silently discarded cause. Exact signal handling and precedence
+remain open.
+
 ## Integrity and safety
 
 Live-tree observation must not claim immutable-snapshot assurance. A hard
