@@ -75,6 +75,9 @@ S`. These values remain exploratory: input independence, equal work, sample
 adequacy, and release criteria are not established by the calculation.
 `sample.schema.json` describes the current exploratory arm-record structure; it
 is not the complete WP01 raw-evidence format and does not establish validity.
+`junit_inventory.py` compares ordered JUnit classname/name/outcome attributes,
+preserving duplicates. JUnit is not authoritative pytest collection or phase
+evidence; the comparison omits tracebacks and must not be used as an oracle.
 The schedule records basic host and harness-Python metadata, including the
 harness executable's path and digest. It does not record environment variables,
 inspect arm interpreters, or establish machine limits. Paths and command arguments
