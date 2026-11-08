@@ -6,6 +6,9 @@ manifests, reset state, retain raw output by default, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
 Known-delay regression tests cover process startup, shutdown, and pipe drainage;
 they do not validate every product or campaign timing boundary.
+On Linux, a separate timer test exercises timeout termination of an ordinary
+owned child process group. It does not establish PT process supervision or
+containment of hostile or detached descendants.
 On POSIX, output is hashed and counted in bounded-memory chunks; it is not
 retained. Timeout cleanup kills the process group and bounds pipe drainage.
 Detached descendants may escape cleanup, and incomplete drainage is reported

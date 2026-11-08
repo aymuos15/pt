@@ -3,8 +3,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import sys
 import tempfile
+import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest import mock
@@ -43,6 +45,52 @@ class MeasureTests(unittest.TestCase):
         result = pt_bench.measure([sys.executable, "-c", "import time; time.sleep(5)"], ".", 0.1)
         self.assertEqual(result["status"], "timeout")
         self.assertIsNotNone(result["returncode"])
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "requires Linux procfs and POSIX process groups")
+    def test_timeout_stops_owned_child_process_group(self):
+        # The descendant records its PID and Linux start time so cleanup never
+        # signals an unrelated process if a PID happens to be reused.
+        program = (
+            "import os,sys,time\n"
+            "from pathlib import Path\n"
+            "pid = os.fork()\n"
+            "if pid == 0:\n"
+            "    fields = Path('/proc/self/stat').read_text().rsplit(')', 1)[1].split()\n"
+            "    Path(sys.argv[1]).write_text(str(os.getpid()) + ' ' + fields[19])\n"
+            "while True:\n"
+            "    time.sleep(1)\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            ready = Path(directory) / "child.txt"
+            result = pt_bench.measure([sys.executable, "-c", program, str(ready)], directory, 1.5)
+            self.assertEqual(result["status"], "timeout")
+            self.assertTrue(result["process_reaped"])
+            self.assertTrue(result["output_complete"])
+            self.assertTrue(ready.exists(), "child did not start before timeout")
+            pid_text, start_time = ready.read_text().split()
+            pid = int(pid_text)
+            process_stat = Path("/proc") / pid_text / "stat"
+            try:
+                deadline = time.monotonic() + 2
+                while True:
+                    try:
+                        fields = process_stat.read_text().rsplit(")", 1)[1].split()
+                    except FileNotFoundError:
+                        fields = None
+                    if (fields is None or fields[19] != start_time or fields[0] == "Z"
+                            or time.monotonic() >= deadline):
+                        break
+                    time.sleep(0.02)
+                if fields is not None and fields[19] == start_time:
+                    self.assertEqual(fields[0], "Z", "owned child remains live after timeout")
+            finally:
+                # If the test fails, terminate only the exact descendant it made.
+                try:
+                    fields = process_stat.read_text().rsplit(")", 1)[1].split()
+                    if fields[19] == start_time and fields[0] != "Z":
+                        os.kill(pid, signal.SIGKILL)
+                except FileNotFoundError:
+                    pass
 
     @unittest.skipUnless(os.name == "posix", "POSIX streaming implementation")
     def test_large_output_is_streamed_with_exact_hashes(self):
