@@ -3,6 +3,13 @@ status = "draft_unqualified"
 description = "Initial synthetic probes; no training/holdout allocation or confirmatory qualification."
 
 [[probes]]
+id = "bytecode-integrity"
+path = "probes/bytecode_integrity_probe.py"
+sha256 = "dcb9d0a130dc491bb664b2c84450d391964ce656325e4837fea99e35287ace5f"
+expected_exit_code = 0
+allocation = "unassigned"
+
+[[probes]]
 id = "custom-collector-duplicates"
 path = "probes/custom_collector_plugin.py"
 sha256 = "be26a2618efb2bfa4b3c2f6673b3a24c2b53dfe48da6aeec34bf206e468b91b7"

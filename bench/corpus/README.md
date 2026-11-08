@@ -48,3 +48,8 @@ check; it is not registered for ordinary pytest. The smoke check creates a
 temporary `.ptcase` file containing two identically named passing items and one
 intentional failure, and checks both duplicate collection and JUnit occurrences.
 This remains an isolated synthetic case, not ecosystem qualification.
+
+`probes/bytecode_integrity_probe.py` creates same-size, same-mtime edits in its
+own temporary directory. On the tested CPython profile its timestamp-based pyc
+negative control loads stale code, while a checked-hash pyc detects the edit.
+It does not purge shared caches, establish a benchmark reset policy, or test PT.
