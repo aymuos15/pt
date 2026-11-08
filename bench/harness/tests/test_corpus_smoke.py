@@ -111,6 +111,35 @@ class CorpusSmokeTests(unittest.TestCase):
                 "module import", "test call", "module import", "module import", "test call",
             ])
 
+    def test_custom_collector_preserves_duplicate_node_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            case_file = root / "cases.ptcase"
+            case_file.write_text("pass:duplicate\npass:duplicate\nfail:expected-failure\n")
+            report = root / "report.xml"
+            env = os.environ.copy()
+            env.pop("PYTEST_ADDOPTS", None)
+            env.pop("PYTEST_PLUGINS", None)
+            env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+            env["PYTHONPATH"] = str(CORPUS)
+            command = [sys.executable, "-m", "pytest", "-p", "no:cacheprovider", "-p",
+                       "custom_collector_plugin", "-q", str(case_file)]
+            collected = subprocess.run(command + ["--collect-only"], cwd=directory, env=env,
+                                       capture_output=True, text=True, timeout=30)
+            self.assertEqual(collected.returncode, 0, collected.stdout + collected.stderr)
+            self.assertEqual(collected.stdout.count("cases.ptcase::duplicate"), 2)
+            run = subprocess.run(command + [f"--junitxml={report}"], cwd=directory, env=env,
+                                 capture_output=True, text=True, timeout=30)
+            self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+            cases = ET.parse(report).getroot().findall(".//testcase")
+            self.assertEqual([case.get("name") for case in cases],
+                             ["duplicate", "duplicate", "expected-failure"])
+            self.assertEqual(len(cases[0]), 0)
+            self.assertEqual(len(cases[1]), 0)
+            failure = cases[2].find("failure")
+            self.assertIsNotNone(failure)
+            self.assertIn("PT_CUSTOM_COLLECTOR_EXPECTED_FAILURE", "".join(failure.itertext()))
+
 
 if __name__ == "__main__":
     unittest.main()

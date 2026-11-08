@@ -3,6 +3,13 @@ status = "draft_unqualified"
 description = "Initial synthetic probes; no training/holdout allocation or confirmatory qualification."
 
 [[probes]]
+id = "custom-collector-duplicates"
+path = "probes/custom_collector_plugin.py"
+sha256 = "be26a2618efb2bfa4b3c2f6673b3a24c2b53dfe48da6aeec34bf206e468b91b7"
+expected_exit_code = 1
+allocation = "unassigned"
+
+[[probes]]
 id = "noop"
 path = "probes/noop_cases.py"
 sha256 = "88235ce9707144e841b5b690bf0b2d02ad4f4493d5cf6fd58ffd057d96f7d917"

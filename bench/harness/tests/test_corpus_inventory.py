@@ -20,7 +20,7 @@ def manifest_text(path, digest, *, probe_id="example", allocation="unassigned"):
 class CorpusInventoryTests(unittest.TestCase):
     def test_repository_inventory(self):
         result = inventory.check_inventory(HARNESS.parent / "corpus" / "manifest.toml")
-        self.assertEqual(result["declared_probes_verified"], 4)
+        self.assertEqual(result["declared_probes_verified"], 5)
         self.assertFalse(result["behavior_qualified"])
         self.assertFalse(result["complete_tree_verified"])
 

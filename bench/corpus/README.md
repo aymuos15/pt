@@ -42,3 +42,9 @@ hidden preflight collection invocation.
 sentinel to `PT_PROBE_IMPORT_EVENTS`. Its smoke check includes a negative control
 showing that separate collection and execution cause an additional import. This
 validates the probe against pytest, not PT's future same-session behavior.
+
+`probes/custom_collector_plugin.py` is explicitly loaded in a controlled smoke
+check; it is not registered for ordinary pytest. The smoke check creates a
+temporary `.ptcase` file containing two identically named passing items and one
+intentional failure, and checks both duplicate collection and JUnit occurrences.
+This remains an isolated synthetic case, not ecosystem qualification.
