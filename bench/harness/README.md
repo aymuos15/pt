@@ -42,6 +42,8 @@ regular files, rejecting symlinks in listed paths and the root's final component
 It emits deterministic JSON suitable for a probe guard, but does not inspect
 undeclared inputs, reject symlinks in ancestors of the supplied root, or provide
 an atomic snapshot. File names and even hashes may disclose sensitive information.
+`../resets/restore_declared_files.py` is a separately documented, opt-in reset
+prototype for disposable worktrees; it can be supplied as a preparation command.
 If a preparation or measurement reports incomplete output drainage or an
 unreaped direct process, the runner preserves the arm record and aborts before
 starting later arms. Reaped direct processes and drained pipes still do not prove
