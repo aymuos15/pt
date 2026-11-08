@@ -101,7 +101,7 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
         raise InspectionError("exited measurement has incomplete cleanup")
 
 
-def inspect_run(directory: Path) -> dict[str, Any]:
+def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Reject missing or inconsistent records; never qualify their contents."""
     schema = _read(SAMPLE_SCHEMA_PATH)
     try:
@@ -291,6 +291,9 @@ def inspect_run(directory: Path) -> dict[str, Any]:
                     raise InspectionError("observation guard does not match recorded result")
                 guard_counts["matched" if verdict["matched_expected_observations"] else "mismatched"] += 1
             counts[result["status"]] += 1
+            if _observations is not None:
+                _observations.append({"block": str(number), "arm": arm,
+                                      "result": result, "guard": record.get("observation_guard")})
     try:
         actual = {path.name for path in directory.iterdir()}
     except OSError as exc:

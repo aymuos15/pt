@@ -46,6 +46,12 @@ The paired driver accepts `--baseline-guard-json` and `--candidate-guard-json`
 with explicit `expected_exit_code`, `expected_stdout_bytes`, and
 `expected_stdout_sha256` fields. It retains matching and mismatching outcomes;
 inspection recomputes guard verdicts rather than trusting recorded booleans.
+`summarize_run.py <run-directory>` can calculate an exploratory paired point
+estimate only when every arm completed and matched a requested guard; any
+missing guard, mismatch, or failed measurement blocks the estimate instead of
+dropping pairs. Missing interval ordering or explicitly truncated raw captures
+also block the estimate. A matching sentinel still does not establish equal work, and
+the summary is neither authenticated nor confirmatory.
 `sample.schema.json` describes the current exploratory arm-record structure; it
 is not the complete WP01 raw-evidence format and does not establish validity.
 The schedule records basic host and harness-Python metadata, including the

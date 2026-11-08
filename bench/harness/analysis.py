@@ -8,7 +8,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 
-def _paired_log_ratios(samples: Sequence[Mapping[str, Any]]) -> list[float]:
+def _paired_log_ratios(samples: Sequence[Mapping[str, Any]], *,
+                       required_status: str = "valid_expected_outcome") -> list[float]:
     """Validate and return log ratios in stable block-identifier order."""
     if not samples:
         raise ValueError("at least one complete block is required")
@@ -20,7 +21,7 @@ def _paired_log_ratios(samples: Sequence[Mapping[str, Any]]) -> list[float]:
             raise ValueError("block must be a nonempty string")
         if arm not in ("baseline", "candidate"):
             raise ValueError("unrecognized arm")
-        if status != "valid_expected_outcome":
+        if status != required_status:
             raise ValueError("unqualified or invalid sample")
         if isinstance(duration, bool) or not isinstance(duration, int) or duration <= 0:
             raise ValueError("elapsed_ns must be a positive integer")
@@ -46,6 +47,12 @@ def paired_geometric_ratio(samples: Sequence[Mapping[str, Any]]) -> float:
     silently drops invalid, duplicate, or incomplete observations.
     """
     ratios = _paired_log_ratios(samples)
+    return math.exp(math.fsum(ratios) / len(ratios))
+
+
+def guarded_exploratory_ratio(samples: Sequence[Mapping[str, Any]]) -> float:
+    """Point estimate over guard-matched records, not equal-work qualification."""
+    ratios = _paired_log_ratios(samples, required_status="guard_matched_unqualified")
     return math.exp(math.fsum(ratios) / len(ratios))
 
 
