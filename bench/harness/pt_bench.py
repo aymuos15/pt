@@ -13,7 +13,10 @@ import signal
 import subprocess
 import tempfile
 import time
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
+
+if TYPE_CHECKING:
+    from raw_capture import RawCapture
 
 
 def _abort_process(process: subprocess.Popen) -> None:
@@ -39,7 +42,8 @@ def _abort_process(process: subprocess.Popen) -> None:
         pass
 
 
-def _stream_posix(process: subprocess.Popen, timeout: float) -> dict[str, Any]:
+def _stream_posix(process: subprocess.Popen, timeout: float,
+                  capture: RawCapture | None = None) -> dict[str, Any]:
     """Drain both pipes without retaining output, with bounded timeout cleanup."""
     deadline = time.monotonic() + timeout
     cleanup_deadline = None
@@ -83,6 +87,8 @@ def _stream_posix(process: subprocess.Popen, timeout: float) -> dict[str, Any]:
                     else:
                         digests[key.data].update(chunk)
                         sizes[key.data] += len(chunk)
+                        if capture is not None:
+                            capture.write(key.data, chunk)
         finally:
             for key in list(selector.get_map().values()):
                 selector.unregister(key.fileobj)
@@ -105,12 +111,21 @@ def _timing(start: int) -> dict[str, Any]:
             "clock_domain": "harness_process_monotonic", "elapsed_ns": end - start}
 
 
-def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
+def measure(argv: Sequence[str], cwd: str, timeout: float, *,
+            raw_bundle: Path | None = None, raw_limit_bytes: int = 10 * 1024 * 1024) -> dict[str, Any]:
     """Measure one process through exit and pipe drainage, retaining all outcomes."""
     if not argv or not all(isinstance(arg, str) for arg in argv) or not argv[0]:
         raise ValueError("command must have a nonempty executable and string arguments")
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("timeout must be finite and positive")
+    if raw_bundle is not None:
+        if os.name != "posix":
+            raise ValueError("raw output capture is supported only on POSIX")
+        if type(raw_limit_bytes) is not int or raw_limit_bytes < 0:
+            raise ValueError("raw output limit must be a nonnegative integer")
+        raw_bundle = Path(raw_bundle)
+        if not raw_bundle.is_dir():
+            raise ValueError("raw output bundle must be an existing directory")
     cwd_path = Path(cwd).resolve(strict=True)
     if not cwd_path.is_dir():
         raise ValueError("cwd must be a directory")
@@ -127,9 +142,18 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
             "cwd": str(cwd_path), **_timing(start),
         }
 
+    execution_reaped = False
     try:
         if os.name == "posix":
-            output = _stream_posix(process, timeout)
+            if raw_bundle is None:
+                output = _stream_posix(process, timeout)
+                execution_reaped = output["process_reaped"]
+            else:
+                from raw_capture import RawCapture
+                with RawCapture(raw_bundle, raw_limit_bytes) as capture:
+                    output = _stream_posix(process, timeout, capture)
+                    execution_reaped = output["process_reaped"]
+                    output["raw_capture"] = capture.publish()
         else:
             # The original prototype path does not provide bounded memory or
             # process-tree cleanup on non-POSIX systems.
@@ -147,8 +171,10 @@ def measure(argv: Sequence[str], cwd: str, timeout: float) -> dict[str, Any]:
                 "stdout_sha256": hashlib.sha256(stdout).hexdigest(),
                 "stderr_sha256": hashlib.sha256(stderr).hexdigest(),
             }
+            execution_reaped = output["process_reaped"]
     except BaseException:
-        _abort_process(process)
+        if not execution_reaped:
+            _abort_process(process)
         raise
 
     return {
@@ -192,13 +218,17 @@ def main() -> int:
     parser.add_argument("--cwd", required=True)
     parser.add_argument("--timeout", type=float, required=True)
     parser.add_argument("--output", required=True, help="new JSON file; never overwritten")
+    parser.add_argument("--raw-output-bundle", type=Path, help="optional existing blob directory; may contain secrets")
+    parser.add_argument("--raw-limit-bytes", type=int, default=10 * 1024 * 1024,
+                        help="maximum captured prefix per stream (default: 10 MiB)")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     argv = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not argv:
         parser.error("a command is required after --")
     try:
-        result = measure(argv, args.cwd, args.timeout)
+        result = measure(argv, args.cwd, args.timeout, raw_bundle=args.raw_output_bundle,
+                         raw_limit_bytes=args.raw_limit_bytes)
         record = {"schema_version": 1, "mode": "exploratory", "result": result}
         write_record(args.output, record)
     except (ValueError, OSError) as exc:

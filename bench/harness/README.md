@@ -2,7 +2,7 @@
 
 This is an independent command timer and supporting prototype. It does **not**
 qualify outcomes, compare work, capture resource totals, semantically validate campaign
-manifests, reset state, retain raw output, or implement
+manifests, reset state, retain raw output by default, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
 Known-delay regression tests cover process startup, shutdown, and pipe drainage;
 they do not validate every product or campaign timing boundary.
@@ -65,9 +65,16 @@ artifact digests against regular files named by SHA-256 in a supplied local
 bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolved
 or mismatched fields. It cannot verify revisions, provenance, semantic content,
 reset equivalence, or a stable snapshot; even all matches remain unqualified.
-`blob_store.py` provides bounded, content-addressed, no-overwrite publication
-for a caller-provided byte stream. It is not yet connected to timer output;
-it does not authenticate content or guarantee power-loss durability.
+`blob_store.py` provides bounded, content-addressed, no-overwrite publication.
+The standalone timer can optionally retain bounded stdout/stderr prefixes with
+`--raw-output-bundle <existing-directory> --raw-limit-bytes <per-stream-limit>`
+on POSIX. Truncation is explicit and full observed-stream hashes remain separate;
+spooling and blob publication are inside the timer, so this is instrumented
+timing, not an unmodified product benchmark. The paired driver does not yet
+support raw capture. Blob publication does not authenticate content or guarantee
+power-loss durability. A blob-publication failure aborts the sample instead of
+publishing a successful record; previously published blobs may remain. Raw output
+can contain secrets; enable it deliberately.
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):
@@ -85,8 +92,8 @@ python3 bench/harness/pt_bench.py --cwd . --timeout 5 --output /tmp/pt-sample.js
 ```
 
 An `exited_unqualified` observation means only that the process exited; even a
-zero exit is not evidence that expected work happened. Output hashes and sizes
-are recorded instead of content, so this prototype does not preserve raw output.
+zero exit is not evidence that expected work happened. By default, output hashes
+and sizes are recorded instead of content.
 Records are published via a same-filesystem hard link after serialization and
 file synchronization, without overwriting existing paths. A crash can leave a
 hidden temporary file, and directory entries are not synced for power-loss
