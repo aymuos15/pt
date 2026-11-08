@@ -28,6 +28,15 @@ restrict access to the owning user as appropriate to the platform, and handle
 backpressure without unbounded buffering. Test-created descendants must not be
 able to keep a session falsely alive indefinitely.
 
+`protocol-v0.schema.json` proposes a **subset** of per-message payload shapes for
+session start, item occurrences, phase reports, collection errors, and session
+termination. It is not a complete event set or a wire implementation. Duplicate
+node IDs are valid when occurrence ordinals differ. Schema validation alone cannot
+verify frame size in bytes, unique/ordered ordinals, producer sequence continuity,
+cross-message accounting, authentication, artifacts, or completion. A valid
+terminal message is not a successful final result. Tests currently exercise only
+the draft schema, not a bridge or coordinator.
+
 Open decisions include channel implementation, handshake and version negotiation,
 schema evolution, precise identity grammar, artifact authentication, and
 platform-specific ownership and cleanup. No implementation should treat this
