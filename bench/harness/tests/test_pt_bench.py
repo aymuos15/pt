@@ -19,7 +19,25 @@ pt_bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pt_bench)
 
 
+def read_process_stat(path):
+    """A procfs record may disappear after open, not just before open."""
+    try:
+        return path.read_text().rsplit(")", 1)[1].split()
+    except (FileNotFoundError, ProcessLookupError):
+        return None
+
+
 class MeasureTests(unittest.TestCase):
+    def test_process_stat_disappearance_is_not_a_live_child_or_a_waived_io_error(self):
+        path = mock.Mock()
+        for missing in (FileNotFoundError(), ProcessLookupError()):
+            with self.subTest(missing=type(missing).__name__):
+                path.read_text.side_effect = missing
+                self.assertIsNone(read_process_stat(path))
+        path.read_text.side_effect = PermissionError("procfs verification denied")
+        with self.assertRaises(PermissionError):
+            read_process_stat(path)
+
     def test_success_is_explicitly_unqualified(self):
         result = pt_bench.measure([sys.executable, "-c", "print('hello')"], ".", 5)
         self.assertEqual(result["status"], "exited_unqualified")
@@ -73,10 +91,7 @@ class MeasureTests(unittest.TestCase):
             try:
                 deadline = time.monotonic() + 2
                 while True:
-                    try:
-                        fields = process_stat.read_text().rsplit(")", 1)[1].split()
-                    except FileNotFoundError:
-                        fields = None
+                    fields = read_process_stat(process_stat)
                     if (fields is None or fields[19] != start_time or fields[0] == "Z"
                             or time.monotonic() >= deadline):
                         break
@@ -86,10 +101,10 @@ class MeasureTests(unittest.TestCase):
             finally:
                 # If the test fails, terminate only the exact descendant it made.
                 try:
-                    fields = process_stat.read_text().rsplit(")", 1)[1].split()
-                    if fields[19] == start_time and fields[0] != "Z":
+                    fields = read_process_stat(process_stat)
+                    if fields is not None and fields[19] == start_time and fields[0] != "Z":
                         os.kill(pid, signal.SIGKILL)
-                except FileNotFoundError:
+                except ProcessLookupError:
                     pass
 
     @unittest.skipUnless(os.name == "posix", "POSIX streaming implementation")
