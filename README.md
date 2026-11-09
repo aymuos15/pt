@@ -73,6 +73,8 @@ this does not qualify a runner or close the later work-package/release gates.
   recursive bindings, preserved missing metrics and 24 unresolved qualification fields.
 - [Scenario/reset/edit validation](docs/wp01-scenario-replay.md): explicit file
   effects, retained request inputs and historical reset evidence, not a semantic oracle.
+- [Paired scenario campaigns](docs/wp01-paired-scenarios.md): frozen shared input
+  bytes, per-arm reset observations and complete failed/unknown/not-run ledgers.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

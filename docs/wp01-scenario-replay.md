@@ -154,7 +154,10 @@ policies, with separate nonnested arm working directories. Both complete file-do
 observations are retained; different or incomplete inputs make the comparison
 blocked rather than selecting successful requests. No actual independent reset,
 semantic equivalence, loaded-code or artifact qualification follows from matching
-declared files. This is not paired scheduling or a new latency/resource/card profile.
+declared files. The standalone comparison is not paired scheduling or a new
+latency/resource/card profile. The subsequent [paired scenario integration](wp01-paired-scenarios.md)
+adds a distinct campaign with frozen payloads and per-arm observations, without
+relabelling earlier latency/resource evidence.
 
 All six qualification fields remain required **null**: complete input domain,
 actual loaded code, semantic equal work, reset equivalence, generation validity
@@ -307,7 +310,8 @@ at `/tmp/opencode/pt-scenario-replay-evidence-us0qasji`:
   by updating a hash. No failure becomes a favorable subset.
 
 This closes a bounded **declared-file validation prerequisite**, not WP01 acceptance.
-Latency/resource campaign integration, real product request/edit endpoints,
+Paired scenario validation is now integrated separately, as linked above.
+Latency/resource campaign qualification, real product request/edit endpoints,
 complete loaded-input/environment/cache/service/reset qualification, semantic
 work/generation validation, resource budgets, observer-overhead characterization,
 frozen corpus/campaign governance and independent review remain open. The existing

@@ -144,6 +144,26 @@ validation is a correctness-instrumented layer, not a latency/resource sample or
 a new card format; latency estimators reject it. See [scope, CLI, safety and
 adverse controls](../../docs/wp01-scenario-replay.md).
 
+`paired_scenarios.py --baseline-plan <scenario.json> --candidate-plan <scenario.json>
+--payloads <input-blobs> --output <new-campaign> --blocks N --seed S --apply`
+integrates those observations into balanced seeded AB/BA **scenario-validation**
+campaigns. Separate arm worktrees and exact matching reset/edit/input/seed/cache/
+timeout/exit policies are mandatory; arm commands may differ and remain individually
+bound. Shared payload bytes are validated and frozen before any arm runs. Each
+scheduled arm gets a new standalone scenario unit, not an independently sampled
+request. Clean S6/S7/S9 unsupported checks continue; a failed or unconfirmed unit
+stops all later sessions without retry or rollback.
+
+Routed `inspect_run.py <campaign>` and `summarize_run.py <campaign>` retain each
+actual returned reset ledger, request-input snapshot, publication certainty and
+all planned session/request/phase/file-effect denominators. Lost whole-unit returns
+retain null observations and `unknown_unobserved` effects, never reconstructed
+success from complete-looking files. Summaries are offline with six required null
+qualifications and null latency/resource statistics; bootstrap and result-card
+relabelling are rejected. This adds no shipping latency endpoint, native resource
+pass, semantic oracle or reset-equivalence qualification. See [layout, CLI exits,
+controls and reproduction](../../docs/wp01-paired-scenarios.md).
+
 The existing `result_card.py <retained-campaign> --output <new-card.json>` and
 `inspect_result_card.py <card.json> --run <retained-campaign>` now route paired
 whole-session resource evidence to
@@ -558,6 +578,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resource_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_replay.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_scenarios.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

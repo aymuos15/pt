@@ -27,6 +27,11 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
     inspection = inspect_run(directory, _observations=observations)
     if _observations is not None:
         _observations.extend(observations)
+    if inspection.get("kind") == "paired_scenario_replay_campaign":
+        if bootstrap_resamples is not None:
+            raise ValueError("bootstrap is unsupported for paired scenario validation")
+        from paired_scenarios import summarize
+        return summarize(inspection, observations)
     if inspection.get("kind") == "paired_replay_resource_campaign":
         if bootstrap_resamples is not None:
             raise ValueError("bootstrap is unsupported for whole-session resource diagnostic campaigns")
@@ -126,7 +131,7 @@ def main() -> int:
         print(f"summarize-run: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] in ("exploratory_point_estimate", "diagnostic_resource_observations") else 1
+    return 0 if result["status"] in ("exploratory_point_estimate", "diagnostic_resource_observations", "declared_file_scenario_observations") else 1
 
 
 if __name__ == "__main__":

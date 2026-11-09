@@ -234,6 +234,8 @@ def _measurement_rows(observations, plan, context, directory):
 def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
     directory = Path(os.path.abspath(directory))
     declaration, _ = read_json(directory / "schedule.json")
+    if declaration.get("kind") == "paired_scenario_replay_campaign":
+        raise ValueError("paired scenario validation is not a latency/resource result-card format; use the complete scenario summary")
     if declaration.get("kind") == "paired_replay_resource_campaign":
         from replay_resource_card import build
         return build(directory, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)

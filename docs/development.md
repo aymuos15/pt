@@ -113,6 +113,10 @@ bytes before and after each command. Mutations require `--apply`, operate only o
 declared ordinary files and stop on uncertainty without retry/rollback. Offline
 inspection/comparison does not execute work. This is bounded file-domain evidence,
 not environment/service/cache, loaded-code, semantic or reset-equivalence qualification.
+The [paired scenario campaign](wp01-paired-scenarios.md) now freezes shared payload
+bytes before execution and retains each arm's actual reset/input observations with
+complete failure/unknown/not-run accounting. It remains a separate instrumented
+validation profile: no latency/resource estimates or qualification upgrade.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
