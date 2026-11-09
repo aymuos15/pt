@@ -54,6 +54,39 @@ work. A whole replay can be one fresh resource unit; a whole paired-campaign
 wrapper is **not** per-arm accounting and must not be divided into per-arm peaks.
 See [resource scope, CLI exit codes, native capability limits and evidence](../../docs/wp01-resources.md).
 
+`replay_resources.py --plan <fixed-replay.json> --output <new-directory>
+--outer-timeout <seconds>` now observes **one complete managed replay in one fresh
+cgroup**, through a separate enrolled harness driver. This is a new opt-in
+diagnostic invocation, not an automatic rerun or extra metrics attached to a
+latency observation. Preparation, requested idle waits, future background
+descendants, ordered interactions, required shutdown, inner publication and
+driver reporting all remain inside that resource group. Driver imports and
+observer work performed by that driver are included without subtraction; the
+outer observer/sampler remain outside cgroup CPU/memory totals.
+
+Use an explicit existing `--cgroup-parent`; no controllers/limits are changed.
+Strict mode starts no driver if a required capability, including `memory.peak`,
+is unavailable. Only `--allow-missing-peak` permits a partial observation, retaining
+a null peak and false complete-accounting. The separate outer watchdog must cover
+the execution budget, reserved shutdown and at least five seconds of slack. It
+can still interrupt shutdown or reporting; a missing receipt never proves cleanup.
+Detached work outliving even a successful replay is counted, killed and failed.
+
+The distinct closed [`replay-resource-v1.schema.json`](replay-resource-v1.schema.json)
+binds the request, raw resource record, driver receipt/transport and complete
+nested session bytes. Save the returned stdout receipt **outside** the bundle.
+`inspect_replay_resources.py --directory <run> --receipt <receipt.json>` checks
+historical evidence without worktree/cgroup access or another command invocation.
+Failed/unsupported/not-run/unknown phases, missing counters, publication faults
+and driver/observer clock provenance remain explicit. There is no cross-process
+clock arithmetic, per-interaction resource imputation, idle-only attribution,
+latency ratio/bootstrap or qualification upgrade. Producer exits are 0 for complete
+unqualified accounting, 1 for explicit partial support, 2 for failure/invalid
+evidence and 3 for unsupported/no subject; inspector exit 0 is consistency only.
+Paired replay resource campaigns/cards remain a separate follow-up; existing
+latency and card formats, including their null qualification fields, are unchanged.
+See [reproduction, exact scope, watchdog limits and native controls](../../docs/wp01-replay-resources.md).
+
 `paired.py --timing-endpoint resource` now integrates these observations into a
 **distinct resource-diagnostic campaign**, not an extra run attached to a latency
 sample. Its closed [`paired-resource-v1.schema.json`](paired-resource-v1.schema.json)
@@ -442,6 +475,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_managed_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_result_card.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resources.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

@@ -226,8 +226,11 @@ Direct CLI controls are retained outside the repository at
 ## Remaining prerequisites
 
 This completes the focused evidence-bound replay reporting integration, **not
-WP01 acceptance**. Whole-session native CPU/memory/idle accounting, actual
-work/generation/input/reset equivalence, semantic manifests, scenario/edit replays,
+WP01 acceptance**. The later [whole-session resource mode](wp01-replay-resources.md)
+provides one separate diagnostic replay, without relabelling these cards or filling
+their qualification fields. Paired resource replay/card integration, native peak
+qualification, actual work/generation/input/reset equivalence, semantic manifests,
+scenario/edit replays,
 observer overhead, frozen campaigns, corpus governance and independent review
 remain open. Missing `memory.peak` gates native peak qualification only, not further
 implementation. WP02–WP04 completion, the real backend/oracle and qualification/

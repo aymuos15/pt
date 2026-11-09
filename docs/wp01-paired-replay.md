@@ -134,7 +134,9 @@ are not copied from other runs or imputed as zero. At `fe8adbe`, the card CLI
 explicitly rejected replay rather than relabelling it as command/lifecycle latency.
 The subsequent [paired-replay card follow-up](wp01-replay-result-cards.md) now
 adds a distinct closed recursive reporting format, including no-return aborts.
-Replay resource integration remains open. Changed reader source bytes require the
+The later [whole-session resource mode](wp01-replay-resources.md) now accounts for
+one separate diagnostic replay, not these latency samples. Paired resource
+replay/card integration remains open. Changed reader source bytes require the
 appropriate historical reader to reconstruct older result cards; `ffd6568` is
 the base reader for this batch.
 

@@ -6,6 +6,12 @@ There is still no PT pytest backend, independent semantic oracle, qualified
 support profile or release campaign. `pt run` remains unavailable. These changes
 do not establish a test-runner speedup.
 
+The later [whole-session managed-replay integration](wp01-replay-resources.md)
+uses this observer around one entire freshly enrolled replay driver, including
+preparation, idle/background work, shutdown and driver publication. It is a
+separate diagnostic mode, not a rerun or relabelling of existing latency evidence;
+this original raw resource schema and strict/partial capability policy are unchanged.
+
 ## Resource unit and execution boundary
 
 [`resource_run.py`](../bench/harness/resource_run.py) observes **one fresh command

@@ -263,9 +263,11 @@ The subsequent [paired-replay card integration](wp01-replay-result-cards.md) now
 adds a distinct recursive, reconstructible reporting format. It does not upgrade
 the standalone observations to qualified work, resources or independent samples.
 
-Whole-session CPU/memory/idle residency and resource-budget equivalence remain
-unknown. A separate future native resource integration must include preparation,
-idle/background work and shutdown without inventing per-step independent units.
+The later [whole-session resource mode](wp01-replay-resources.md) now provides a
+separate diagnostic invocation including preparation, idle/background work,
+shutdown and driver reporting. It does not add resource values to these retained
+latency-only receipts or qualify resource budgets/idle-only costs. Paired resource
+replay/card integration remains open; no per-step independent units are invented.
 Missing `memory.peak` gates native peak qualification, **not further implementation**.
 WP02/WP03, WP04 completion, the real backend and qualification/release dependencies
 remain open in the [prerequisite register](wp01-status.md). Rust/bridge builds,

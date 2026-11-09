@@ -94,8 +94,13 @@ reuse, reset semantics, generations or resource totals. The
 replays and preserves failed/not-run/unknown sessions through routed inspection
 and exploratory summaries. [Paired-replay result cards](wp01-replay-result-cards.md)
 now recursively bind those campaigns, preserving failed/not-run/unknown sessions
-and all qualification gaps through independent reconstruction. Replay resource
-integration remains open; interaction steps are not independent samples.
+and all qualification gaps through independent reconstruction. The separate
+[whole-session resource mode](wp01-replay-resources.md) now covers preparation,
+idle/background descendants, shutdown and driver reporting in a fresh cgroup.
+Driver overhead is included; outer observer/sampler overhead is excluded from
+cgroup totals. Missing peak remains unsupported unless explicitly accepted as a
+partial diagnostic. Paired resource replay/card integration remains open; existing
+latency observations are not rerun or relabelled, and steps are not independent samples.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
