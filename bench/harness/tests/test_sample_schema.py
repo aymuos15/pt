@@ -20,7 +20,7 @@ class ExploratorySampleSchemaTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
         output = root / "run"
-        command = [sys.executable, str(HARNESS / "paired.py"), "--output", str(output),
+        command = [sys.executable, str(HARNESS / "paired.py"), "--timing-endpoint", "command", "--output", str(output),
                    "--cwd", str(root), "--baseline-json", json.dumps(baseline),
                    "--candidate-json", json.dumps(candidate), "--blocks", "1", "--seed", "3",
                    "--timeout", "0.2"]

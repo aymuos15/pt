@@ -21,6 +21,7 @@ class ExploratoryPairsTests(unittest.TestCase):
             sys.executable, str(PAIRED), "--output", str(output), "--cwd", str(output.parent),
             "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
             "--blocks", str(blocks), "--seed", "3", "--timeout", str(timeout),
+            "--timing-endpoint", "command",  # Exercise retained v1/command contracts explicitly.
         ]
         if baseline_prepare is not None:
             args += ["--baseline-prepare-json", json.dumps(baseline_prepare)]

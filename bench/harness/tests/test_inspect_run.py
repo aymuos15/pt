@@ -23,7 +23,7 @@ class InspectRunTests(unittest.TestCase):
         args = [sys.executable, str(PAIRED), "--output", str(self.run_dir),
                 "--cwd", str(self.root), "--baseline-json", json.dumps(command),
                 "--candidate-json", json.dumps(command), "--blocks", "1", "--seed", "5",
-                "--timeout", "2"]
+                "--timeout", "2", "--timing-endpoint", "command"]
         if preparation is not None:
             args += ["--baseline-prepare-json", json.dumps(preparation)]
         result = subprocess.run(args, capture_output=True, text=True, timeout=15)

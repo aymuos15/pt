@@ -1,6 +1,7 @@
 # WP01 publication-inclusive observation endpoint
 
-Status: **implemented for the standalone exploratory timer; not WP01 acceptance,
+Status: **implemented for the standalone exploratory timer, with a
+[paired follow-up](wp01-paired-lifecycle.md); not WP01 acceptance,
 semantic qualification or a PT backend**. Date: **2026-11-09**. Base: `3871aee`.
 This closes that timer's unmeasured sample-publication stage without redefining
 old observations, inventing a self-referential timestamp or relaxing publication
@@ -108,14 +109,15 @@ The existing timeout is still a **command/process timeout**, not a hard deadline
 for filesystem finalization. Hung filesystem calls, whole-boundary resource
 accounting and campaign-level recovery remain open work, not hidden guarantees.
 
-The paired driver still calls `measure()` and uses the command interval. Its
-plans, inspections and summaries now explicitly name
-`process_launch_through_exit_pipes_and_optional_raw_finalization_v1`; inspection
-rejects relabelling these as publication-inclusive. Legacy plans without an
-endpoint remain readable as command observations only. Arm/schedule publication,
-receipt transport/persistence, preparation amortization, full request/watch/
-replay endpoints and semantic/campaign validation have not been added to paired
-latencies. A standalone receipt is not evidence those later gates are closed.
+At `02c72c6`, paired runs still used the command interval. The
+[version-2 follow-up](wp01-paired-lifecycle.md) now makes publication-inclusive
+samples/receipts the paired default, archives declared report bytes inside each
+stage and selects lifecycle intervals for analysis. Explicit command-only mode
+and old records remain separately labelled; they cannot be relabelled or mixed.
+Schedule publication, receipt transport/persistence, preparation amortization,
+full request/watch/replay endpoints and semantic/campaign validation remain
+outside these stage observations. The standalone evidence below is historical,
+not proof the later paired/release gates were already closed.
 
 ## Regression evidence and retained development failures
 

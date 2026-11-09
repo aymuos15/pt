@@ -13,6 +13,10 @@ def _paired_log_ratios(samples: Sequence[Mapping[str, Any]], *,
     """Validate and return log ratios in stable block-identifier order."""
     if not samples:
         raise ValueError("at least one complete block is required")
+    endpoints = [sample.get("timing_endpoint") for sample in samples]
+    if any(value is not None for value in endpoints):
+        if any(not isinstance(value, str) or not value for value in endpoints) or len(set(endpoints)) != 1:
+            raise ValueError("mixed or missing timing endpoints")
     blocks: dict[str, dict[str, int]] = {}
     for sample in samples:
         block, arm, status, duration = (sample.get(key) for key in
@@ -102,7 +106,7 @@ def _bootstrap_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int, resampl
         return estimates[lower] + (estimates[upper] - estimates[lower]) * (position - lower)
 
     tail = (1 - confidence) / 2
-    return {
+    result = {
         "mode": "exploratory_unqualified", "ratio_direction": "baseline_over_candidate",
         "point_estimate": math.exp(math.fsum(logs) / len(logs)),
         "interval_method": "percentile_whole_paired_blocks_linear_quantile",
@@ -110,3 +114,6 @@ def _bootstrap_ratio(samples: Sequence[Mapping[str, Any]], *, seed: int, resampl
         "interval_upper": quantile(1 - tail), "blocks": len(logs),
         "bootstrap_resamples": resamples, "bootstrap_seed": seed,
     }
+    if samples[0].get("timing_endpoint") is not None:
+        result["timing_endpoint"] = samples[0]["timing_endpoint"]
+    return result

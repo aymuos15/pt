@@ -47,6 +47,8 @@ this does not qualify a runner or close the later work-package/release gates.
   stage boundaries, negative controls, and explicit endpoint exclusions.
 - [Publication-inclusive observation endpoint](docs/wp01-lifecycle.md): committed
   samples, post-commit receipts and bounded declared-finalization checks, not PT qualification.
+- [Paired lifecycle integration](docs/wp01-paired-lifecycle.md): version-2 receipts,
+  retained report bytes, abort accounting and endpoint-specific analysis.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

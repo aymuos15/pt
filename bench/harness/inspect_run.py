@@ -16,7 +16,7 @@ import jsonschema
 
 from artifact_check import _digest_status
 from guards import check_observation, validate_expectations
-from pt_bench import COMMAND_ENDPOINT
+from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
@@ -111,6 +111,11 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
         raise InspectionError(f"invalid exploratory sample schema: {exc.message}") from exc
     validator = jsonschema.Draft202012Validator(schema)
     plan = _read(directory / "schedule.json")
+    if plan.get("timing_endpoint") == LIFECYCLE_ENDPOINT:
+        if type(plan.get("schema_version")) is not int or plan["schema_version"] != 2:
+            raise InspectionError("do not mix: publication-inclusive records require a version-2 plan and receipts")
+        from paired_lifecycle import inspect_pairs
+        return inspect_pairs(directory, plan, observations=_observations)
     if plan.get("timing_endpoint", COMMAND_ENDPOINT) != COMMAND_ENDPOINT:
         raise InspectionError("unsupported paired timing endpoint; do not mix command and lifecycle intervals")
     schedule, seed, cwd = plan.get("schedule"), plan.get("seed"), plan.get("cwd")
@@ -351,7 +356,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         result = inspect_run(args.directory)
-    except (InspectionError, ValueError) as exc:
+    except (InspectionError, ValueError, OSError) as exc:
         print(f"inspect-run: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, sort_keys=True))

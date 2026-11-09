@@ -239,7 +239,10 @@ def _same_json(left: Any, right: Any) -> bool:
 def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: Path, *,
                         required_finalization: dict[str, Any] | None = None,
                         raw_bundle: Path | None = None,
-                        raw_limit_bytes: int = 10 * 1024 * 1024) -> dict[str, Any]:
+                        raw_limit_bytes: int = 10 * 1024 * 1024,
+                        context: dict[str, Any] | None = None,
+                        guard_expectations: dict[str, Any] | None = None,
+                        archive_bundle: Path | None = None) -> dict[str, Any]:
     """Return a post-commit receipt; its transport is outside the subject clock.
 
     The immutable sample deliberately contains no post-publication timestamp or
@@ -253,6 +256,14 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
     )
     require_safe_lookup()
     contract = requirements(required_finalization)
+    extended = context is not None or guard_expectations is not None or archive_bundle is not None
+    if context is not None:
+        if not isinstance(context, dict):
+            raise ValueError("sample context must be a JSON object")
+        context = json.loads(json.dumps(context, allow_nan=False))
+    if guard_expectations is not None:
+        from guards import validate_expectations
+        guard_expectations = validate_expectations(guard_expectations)
     output = Path(os.path.abspath(output))
     root = Path(os.path.abspath(cwd))
     # Reject obvious invalid destinations before executing work; exclusive
@@ -264,20 +275,35 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
         raise FileExistsError(f"sample destination already exists: {output}")
     if raw_bundle is not None:
         raw_bundle = Path(os.path.abspath(raw_bundle))
+    if archive_bundle is not None:
+        archive_bundle = Path(os.path.abspath(archive_bundle))
     errors = []
     result = None
     sample = None
     published_identity = None
     initial = None
     final = None
+    archived = None
+    guard = None
     try:
         result = measure(argv, str(root), timeout, raw_bundle=raw_bundle, raw_limit_bytes=raw_limit_bytes)
     except (OSError, ValueError) as exc:
         errors.append({"stage": "measurement", "error": str(exc)})
     if result is not None:
         initial = check(result, root, contract, raw_bundle)
-        record = {"schema_version": 1, "mode": "exploratory", "result": result,
+        if guard_expectations is not None:
+            from guards import check_observation
+            guard = check_observation(result, **guard_expectations)
+        if archive_bundle is not None:
+            from finalization import archive
+            archived = archive(root, initial, archive_bundle)
+            if archived["errors"]:
+                errors.append({"stage": "artifact_archive", "error": "required artifact archival failed"})
+        record = {"schema_version": 2 if extended else 1, "mode": "exploratory", "result": result,
                   "required_finalization": {"requirements": contract, "observed": initial}}
+        if extended:
+            record.update(context=context, guard_expectations=guard_expectations,
+                          observation_guard=guard, artifact_archive=archived)
         try:
             expected = (json.dumps(record, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
             if len(expected) > MAX_RECORD_BYTES:
@@ -306,7 +332,7 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
     finalized = (not errors and sample is not None and initial is not None
                  and initial["matched"] and final["matched"])
     receipt = {
-        "schema_version": 1, "mode": "exploratory_unqualified", "confirmatory_eligible": False,
+        "schema_version": 2 if extended else 1, "mode": "exploratory_unqualified", "confirmatory_eligible": False,
         "lifecycle": {"endpoint": LIFECYCLE_ENDPOINT,
                       "status": "finalized_unqualified" if finalized else "finalization_failed",
                       **_timing(start)},
@@ -317,19 +343,25 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
         "errors": errors,
         "limitations": LIFECYCLE_LIMITATIONS.copy(),
     }
+    if extended:
+        receipt.update(context=context, guard_expectations=guard_expectations,
+                       observation_guard=guard, artifact_archive=archived)
     if len(json.dumps(receipt, sort_keys=True, allow_nan=False).encode("utf-8")) > MAX_RECEIPT_BYTES:
         raise ValueError("lifecycle receipt exceeds byte limit; sample alone is unconfirmed")
     return receipt
 
 
-def inspect_lifecycle(output: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+def inspect_lifecycle(output: Path, receipt: dict[str, Any], *, archived_bundle: Path | None = None) -> dict[str, Any]:
     """Check a receipt/sample pair without authenticating it or qualifying work."""
     from finalization import check, read_json, requirements
 
     fields = {"schema_version", "mode", "confirmatory_eligible", "lifecycle", "result", "sample",
               "cwd", "raw_bundle", "required_finalization", "errors", "limitations"}
+    extended = isinstance(receipt, dict) and type(receipt.get("schema_version")) is int and receipt["schema_version"] == 2
+    if extended:
+        fields |= {"context", "guard_expectations", "observation_guard", "artifact_archive"}
     if (not isinstance(receipt, dict) or set(receipt) != fields
-            or type(receipt["schema_version"]) is not int or receipt["schema_version"] != 1
+            or type(receipt["schema_version"]) is not int or receipt["schema_version"] not in (1, 2)
             or receipt["mode"] != "exploratory_unqualified" or receipt["confirmatory_eligible"] is not False
             or receipt["limitations"] != LIFECYCLE_LIMITATIONS):
         raise ValueError("invalid lifecycle receipt envelope")
@@ -351,7 +383,7 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any]) -> dict[str, Any]:
     interval(lifecycle)
     errors = receipt["errors"]
     if (not isinstance(errors, list) or any(not isinstance(item, dict) or set(item) != {"stage", "error"}
-            or item["stage"] not in ("measurement", "sample_publication", "required_finalization")
+            or item["stage"] not in ("measurement", "sample_publication", "required_finalization", "artifact_archive")
             or not isinstance(item["error"], str) or not item["error"] for item in errors)):
         raise ValueError("invalid lifecycle error evidence")
     evidence = receipt["required_finalization"]
@@ -383,21 +415,54 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any]) -> dict[str, Any]:
     raw = receipt["raw_bundle"]
     if raw is not None and (not isinstance(raw, str) or not Path(raw).is_absolute()):
         raise ValueError("invalid lifecycle raw bundle")
+    expected_record = {"schema_version": 2 if extended else 1, "mode": "exploratory", "result": result,
+                       "required_finalization": {"requirements": contract, "observed": evidence["before_publication"]}}
+    if extended:
+        if receipt["context"] is not None and not isinstance(receipt["context"], dict):
+            raise ValueError("invalid lifecycle context")
+        archive_value = receipt["artifact_archive"]
+        if archive_value is not None and (not isinstance(archive_value, dict)
+                or set(archive_value) != {"bundle", "artifacts", "errors"}
+                or not isinstance(archive_value["bundle"], str)
+                or not Path(archive_value["bundle"]).is_absolute()):
+            raise ValueError("invalid artifact-archive evidence")
+        from guards import check_observation, validate_expectations
+        expectation = receipt["guard_expectations"]
+        guard = (check_observation(result, **validate_expectations(expectation))
+                 if expectation is not None and result is not None else None)
+        if not _same_json(guard, receipt["observation_guard"]):
+            raise ValueError("observation guard differs from lifecycle result")
+        expected_record.update({key: receipt[key] for key in
+                                ("context", "guard_expectations", "observation_guard", "artifact_archive")})
     if sample is not None:
         record, observed = read_json(output)
         if (not isinstance(sample, dict) or set(sample) != {"name", "bytes", "sha256"}
                 or type(sample["bytes"]) is not int or sample["name"] != output.name
                 or sample["bytes"] != observed["bytes"] or sample["sha256"] != observed["sha256"]
-                or not _same_json(record, {"schema_version": 1, "mode": "exploratory", "result": result,
-                                          "required_finalization": {"requirements": contract,
-                                                                    "observed": evidence["before_publication"]}})):
+                or not _same_json(record, expected_record)):
             raise ValueError("sample does not match lifecycle receipt")
     matched = False
     if result is not None:
-        current = check(result, Path(receipt["cwd"]), contract, Path(raw) if raw is not None else None)
+        historical = None
+        if extended and receipt["artifact_archive"] is not None:
+            from finalization import archived_check
+            archive_root = archived_bundle if archived_bundle is not None else Path(receipt["artifact_archive"]["bundle"])
+            historical = archived_check(result, contract, evidence["before_publication"],
+                                        receipt["artifact_archive"], archive_root, capture_raw=raw is not None)
+        if archived_bundle is not None:
+            if historical is None:
+                raise ValueError("historical inspection requires archived evidence")
+            current = historical
+        else:
+            current = check(result, Path(receipt["cwd"]), contract, Path(raw) if raw is not None else None)
         matched = (current["matched"] and _same_json(current, evidence["after_publication"])
                    and _same_json(current, evidence["before_publication"]))
+        if historical is not None:
+            matched = matched and _same_json(historical, evidence["before_publication"])
     finalized = not errors and sample is not None and matched
+    if extended and receipt["artifact_archive"] is not None:
+        if receipt["artifact_archive"].get("errors"):
+            finalized = False
     if (lifecycle["status"] == "finalized_unqualified") != finalized:
         raise ValueError("lifecycle status conflicts with publication or required-finalization evidence")
     return {"receipt_consistency": "checked_unqualified", "lifecycle_finalized": finalized,

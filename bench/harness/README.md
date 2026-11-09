@@ -24,8 +24,8 @@ termination; cleanup is not guaranteed if OS process control fails.
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not establish independent observations. `paired.py` can run those
-orders sequentially and preserve individual unqualified observations. It does
-not verify state or work. Optional per-arm `--baseline-prepare-json` and
+orders sequentially and preserve individual unqualified observations. It checks
+declared finalization evidence, not general state or test work. Optional per-arm `--baseline-prepare-json` and
 `--candidate-prepare-json` commands run before each arm, with separate timing
 and records; failed preparation prevents that arm from running. Preparation is
 not measured in the arm's elapsed time and is not proof of a valid reset. A zero
@@ -55,9 +55,12 @@ starting later arms. Reaped direct processes and drained pipes still do not prov
 that detached descendants have exited.
 `inspect_run.py <run-directory>` checks planned block order, record presence,
 arm identities, arm-record schema, output metadata shape, and preparation/result
-consistency. It cannot authenticate
-records, verify unobserved work or state, or qualify a benchmark; it rejects
-partial runs and unexpected files rather than silently excluding them.
+consistency. The default version-2 format also requires bound lifecycle receipts
+and retained declared artifact bytes. A consistent recorded abort accounts for
+all planned arms as observed or not run; unexplained partial runs and unexpected
+files are rejected. Inspection exit zero means consistency, not a completed or
+qualified campaign; `record_consistency: aborted` always blocks analysis.
+Inspection cannot authenticate records or verify unobserved work/current state.
 When all stage intervals are available, inspection rejects recorded overlap or
 out-of-order stages; legacy records with missing intervals are labelled
 `incomplete` for that check. Recorded non-overlap cannot prove actual resource
@@ -70,16 +73,18 @@ with explicit `expected_exit_code`, `expected_stdout_bytes`, and
 inspection recomputes guard verdicts rather than trusting recorded booleans.
 `summarize_run.py <run-directory>` can calculate an exploratory paired point
 estimate only when every arm completed and matched a requested guard; any
-missing guard, mismatch, or failed measurement blocks the estimate instead of
-dropping pairs. Missing interval ordering or explicitly truncated raw captures
+missing guard, mismatch, failed lifecycle or measurement blocks the estimate instead of
+dropping pairs. Recorded aborts, missing interval ordering or explicitly truncated raw captures
 also block the estimate. A matching sentinel still does not establish equal work, and
 the summary is neither authenticated nor confirmatory.
 The summary includes absolute mean arm latencies and can optionally run a
 whole-block percentile bootstrap using `--bootstrap-resamples N --bootstrap-seed
 S`. These values remain exploratory: input independence, equal work, sample
 adequacy, and release criteria are not established by the calculation.
-`sample.schema.json` describes the current exploratory arm-record structure; it
-is not the complete WP01 raw-evidence format and does not establish validity.
+`sample.schema.json` describes legacy version-1 command-only arm records. New
+version-2 samples/receipts are checked against their stage context, contract,
+typed process observations and exact sample/retained-byte bindings; neither is
+the complete WP01 raw-evidence format or establishes benchmark validity.
 `junit_inventory.py` compares ordered JUnit classname/name/outcome attributes,
 preserving duplicates. JUnit is not authoritative pytest collection or phase
 evidence; the comparison omits tracebacks and must not be used as an oracle.
@@ -103,10 +108,17 @@ finalization checks. The receipt is bound to the sample's exact digest/size; the
 sample alone does not claim this larger interval completed. Receipt serialization
 and stdout transport are observer bookkeeping outside that declared endpoint.
 See [the endpoint contract and failure controls](../../docs/wp01-lifecycle.md).
-The paired driver/inspector/summary explicitly label their existing endpoint
-`process_launch_through_exit_pipes_and_optional_raw_finalization_v1`; they do not
-use the new lifecycle receipt or include arm/schedule publication in latency.
-Inspection rejects attempts to relabel those records as lifecycle measurements.
+The paired driver now defaults to publication-inclusive stage samples and saved
+receipts. Preparation, probe and measurement each include declared report
+archival, guard checking, sample publication, cleanup/read-back and finalization
+verification. Analysis uses the measured arm's **lifecycle** interval, not its
+inner command interval. `--timing-endpoint command` explicitly retains legacy
+command-only behavior; finalization contracts are rejected in that mode. Plans,
+receipts and summaries name their endpoint, and mixed/relabeled or partly
+unlabelled observations cannot be combined. Receipt-file persistence and initial
+schedule publication are observer bookkeeping outside the stage interval, but
+must finish before the next stage; neither is claimed part of an amortized replay.
+See [paired lifecycle format, failures and historical validation](../../docs/wp01-paired-lifecycle.md).
 Neither endpoint establishes a complete generation-valid result, watch/replay
 lifecycle, resource containment or confirmatory eligibility.
 `analysis.py` implements a paired geometric point estimator and exploratory
@@ -147,6 +159,12 @@ Blob publication does not authenticate content or guarantee
 power-loss durability. A blob-publication failure aborts the sample instead of
 publishing a successful record; previously published blobs may remain. Raw output
 can contain secrets; enable it deliberately.
+Declared finalization artifacts in version-2 paired runs are separately retained
+by digest even without `--capture-raw`. This explicit file declaration is an
+opt-in to retain those report bytes, including bounded mismatches. The run root
+is created privately; review its reports, arguments, paths and hashes before
+sharing. Later stages may overwrite worktree outputs: paired inspection checks
+the retained historical bytes and typed observations, not current worktree state.
 
 The original concurrent-publication failure is retained in
 [`docs/wp00-review.md`](../../docs/wp00-review.md). The link/unlink publication
@@ -176,7 +194,17 @@ Publication/finalization regression commands:
 ```sh
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_lifecycle.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_finalization.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_lifecycle.py -v
 ```
+
+For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`
+declare measurement requirements. `--baseline-prepare-finalization-json` and
+`--baseline-probe-finalization-json` (and candidate equivalents) apply separately
+to those stages. All use the standalone contract's three fields. Preparation and
+probe require exit zero; a measurement guard's explicit exit is also bound into
+its finalization contract. Conflicts fail before execution. Publication/archival
+failure or uncertain cleanup stops later arms without replay. An abort blocks
+point estimates/bootstrap/absolute comparisons for the entire planned set.
 
 `--finalization-json` optionally declares `expected_exit_code` (an integer or
 `null`), `artifacts` (relative paths with exact byte counts/SHA-256), and `absent`

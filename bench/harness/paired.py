@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pt_bench import COMMAND_ENDPOINT, measure, write_record
+from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT, measure, write_record
 from schedule import paired_schedule
 from metadata import collect_metadata
 from guards import check_observation, validate_expectations
@@ -38,7 +38,7 @@ def _successful(result: dict[str, Any]) -> bool:
             and result.get("output_complete") is True and result.get("process_reaped") is True)
 
 
-def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
+def _run_command_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
               blocks: int, seed: int, timeout: float, *,
               baseline_prepare: list[str] | None = None,
               candidate_prepare: list[str] | None = None,
@@ -182,6 +182,37 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 )
 
 
+def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
+              blocks: int, seed: int, timeout: float, *, timing_endpoint: str = LIFECYCLE_ENDPOINT,
+              **options) -> None:
+    allowed = {"capture_raw", "raw_limit_bytes"}
+    for arm in ("baseline", "candidate"):
+        allowed.update(f"{arm}_{suffix}" for suffix in
+                       ("prepare", "probe", "probe_guard", "guard", "cwd", "finalization", "prepare_finalization", "probe_finalization"))
+    if set(options) - allowed:
+        raise ValueError("unknown paired options")
+    if timing_endpoint == LIFECYCLE_ENDPOINT:
+        from paired_lifecycle import PairedLifecycleAborted, run_pairs as run_lifecycle_pairs
+        try:
+            run_lifecycle_pairs(output, cwd, baseline, candidate, blocks, seed, timeout, **options)
+        except PairedLifecycleAborted as exc:
+            raise RunAbortedError(str(exc)) from exc
+    elif timing_endpoint == COMMAND_ENDPOINT:
+        if any(value is not None for key, value in options.items() if key.endswith("_finalization")):
+            raise ValueError("required-finalization contracts require publication-inclusive timing")
+        legacy = {key: value for key, value in options.items() if not key.endswith("_finalization")}
+        _run_command_pairs(output, cwd, baseline, candidate, blocks, seed, timeout, **legacy)
+    else:
+        raise ValueError("unsupported paired timing endpoint")
+
+
+def _json_object(value):
+    if value is None:
+        return None
+    from finalization import parse_json
+    return parse_json(value)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -204,6 +235,11 @@ def main() -> int:
     parser.add_argument("--blocks", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--timeout", type=float, required=True)
+    parser.add_argument("--timing-endpoint", choices=("lifecycle", "command"), default="lifecycle",
+                        help="new publication-inclusive observations (default) or explicit legacy command timing")
+    for arm in ("baseline", "candidate"):
+        for suffix in ("", "-prepare", "-probe"):
+            parser.add_argument(f"--{arm}{suffix}-finalization-json", help="declared stage exit/artifacts/absences")
     args = parser.parse_args()
     try:
         run_pairs(args.output, args.cwd, json.loads(args.baseline_json),
@@ -216,16 +252,19 @@ def main() -> int:
                                   if args.baseline_probe_json is not None else None),
                   candidate_probe=(_command(json.loads(args.candidate_probe_json))
                                    if args.candidate_probe_json is not None else None),
-                  baseline_probe_guard=(validate_expectations(json.loads(args.baseline_probe_guard_json))
+                   baseline_probe_guard=(validate_expectations(_json_object(args.baseline_probe_guard_json))
                                         if args.baseline_probe_guard_json is not None else None),
-                  candidate_probe_guard=(validate_expectations(json.loads(args.candidate_probe_guard_json))
+                   candidate_probe_guard=(validate_expectations(_json_object(args.candidate_probe_guard_json))
                                          if args.candidate_probe_guard_json is not None else None),
-                  baseline_guard=(validate_expectations(json.loads(args.baseline_guard_json))
+                   baseline_guard=(validate_expectations(_json_object(args.baseline_guard_json))
                                   if args.baseline_guard_json is not None else None),
-                  candidate_guard=(validate_expectations(json.loads(args.candidate_guard_json))
+                   candidate_guard=(validate_expectations(_json_object(args.candidate_guard_json))
                                    if args.candidate_guard_json is not None else None),
                   baseline_cwd=args.baseline_cwd, candidate_cwd=args.candidate_cwd,
-                  capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes)
+                  capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes,
+                  timing_endpoint=LIFECYCLE_ENDPOINT if args.timing_endpoint == "lifecycle" else COMMAND_ENDPOINT,
+                  **{f"{arm}{suffix}_finalization": _json_object(getattr(args, f"{arm}{suffix}_finalization_json"))
+                     for arm in ("baseline", "candidate") for suffix in ("", "_prepare", "_probe")})
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")
     return 0

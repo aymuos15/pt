@@ -10,6 +10,7 @@ from typing import Any
 
 from analysis import guarded_exploratory_bootstrap, guarded_exploratory_ratio
 from inspect_run import InspectionError, inspect_run
+from pt_bench import LIFECYCLE_ENDPOINT
 
 
 def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
@@ -27,20 +28,27 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
         raise ValueError("bootstrap exceeds the exploratory computation limit")
     blockers = []
     samples = []
+    if inspection["record_consistency"] != "complete":
+        blockers.append({"block": None, "arm": None, "reasons": ["run_aborted_or_incomplete"]})
     if inspection["recorded_interval_order"] != "nonoverlapping":
         blockers.append({"block": None, "arm": None, "reasons": ["recorded_interval_order_incomplete"]})
     if bootstrap_resamples is not None and inspection["blocks"] < 2:
         blockers.append({"block": None, "arm": None, "reasons": ["bootstrap_requires_two_blocks"]})
     for observation in observations:
         result, guard = observation["result"], observation["guard"]
-        reasons = []
+        reasons = observation.get("failure_reasons", []).copy()
+        timing = result
+        if inspection["timing_endpoint"] == LIFECYCLE_ENDPOINT:
+            timing = observation.get("timing") or {}
+            if not observation.get("lifecycle_finalized"):
+                reasons.append("lifecycle_not_finalized")
         if result.get("status") != "exited_unqualified":
             reasons.append("measurement_not_completed")
         if guard is None:
             reasons.append("guard_not_requested")
         elif not guard["matched_expected_observations"]:
             reasons.append("guard_mismatch")
-        if type(result.get("elapsed_ns")) is not int or result["elapsed_ns"] <= 0:
+        if type(timing.get("elapsed_ns")) is not int or timing["elapsed_ns"] <= 0:
             reasons.append("missing_positive_elapsed_time")
         capture = result.get("raw_capture")
         if capture is not None and any(capture[stream]["truncated"] for stream in ("stdout", "stderr")):
@@ -50,11 +58,15 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
                              "reasons": reasons})
         else:
             samples.append({"block": observation["block"], "arm": observation["arm"],
-                            "status": "guard_matched_unqualified", "elapsed_ns": result["elapsed_ns"]})
+                            "status": "guard_matched_unqualified", "elapsed_ns": timing["elapsed_ns"],
+                            "timing_endpoint": inspection["timing_endpoint"]})
     summary: dict[str, Any] = {
         "mode": "exploratory_unqualified", "confirmatory_eligible": False,
         "timing_endpoint": inspection["timing_endpoint"],
         "blocks": inspection["blocks"], "arm_status_counts": inspection["arm_status_counts"],
+        "planned_arm_count": inspection.get("planned_arm_count", 2 * inspection["blocks"]),
+        "observed_arm_count": inspection.get("observed_arm_count", 2 * inspection["blocks"]),
+        "stage_lifecycle_status_counts": inspection.get("stage_lifecycle_status_counts", {}),
         "observation_guard_counts": inspection["observation_guard_counts"],
         "recorded_interval_order": inspection["recorded_interval_order"],
         "blockers": blockers,

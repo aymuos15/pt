@@ -26,7 +26,7 @@ class ExploratorySummaryTests(unittest.TestCase):
         baseline = [sys.executable, "-c", "print('executed')"]
         command = [sys.executable, str(PAIRED), "--output", str(self.output), "--cwd", str(self.root),
                    "--baseline-json", json.dumps(baseline), "--candidate-json", json.dumps(candidate),
-                   "--blocks", "2", "--seed", "5", "--timeout", "3"]
+                   "--blocks", "2", "--seed", "5", "--timeout", "3", "--timing-endpoint", "command"]
         if guarded:
             command += ["--baseline-guard-json", json.dumps(GUARD), "--candidate-guard-json", json.dumps(GUARD)]
         if capture_limit is not None:

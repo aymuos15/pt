@@ -50,8 +50,10 @@ semantic oracle. See `../tests/contracts/README.md`.
 
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
-not qualify pytest work or generations; the paired driver remains explicitly
-command-timed. See [the endpoint contract and regression commands](wp01-lifecycle.md).
+not qualify pytest work or generations. The paired driver now defaults to
+publication-inclusive version-2 stage receipts with retained report bytes;
+explicit command-only mode remains for legacy observations. See the
+[standalone](wp01-lifecycle.md) and [paired endpoint contracts](wp01-paired-lifecycle.md).
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

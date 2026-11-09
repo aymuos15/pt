@@ -169,7 +169,11 @@ class ResetTests(unittest.TestCase):
         for arm in ("baseline", "candidate"):
             record = json.loads((output / f"block-000001-{arm}.json").read_text())
             self.assertEqual(record["result"]["returncode"], 0)
-            self.assertEqual(record["mode"], "exploratory_unqualified")
+            self.assertEqual(record["mode"], "exploratory")
+            self.assertEqual(record["schema_version"], 2)
+            receipt = json.loads((output / f"receipt-block-000001-{arm}.json").read_text())
+            self.assertEqual(receipt["mode"], "exploratory_unqualified")
+            self.assertFalse(receipt["confirmatory_eligible"])
         inspection = subprocess.run([sys.executable, str(HARNESS / "inspect_run.py"), str(output)],
                                     capture_output=True, text=True, timeout=15)
         self.assertEqual(inspection.returncode, 0, inspection.stderr)
