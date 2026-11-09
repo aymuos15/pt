@@ -2,6 +2,8 @@
 
 import hashlib
 import importlib.util
+from contextlib import redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
@@ -198,6 +200,8 @@ class HarnessPublicationBoundaryTests(ObservedBoundaryTests):
         self.root = Path(self.temp.name)
         self.entered = threading.Event()
         self.release = threading.Event()
+        sys.path.insert(0, str(PROBE.parents[2]))
+        self.addCleanup(sys.path.pop, 0)
 
     def pause(self):
         self.entered.set()
@@ -207,8 +211,6 @@ class HarnessPublicationBoundaryTests(ObservedBoundaryTests):
     @unittest.skipUnless(sys.platform == "linux" and hasattr(os, "O_NOFOLLOW"),
                          "requires Linux native blob publication")
     def test_raw_blob_publication_and_spool_cleanup_are_inside_timer(self):
-        sys.path.insert(0, str(PROBE.parents[2]))
-        self.addCleanup(sys.path.pop, 0)
         import raw_capture
         for stage in ("publish", "__exit__"):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
@@ -239,7 +241,7 @@ class HarnessPublicationBoundaryTests(ObservedBoundaryTests):
                     self.assertEqual((bundle / item["sha256"]).read_bytes(), expected)
                     self.assertEqual(item["sha256"], hashlib.sha256(expected).hexdigest())
 
-    def test_sample_json_publication_remains_outside_reported_elapsed_time(self):
+    def test_sample_publication_is_inside_lifecycle_but_outside_command_interval(self):
         destination = self.root / "sample.json"
         original = timer.write_record
         measured = []
@@ -252,7 +254,9 @@ class HarnessPublicationBoundaryTests(ObservedBoundaryTests):
         argv = [str(PROBE.parents[2] / "pt_bench.py"), "--cwd", str(self.root),
                 "--timeout", "5", "--output", str(destination), "--",
                 sys.executable, "-c", "pass"]
-        with mock.patch.object(sys, "argv", argv), mock.patch.object(timer, "write_record", delayed):
+        captured = io.StringIO()
+        with (mock.patch.object(sys, "argv", argv), mock.patch.object(timer, "write_record", delayed),
+              redirect_stdout(captured)):
             status, window = self.observe(
                 timer.main, self.entered.is_set, self.release.set,
                 lambda: self.assertFalse(destination.exists()),
@@ -264,6 +268,10 @@ class HarnessPublicationBoundaryTests(ObservedBoundaryTests):
         self.assertLess(result["monotonic_end_ns"], window[0])
         with self.assertRaisesRegex(AssertionError, "timer ended before release"):
             self.assert_covers_stage(result, window)
+        receipt = json.loads(captured.getvalue())
+        self.assertEqual(receipt["lifecycle"]["status"], "finalized_unqualified")
+        self.assert_covers_stage(receipt["lifecycle"], window)
+        self.assertTrue(timer.inspect_lifecycle(destination, receipt)["lifecycle_finalized"])
 
 
 class TimerBoundaryTests(unittest.TestCase):

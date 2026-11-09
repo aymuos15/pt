@@ -48,6 +48,11 @@ assertions using schemas and a test-only ledger. It does not implement the
 production bridge, artifact/environment/generation verification, or WP03's real
 semantic oracle. See `../tests/contracts/README.md`.
 
+The standalone exploratory timer now emits a post-commit lifecycle receipt in
+addition to its immutable sample. Its bounded declared-file/absence checks do
+not qualify pytest work or generations; the paired driver remains explicitly
+command-timed. See [the endpoint contract and regression commands](wp01-lifecycle.md).
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create

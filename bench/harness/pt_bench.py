@@ -218,6 +218,195 @@ def write_record(path: str, record: dict[str, Any]) -> None:
             temp_path.unlink(missing_ok=True)
 
 
+COMMAND_ENDPOINT = "process_launch_through_exit_pipes_and_optional_raw_finalization_v1"
+LIFECYCLE_ENDPOINT = "invocation_through_sample_publication_and_declared_finalization_v1"
+LIFECYCLE_LIMITATIONS = [
+    "post-commit receipt serialization and transport are outside the measured endpoint",
+    "undeclared work, resources and artifacts are not verified",
+    "no semantic, generation, descendant-containment or power-loss-durability qualification",
+    "caller-owned paths; observations are not an authenticated atomic snapshot",
+]
+
+
+def _same_json(left: Any, right: Any) -> bool:
+    """JSON types matter: Python's True == 1 must not validate raw evidence."""
+    try:
+        return json.dumps(left, sort_keys=True, allow_nan=False) == json.dumps(right, sort_keys=True, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("non-JSON lifecycle evidence") from exc
+
+
+def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: Path, *,
+                        required_finalization: dict[str, Any] | None = None,
+                        raw_bundle: Path | None = None,
+                        raw_limit_bytes: int = 10 * 1024 * 1024) -> dict[str, Any]:
+    """Return a post-commit receipt; its transport is outside the subject clock.
+
+    The immutable sample deliberately contains no post-publication timestamp or
+    claim of lifecycle success. A successful receipt requires read-back of the
+    exact sample bytes and unchanged declared evidence across publication. The
+    old result.elapsed_ns remains the narrower command observation interval.
+    """
+    start = time.monotonic_ns()
+    from finalization import (
+        MAX_RECORD_BYTES, MAX_RECEIPT_BYTES, check, inspect_file, require_safe_lookup, requirements,
+    )
+    require_safe_lookup()
+    contract = requirements(required_finalization)
+    output = Path(os.path.abspath(output))
+    root = Path(os.path.abspath(cwd))
+    # Reject obvious invalid destinations before executing work; exclusive
+    # publication is still authoritative if another caller races this check.
+    for directory in (root, output.parent):
+        fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        os.close(fd)
+    if os.path.lexists(output):
+        raise FileExistsError(f"sample destination already exists: {output}")
+    if raw_bundle is not None:
+        raw_bundle = Path(os.path.abspath(raw_bundle))
+    errors = []
+    result = None
+    sample = None
+    published_identity = None
+    initial = None
+    final = None
+    try:
+        result = measure(argv, str(root), timeout, raw_bundle=raw_bundle, raw_limit_bytes=raw_limit_bytes)
+    except (OSError, ValueError) as exc:
+        errors.append({"stage": "measurement", "error": str(exc)})
+    if result is not None:
+        initial = check(result, root, contract, raw_bundle)
+        record = {"schema_version": 1, "mode": "exploratory", "result": result,
+                  "required_finalization": {"requirements": contract, "observed": initial}}
+        try:
+            expected = (json.dumps(record, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
+            if len(expected) > MAX_RECORD_BYTES:
+                raise ValueError("sample exceeds lifecycle record byte limit")
+            write_record(str(output), record)
+            observed, _ = inspect_file(output.parent, output.name, limit=len(expected))
+            digest = hashlib.sha256(expected).hexdigest()
+            if observed["bytes"] != len(expected) or observed["sha256"] != digest:
+                raise ValueError("published sample does not match serialized observation")
+            sample = {"name": output.name, "bytes": observed["bytes"], "sha256": digest}
+            published_identity = observed
+        except (OSError, ValueError) as exc:
+            errors.append({"stage": "sample_publication", "error": str(exc)})
+        # Do not accept artifacts/absence checks that changed while a slow
+        # sample writer ran, even if the process and pre-publication check passed.
+        final = check(result, root, contract, raw_bundle)
+        if initial != final:
+            errors.append({"stage": "required_finalization", "error": "declared evidence changed across sample publication"})
+        if sample is not None:
+            try:
+                last, _ = inspect_file(output.parent, output.name, limit=sample["bytes"])
+                if last != published_identity:
+                    raise ValueError("sample changed during post-publication finalization")
+            except (OSError, ValueError) as exc:
+                errors.append({"stage": "sample_publication", "error": str(exc)})
+    finalized = (not errors and sample is not None and initial is not None
+                 and initial["matched"] and final["matched"])
+    receipt = {
+        "schema_version": 1, "mode": "exploratory_unqualified", "confirmatory_eligible": False,
+        "lifecycle": {"endpoint": LIFECYCLE_ENDPOINT,
+                      "status": "finalized_unqualified" if finalized else "finalization_failed",
+                      **_timing(start)},
+        "result": result, "sample": sample, "cwd": str(root),
+        "raw_bundle": str(raw_bundle) if raw_bundle is not None else None,
+        "required_finalization": {"requirements": contract, "before_publication": initial,
+                                  "after_publication": final},
+        "errors": errors,
+        "limitations": LIFECYCLE_LIMITATIONS.copy(),
+    }
+    if len(json.dumps(receipt, sort_keys=True, allow_nan=False).encode("utf-8")) > MAX_RECEIPT_BYTES:
+        raise ValueError("lifecycle receipt exceeds byte limit; sample alone is unconfirmed")
+    return receipt
+
+
+def inspect_lifecycle(output: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    """Check a receipt/sample pair without authenticating it or qualifying work."""
+    from finalization import check, read_json, requirements
+
+    fields = {"schema_version", "mode", "confirmatory_eligible", "lifecycle", "result", "sample",
+              "cwd", "raw_bundle", "required_finalization", "errors", "limitations"}
+    if (not isinstance(receipt, dict) or set(receipt) != fields
+            or type(receipt["schema_version"]) is not int or receipt["schema_version"] != 1
+            or receipt["mode"] != "exploratory_unqualified" or receipt["confirmatory_eligible"] is not False
+            or receipt["limitations"] != LIFECYCLE_LIMITATIONS):
+        raise ValueError("invalid lifecycle receipt envelope")
+    lifecycle = receipt["lifecycle"]
+    if (not isinstance(lifecycle, dict)
+            or set(lifecycle) != {"endpoint", "status", "monotonic_start_ns", "monotonic_end_ns", "elapsed_ns", "clock_domain"}
+            or lifecycle["endpoint"] != LIFECYCLE_ENDPOINT
+            or lifecycle["status"] not in ("finalized_unqualified", "finalization_failed")):
+        raise ValueError("invalid lifecycle endpoint or status")
+
+    def interval(value):
+        if (not isinstance(value, dict) or any(type(value.get(name)) is not int for name in
+                                             ("monotonic_start_ns", "monotonic_end_ns", "elapsed_ns"))
+                or value.get("clock_domain") != "harness_process_monotonic"
+                or value["monotonic_end_ns"] < value["monotonic_start_ns"]
+                or value["elapsed_ns"] != value["monotonic_end_ns"] - value["monotonic_start_ns"]):
+            raise ValueError("inconsistent lifecycle/command interval")
+
+    interval(lifecycle)
+    errors = receipt["errors"]
+    if (not isinstance(errors, list) or any(not isinstance(item, dict) or set(item) != {"stage", "error"}
+            or item["stage"] not in ("measurement", "sample_publication", "required_finalization")
+            or not isinstance(item["error"], str) or not item["error"] for item in errors)):
+        raise ValueError("invalid lifecycle error evidence")
+    evidence = receipt["required_finalization"]
+    if not isinstance(evidence, dict) or set(evidence) != {"requirements", "before_publication", "after_publication"}:
+        raise ValueError("invalid required-finalization evidence")
+    contract = requirements(evidence["requirements"])
+    if not _same_json(contract, evidence["requirements"]):
+        raise ValueError("noncanonical required-finalization contract")
+    result = receipt["result"]
+    sample = receipt["sample"]
+    if result is not None and not isinstance(result, dict):
+        raise ValueError("invalid lifecycle command observation")
+    if result is None and (sample is not None or evidence["before_publication"] is not None
+                           or evidence["after_publication"] is not None
+                           or not any(item["stage"] == "measurement" for item in errors)):
+        raise ValueError("missing measurement failure evidence")
+    if result is not None:
+        if (result.get("status") not in ("exited_unqualified", "timeout", "launch_error")
+                or any(item["stage"] == "measurement" for item in errors)):
+            raise ValueError("invalid lifecycle measurement status or failure evidence")
+        if sample is None and not any(item["stage"] == "sample_publication" for item in errors):
+            raise ValueError("missing sample-publication failure evidence")
+        interval(result)
+        if (result["monotonic_start_ns"] < lifecycle["monotonic_start_ns"]
+                or result["monotonic_end_ns"] > lifecycle["monotonic_end_ns"]):
+            raise ValueError("command is outside lifecycle interval")
+    if not isinstance(receipt["cwd"], str) or not Path(receipt["cwd"]).is_absolute():
+        raise ValueError("invalid lifecycle cwd")
+    raw = receipt["raw_bundle"]
+    if raw is not None and (not isinstance(raw, str) or not Path(raw).is_absolute()):
+        raise ValueError("invalid lifecycle raw bundle")
+    if sample is not None:
+        record, observed = read_json(output)
+        if (not isinstance(sample, dict) or set(sample) != {"name", "bytes", "sha256"}
+                or type(sample["bytes"]) is not int or sample["name"] != output.name
+                or sample["bytes"] != observed["bytes"] or sample["sha256"] != observed["sha256"]
+                or not _same_json(record, {"schema_version": 1, "mode": "exploratory", "result": result,
+                                          "required_finalization": {"requirements": contract,
+                                                                    "observed": evidence["before_publication"]}})):
+            raise ValueError("sample does not match lifecycle receipt")
+    matched = False
+    if result is not None:
+        current = check(result, Path(receipt["cwd"]), contract, Path(raw) if raw is not None else None)
+        matched = (current["matched"] and _same_json(current, evidence["after_publication"])
+                   and _same_json(current, evidence["before_publication"]))
+    finalized = not errors and sample is not None and matched
+    if (lifecycle["status"] == "finalized_unqualified") != finalized:
+        raise ValueError("lifecycle status conflicts with publication or required-finalization evidence")
+    return {"receipt_consistency": "checked_unqualified", "lifecycle_finalized": finalized,
+            "endpoint": LIFECYCLE_ENDPOINT, "elapsed_ns": lifecycle["elapsed_ns"],
+            "confirmatory_eligible": False,
+            "limitations": ["records are not authenticated", "only declared finalization evidence checked",
+                            "no test-work, generation or descendant-containment qualification"]}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cwd", required=True)
@@ -225,20 +414,28 @@ def main() -> int:
     parser.add_argument("--output", required=True, help="new JSON file; never overwritten")
     parser.add_argument("--raw-output-bundle", type=Path, help="optional existing blob directory; may contain secrets")
     parser.add_argument("--raw-limit-bytes", type=int, default=10 * 1024 * 1024,
-                        help="maximum captured prefix per stream (default: 10 MiB)")
+                         help="maximum captured prefix per stream (default: 10 MiB)")
+    parser.add_argument("--finalization-json", help="explicit expected exit, artifact digests and absent paths")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     argv = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not argv:
         parser.error("a command is required after --")
     try:
-        result = measure(argv, args.cwd, args.timeout, raw_bundle=args.raw_output_bundle,
-                         raw_limit_bytes=args.raw_limit_bytes)
-        record = {"schema_version": 1, "mode": "exploratory", "result": result}
-        write_record(args.output, record)
+        from finalization import parse_json
+        receipt = measure_and_publish(
+            argv, args.cwd, args.timeout, Path(args.output), raw_bundle=args.raw_output_bundle,
+            raw_limit_bytes=args.raw_limit_bytes,
+            required_finalization=parse_json(args.finalization_json) if args.finalization_json is not None else None,
+        )
+        # The endpoint includes sample publication, not transport of its own
+        # post-commit measurement receipt. A missing receipt cannot certify it.
+        print(json.dumps(receipt, sort_keys=True, allow_nan=False), flush=True)
     except (ValueError, OSError) as exc:
         parser.exit(2, f"pt-bench: {exc}\n")
-    return 0 if result["status"] == "exited_unqualified" else 1
+    if receipt["errors"]:
+        return 2
+    return 0 if receipt["lifecycle"]["status"] == "finalized_unqualified" else 1
 
 
 if __name__ == "__main__":

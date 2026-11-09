@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pt_bench import measure, write_record
+from pt_bench import COMMAND_ENDPOINT, measure, write_record
 from schedule import paired_schedule
 from metadata import collect_metadata
 from guards import check_observation, validate_expectations
@@ -102,6 +102,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
         bundle.mkdir()
     plan = {
         "schema_version": 1, "mode": "exploratory_unqualified", "seed": seed,
+        "timing_endpoint": COMMAND_ENDPOINT,
         "cwd": str(cwd), "timeout_seconds": timeout, "schedule": schedule,
         "baseline_argv": baseline, "candidate_argv": candidate,
         "preparation_argv": preparations,

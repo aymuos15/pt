@@ -47,6 +47,7 @@ class ExploratorySummaryTests(unittest.TestCase):
         self.assertEqual(report["blocks"], 2)
         self.assertEqual(report["observation_guard_counts"], {"matched": 4})
         self.assertEqual(report["ratio_direction"], "baseline_over_candidate")
+        self.assertEqual(report["timing_endpoint"], "process_launch_through_exit_pipes_and_optional_raw_finalization_v1")
         self.assertGreater(report["ratio"], 0)
         absolute = report["absolute_latency_ns"]
         self.assertGreater(absolute["baseline_mean"], 0)

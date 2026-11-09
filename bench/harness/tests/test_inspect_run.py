@@ -41,7 +41,15 @@ class InspectRunTests(unittest.TestCase):
         self.assertEqual(summary["record_consistency"], "complete")
         self.assertEqual(summary["arm_status_counts"], {"exited_unqualified": 2})
         self.assertEqual(summary["recorded_interval_order"], "nonoverlapping")
+        self.assertEqual(summary["timing_endpoint"], "process_launch_through_exit_pipes_and_optional_raw_finalization_v1")
         self.assertFalse(summary["confirmatory_eligible"])
+        plan_path = self.run_dir / "schedule.json"
+        plan = json.loads(plan_path.read_text())
+        plan["timing_endpoint"] = "invocation_through_sample_publication_and_declared_finalization_v1"
+        plan_path.write_text(json.dumps(plan))
+        rejected = self.inspect()
+        self.assertEqual(rejected.returncode, 2)
+        self.assertIn("do not mix", rejected.stderr)
 
     def test_legacy_run_without_state_probes_remains_readable(self):
         self.make_run()

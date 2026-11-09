@@ -1,8 +1,9 @@
 # WP01 timing evidence and open prerequisites
 
 Status: **partial independent-harness regression evidence; WP01 remains open**.
-Date: **2026-11-09**. Base revision: `373907e`, plus this focused timing-fixture
-change. No PT backend, semantic qualification, coverage support, speedup or
+Date: **2026-11-09**. Timing-fixture evidence was committed in `3871aee` (base
+`373907e`); the [publication-inclusive follow-up](wp01-lifecycle.md) builds on it.
+No PT backend, semantic qualification, coverage support, speedup or
 confirmatory campaign is established. `pt run` remains unavailable.
 
 ## Observed timing stages
@@ -62,7 +63,7 @@ delay wrappers do not replace the actual publication/cleanup operations.
   resource validator. This is not WP03's broken-runner oracle or WP15 coverage
   qualification, and it does not establish process containment.
 
-## Exact current endpoint, including exclusions
+## Command interval and publication-inclusive follow-up
 
 `pt_bench.measure()` resolves/validates arguments and cwd **before** starting the
 clock. It starts immediately before `Popen` and stops after process/pipe handling
@@ -70,12 +71,15 @@ and any optional raw-capture publication/context cleanup. In the tested fixture,
 the command itself awaits final reports, coverage and cooperative resource
 release, which is why those stages are included.
 
-`pt_bench.main()` calls `write_record()` **after `measure()` has returned**.
-A new regression holds the real sample writer, verifies the sample destination
-is still absent, then publishes and checks that the saved `monotonic_end_ns`
-predates the entire hold. The record therefore correctly fails a hypothetical
-publication-inclusive interval check. This test documents the exclusion; it
-does not silently redefine `elapsed_ns` or claim a complete lifecycle endpoint.
+At `3871aee`, `pt_bench.main()` wrote the sample only after `measure()` returned,
+and no larger endpoint existed. That exclusion remains true for the unchanged
+inner `result.elapsed_ns`. The follow-up adds `measure_and_publish()` and a
+separate post-commit receipt whose `lifecycle.elapsed_ns` includes sample
+publication, temporary cleanup, read-back and declared required-finalization
+validation. The regression now verifies both intervals: the command interval
+excludes the held publication stage, and the lifecycle interval encloses it.
+The immutable sample is not rewritten to invent its own post-commit timestamp.
+See [the exact new boundary, validation and limitations](wp01-lifecycle.md).
 
 Paired preparation/probes have their own recorded intervals; arm and schedule
 record publication is also outside the corresponding measured intervals. These
@@ -84,7 +88,7 @@ Leader reaping and pipe drainage do not prove that ordinary pipe-closing or
 detached descendants exited, or that external resources were released. The
 cooperative file-lease check does not implement a product resource manager.
 
-## Verification and retained failures
+## Historical verification and retained failures: 3871aee
 
 Reproduce from the repository root:
 
@@ -127,7 +131,7 @@ and were not claimed by this batch.
 
 | Package | Still required before acceptance |
 |---|---|
-| WP01 / G01 | Complete scenario/request/replay endpoints and required-finalization validation, semantic manifest validation and full raw-evidence/result-card fields; whole-boundary resource accounting and background CPU/memory controls; skipped-work/warnings/stale/cached/coverage/worker-leak broken candidates; harness-only overhead characterization and campaign/identity/review governance. The current stage tests and exploratory analyzers do not close acceptance. |
+| WP01 / G01 | The standalone publication-inclusive observation endpoint and bounded declared-file/absence validation now have [focused follow-up evidence](wp01-lifecycle.md). Still required: paired publication-inclusive integration and full scenario/request/replay endpoints; semantic/work/generation and non-file resource finalization validation, semantic manifests and complete raw-evidence/result cards; whole-boundary resource accounting/background controls; broader broken candidates, overhead characterization and campaign/identity/review governance. WP01 acceptance remains open. |
 | WP02 / G02 | Authenticated artifact/environment/repository pins, actual corpus eligibility with failures/exclusions, two clean qualified materializations, fixed training/confirmatory/holdout partitions and per-scenario reset/state contracts. Prior local synthetic materialization and external-repository feasibility checks are not those decisions; no new materialization is claimed for this changed harness lock. |
 | WP03 / G03 | Real-pytest occurrence/phase observer and canonical raw trace, narrow normalization, independent semantic comparator and broken-runner cases including skipped setup/teardown, strict XPASS, hidden collection failure, stale inputs and subprocess coverage. Synthetic ledgers, JUnit and limited line-set comparisons remain insufficient. |
 

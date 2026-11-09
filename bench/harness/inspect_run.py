@@ -16,6 +16,7 @@ import jsonschema
 
 from artifact_check import _digest_status
 from guards import check_observation, validate_expectations
+from pt_bench import COMMAND_ENDPOINT
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
@@ -110,6 +111,8 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
         raise InspectionError(f"invalid exploratory sample schema: {exc.message}") from exc
     validator = jsonschema.Draft202012Validator(schema)
     plan = _read(directory / "schedule.json")
+    if plan.get("timing_endpoint", COMMAND_ENDPOINT) != COMMAND_ENDPOINT:
+        raise InspectionError("unsupported paired timing endpoint; do not mix command and lifecycle intervals")
     schedule, seed, cwd = plan.get("schedule"), plan.get("seed"), plan.get("cwd")
     if (type(plan.get("schema_version")) is not int or plan["schema_version"] != 1
             or plan.get("mode") != "exploratory_unqualified"
@@ -333,6 +336,7 @@ def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None =
         if actual_blobs != set(blob_sizes):
             raise InspectionError("unexpected or missing blob files")
     return {"record_consistency": "complete", "mode": "exploratory_unqualified",
+            "timing_endpoint": COMMAND_ENDPOINT,
             "blocks": len(schedule), "arm_status_counts": dict(sorted(counts.items())),
             "observation_guard_counts": dict(sorted(guard_counts.items())),
             "recorded_interval_order": ("nonoverlapping" if all_intervals_present else "incomplete"),

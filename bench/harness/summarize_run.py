@@ -53,6 +53,7 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
                             "status": "guard_matched_unqualified", "elapsed_ns": result["elapsed_ns"]})
     summary: dict[str, Any] = {
         "mode": "exploratory_unqualified", "confirmatory_eligible": False,
+        "timing_endpoint": inspection["timing_endpoint"],
         "blocks": inspection["blocks"], "arm_status_counts": inspection["arm_status_counts"],
         "observation_guard_counts": inspection["observation_guard_counts"],
         "recorded_interval_order": inspection["recorded_interval_order"],

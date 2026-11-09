@@ -17,7 +17,8 @@ On POSIX, output is hashed and counted in bounded-memory chunks; it is not
 retained. Timeout cleanup kills the process group and bounds pipe drainage.
 Detached descendants may escape cleanup, and incomplete drainage is reported
 as `output_complete: false`; the timer is not a sandbox. On non-POSIX systems
-capture still uses in-memory pipes and process-tree cleanup is not covered.
+legacy `measure()` still uses in-memory pipes and process-tree cleanup is not
+covered; the new standalone publication-inclusive endpoint requires safe POSIX lookup.
 Unexpected harness errors and interruptions trigger bounded, best-effort child
 termination; cleanup is not guaranteed if OS process control fails.
 
@@ -95,9 +96,19 @@ records without these optional fields remain readable.
 `elapsed_ns` starts immediately before process launch, after argument/cwd checks,
 and ends after leader/pipe handling and any opt-in raw-capture finalization.
 The standalone sample JSON and paired arm/schedule records are published **after**
-their measured intervals. This is not a complete request-to-valid-result or
-campaign-publication endpoint, and drained pipes/reaped leaders do not prove
-required resource cleanup. The timing tests deliberately expose this exclusion.
+their **command** intervals. The standalone CLI now also emits a post-commit
+JSON receipt on stdout, with a separate `lifecycle.elapsed_ns` covering API-entry
+validation, the command, sample publication/temp cleanup/read-back and declared
+finalization checks. The receipt is bound to the sample's exact digest/size; the
+sample alone does not claim this larger interval completed. Receipt serialization
+and stdout transport are observer bookkeeping outside that declared endpoint.
+See [the endpoint contract and failure controls](../../docs/wp01-lifecycle.md).
+The paired driver/inspector/summary explicitly label their existing endpoint
+`process_launch_through_exit_pipes_and_optional_raw_finalization_v1`; they do not
+use the new lifecycle receipt or include arm/schedule publication in latency.
+Inspection rejects attempts to relabel those records as lifecycle measurements.
+Neither endpoint establishes a complete generation-valid result, watch/replay
+lifecycle, resource containment or confirmatory eligibility.
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
@@ -160,6 +171,25 @@ Timing-boundary regression command:
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_timing_boundaries.py -v
 ```
 
+Publication/finalization regression commands:
+
+```sh
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_lifecycle.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_finalization.py -v
+```
+
+`--finalization-json` optionally declares `expected_exit_code` (an integer or
+`null`), `artifacts` (relative paths with exact byte counts/SHA-256), and `absent`
+(relative paths that must not exist). All three fields are required when supplying
+the option. These checks run before and after publication, without retries or
+repair. The final sample is also re-read after validation. Opt-in raw blob
+references are checked against actual bytes, including the explicit prefix limit.
+An omitted contract defaults to no expected exit or external-file/absence checks;
+undeclared test work/resources are never implied verified. A lifecycle receipt
+with `finalized_unqualified` is an observation, **not a test-pass result**.
+Safe POSIX relative lookup is required for this new endpoint; unsupported systems
+fail visibly. Legacy `measure()` itself is unchanged.
+
 The parent holds each observed stage for 0.15 seconds, requires the command to
 remain pending, then checks that its own monotonic hold interval is enclosed by
 the timer. Exact stage order, fixture phases, reports, merged line sets and
@@ -182,10 +212,12 @@ uv run --locked --project bench/harness --python 3.12.12 python -m unittest disc
 uv run --locked --project bench/harness --python 3.12.12 python bench/harness/manifest.py bench/benchmark-campaign.template.yaml
 ```
 
-Example exploratory observation (write output outside the repository):
+Example exploratory observation and receipt check (write outside the repository):
 
 ```sh
-python3 bench/harness/pt_bench.py --cwd . --timeout 5 --output /tmp/pt-sample.json -- python3 -c 'print("hello")'
+directory="$(mktemp -d /tmp/opencode/pt-bench.XXXXXX)"
+uv run --locked --project bench/harness --python 3.12.12 python bench/harness/pt_bench.py --cwd . --timeout 5 --output "$directory/sample.json" --finalization-json '{"expected_exit_code":0,"artifacts":[],"absent":[]}' -- bench/harness/.venv/bin/python -c 'print("hello")' > "$directory/receipt.json"
+uv run --locked --project bench/harness --python 3.12.12 python bench/harness/inspect_lifecycle.py --sample "$directory/sample.json" --receipt "$directory/receipt.json"
 ```
 
 An `exited_unqualified` observation means only that the process exited; even a
@@ -195,3 +227,9 @@ Records are published via a same-filesystem hard link after serialization and
 file synchronization, without overwriting existing paths. A crash can leave a
 hidden temporary file, and directory entries are not synced for power-loss
 durability. Filesystems without hard-link support reject publication.
+The CLI returns 1 for timeout/launch failure or unmatched declared checks, and 2
+for preflight, measurement/publication or receipt-output errors. Failure receipts
+and failed sample observations are retained when possible. A failure can leave
+partial blobs, a staging file or a visible sample without a valid receipt; none
+is a finalized lifecycle. Existing paths are never overwritten or automatically
+adopted, and publication failure never replays command work.
