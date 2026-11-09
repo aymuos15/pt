@@ -103,9 +103,20 @@ bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolv
 or mismatched fields. It cannot verify revisions, provenance, semantic content,
 reset equivalence, or a stable snapshot; even all matches remain unqualified.
 `blob_store.py` provides bounded, content-addressed, no-overwrite publication.
+Blob files are now published with Linux `renameat2(RENAME_NOREPLACE)`, requiring
+a libc wrapper and kernel/filesystem support. The synchronized staging file is
+moved atomically, so a newly visible inode has no staging alias for its creator
+to unlink during a duplicate reader's verification. Unsupported native operations
+fail visibly; there is no hard-link, overwrite-rename or check-then-rename
+fallback. Existing-blob verification still rejects any device/inode/size/mtime/
+ctime change or wrong digest; it does not retry away evidence of mutation.
+Content-addressed names and blob record fields are unchanged. This remains a
+caller-owned-directory prototype, not a hostile-directory/parent-path security
+boundary or a power-loss-durable store.
 The standalone timer can optionally retain bounded stdout/stderr prefixes with
 `--raw-output-bundle <existing-directory> --raw-limit-bytes <per-stream-limit>`
-on POSIX. Truncation is explicit and full observed-stream hashes remain separate;
+on Linux with that native publication support. Truncation is explicit and full
+observed-stream hashes remain separate;
 spooling and blob publication are inside the timer, so this is instrumented
 timing, not an unmodified product benchmark. The paired driver can opt in with
 `--capture-raw --raw-limit-bytes <per-stream-limit>` and stores blobs in its run
@@ -115,6 +126,23 @@ Blob publication does not authenticate content or guarantee
 power-loss durability. A blob-publication failure aborts the sample instead of
 publishing a successful record; previously published blobs may remain. Raw output
 can contain secrets; enable it deliberately.
+
+The original concurrent-publication failure is retained in
+[`docs/wp00-review.md`](../../docs/wp00-review.md). The link/unlink publication
+protocol changed ctime when the creator removed its staging alias, even though
+the blob's bytes matched. A deterministic regression pauses the creator after
+publication and finishes it during a duplicate verification; it fails the old
+protocol even on coarse ctime clocks by exposing its second link. Tests also
+preserve rejection of ctime-only/other fingerprint changes with matching bytes,
+corrupt/non-regular/symlink entries, fsync/native failures and unsupported
+publication, and exercise multi-threaded and multi-process callers. This is
+functional harness evidence, not completion of WP01 or PT qualification.
+
+Targeted regression command (run from the repository root):
+
+```sh
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_blob_store.py -v
+```
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):
