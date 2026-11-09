@@ -117,3 +117,22 @@ Outstanding: verify downloadable interpreter, Rust distribution, and dependency
 artifacts against recorded digests; establish platform-specific environment
 identity and clean materialization; configure CI and run conformance. These steps
 are required before treating the environment as benchmark or support evidence.
+
+## Deferred optimization watchlist: Serc
+
+[Serc (`astral-experiments/serc`)](https://github.com/astral-experiments/serc) is an
+experimental CPython bytecode compiler written in Rust. Track it as a possible
+**opt-in environment-preparation optimization**, not a PT dependency, supported
+feature or prerequisite for the real pytest backend. Upstream explicitly warns
+that it may emit incorrect bytecode; its compilation benchmarks are not PT
+test-runner speedup evidence.
+
+Potential benefit is reducing `.py`-to-`.pyc` compilation during preparation or
+cold imports, not module execution, pytest collection logic, fixtures or test
+bodies. Runs with valid bytecode caches may gain little. Before integration,
+verify compatibility with PT's exact CPython **3.12.12** pin, optimization flags,
+pytest assertion rewriting, tracebacks and cache invalidation, including
+same-size/same-mtime edits. Keep fresh same-session real pytest as the backend.
+Any evaluation must declare matching bytecode/cache state and compilation resource
+budgets for both arms, charge preparation to the relevant lifecycle and retain
+failures. No integration, measured PT benefit or future uv availability is assumed.
