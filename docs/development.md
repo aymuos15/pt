@@ -9,7 +9,8 @@ GIL-enabled CPython 3.12.12 and pytest 8.4.2.
   rustup installed, invoking Rust tools from the repository may download this
   toolchain into the user's rustup installation. An initial Linux x86-64 check
   observed rustc commit `58cf8f9c35b355199727627d07ae34a4e2846d67`; this is not
-  a verified distribution-artifact digest. No Rust workspace exists yet.
+  a verified distribution-artifact digest. A workspace now contains WP04
+  process-only primitives; it is not yet a qualified pytest backend.
 - The independent harness uses CPython **3.12.12** for the initial development
   check and pytest **8.4.2** for its controlled corpus smoke tests. Its Python
   dependencies are locked in `bench/harness/uv.lock`. The local `uv` used for
@@ -22,6 +23,9 @@ From the repository root, with rustup and uv already installed:
 rustc --version --verbose
 cargo fmt --version
 cargo clippy --version
+cargo test --locked --workspace
+cargo fmt --all --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
 uv sync --locked --project bench/harness --python 3.12.12
 uv run --locked --project bench/harness --python 3.12.12 python -c 'import sys, pytest; print(sys.version); print("pytest", pytest.__version__)'
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -v

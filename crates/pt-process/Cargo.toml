@@ -1,0 +1,13 @@
+[package]
+name = "pt-process"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Fresh-process supervision primitives; not a pytest semantic backend"
+
+[dependencies]
+serde.workspace = true
+
+[lints]
+workspace = true
