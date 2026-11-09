@@ -26,7 +26,7 @@ StrictValidator = validators.extend(
 )
 
 
-def _json_types(value: Any) -> None:
+def validate_json_types(value: Any) -> None:
     """Reject non-JSON objects/nonfinite values before traversing schemas.
 
     The depth bound also rejects cyclic API inputs without unbounded recursion.
@@ -36,18 +36,18 @@ def _json_types(value: Any) -> None:
     while pending:
         item, depth = pending.pop()
         if depth > MAX_JSON_DEPTH:
-            raise ValueError("v2 evidence exceeds JSON nesting limit")
+            raise ValueError("evidence exceeds JSON nesting limit")
         if type(item) is dict:
             if any(type(key) is not str for key in item):
-                raise ValueError("v2 evidence requires string JSON keys")
+                raise ValueError("evidence requires string JSON keys")
             pending.extend((child, depth + 1) for child in item.values())
         elif type(item) is list:
             pending.extend((child, depth + 1) for child in item)
         elif type(item) is float:
             if not math.isfinite(item):
-                raise ValueError("v2 evidence contains non-finite JSON number")
+                raise ValueError("evidence contains non-finite JSON number")
         elif item is not None and type(item) not in (str, int, bool):
-            raise ValueError("v2 evidence contains a non-JSON value")
+            raise ValueError("evidence contains a non-JSON value")
 
 
 @lru_cache(maxsize=1)
@@ -68,7 +68,7 @@ def validate_v2(kind: str, value: Any) -> None:
     """Validate a full record before semantic checks or publication."""
     if kind not in SCHEMAS:
         raise ValueError(f"unknown v2 evidence kind: {kind}")
-    _json_types(value)
+    validate_json_types(value)
     error = next(_validators()[kind].iter_errors(value), None)
     if error is not None:
         path = "/" + "/".join(str(part) for part in error.absolute_path)
@@ -77,7 +77,7 @@ def validate_v2(kind: str, value: Any) -> None:
 
 
 def validate_context(value: Any) -> None:
-    _json_types(value)
+    validate_json_types(value)
     validator = _validators()["receipt"].evolve(schema={"$ref": "urn:pt:bench:lifecycle-v2#/$defs/nullable_context"})
     if not validator.is_valid(value):
         raise ValueError("invalid v2 lifecycle context")

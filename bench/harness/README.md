@@ -1,7 +1,8 @@
 # Exploratory harness prototype
 
 This is an independent command timer and supporting prototype. It does **not**
-qualify outcomes, compare work, capture resource totals, semantically validate campaign
+qualify outcomes, compare work, capture resource totals in its default paired path,
+semantically validate campaign
 manifests, reset state, retain raw output by default, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
 Known-delay regression tests cover process startup, shutdown, pipe drainage,
@@ -21,6 +22,38 @@ legacy `measure()` still uses in-memory pipes and process-tree cleanup is not
 covered; the new standalone publication-inclusive endpoint requires safe POSIX lookup.
 Unexpected harness errors and interruptions trigger bounded, best-effort child
 termination; cleanup is not guaranteed if OS process control fails.
+
+`resource_run.py` is a **separate, opt-in diagnostic resource pass**, not a silent
+change to the paired timer. It creates a fresh private child of an explicitly
+supplied, already delegated cgroup-v2 parent on Linux x86-64. An isolated observer
+launcher enrolls itself before `exec` of the unchanged subject command; all future
+inheriting descendants are counted, including detached/nested-cgroup workers.
+It records raw `cpu.stat`, `memory.current`, `memory.peak` when available,
+`memory.events`, recursive population and bounded current-memory samples. CPU
+totals are whole-cgroup counter deltas; kernel peak charged memory is **not**
+RSS/PSS or a sum of historical per-process maxima. The sample maximum is only a
+lower bound on charged current memory and is never promoted to a measured peak.
+
+Default resource mode requires every capability and starts **no subject work**
+if peak accounting/delegation/enrollment/cleanup is unavailable. Only the explicit
+`--allow-missing-peak` diagnostic may retain CPU/current observations without a
+peak; its status is `partial_unsupported`, peak is `null`, and complete-accounting
+and confirmatory flags remain false. Unknown dynamic-loader environment profiles
+also block enrollment without silently changing the subject's environment.
+No controllers, limits, host caches or existing process memberships are modified.
+No pre-existing daemon/service is adopted. Background work outliving the leader
+is retained as a failure, followed by one recursive cgroup kill and bounded empty
+checks; forced termination or uncertain counters/cleanup cannot become success.
+
+Resource passes use the distinct closed
+[`resource-observation-v1.schema.json`](resource-observation-v1.schema.json), not
+an extension of v2 paired records. `inspect_resources.py <record>` validates
+historical types, scopes, capabilities, clocks, counter arithmetic, samples and
+failure accounting; inspection exit zero never means the subject passed. It
+cannot authenticate the history or account for escaped/external pre-existing
+work. A whole replay can be one fresh resource unit; a whole paired-campaign
+wrapper is **not** per-arm accounting and must not be divided into per-arm peaks.
+See [resource scope, CLI exit codes, native capability limits and evidence](../../docs/wp01-resources.md).
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not establish independent observations. `paired.py` can run those
@@ -206,6 +239,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_finalization.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_lifecycle.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_evidence_v2.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_cgroup_accounting.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

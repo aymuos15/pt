@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:resource-observation-v1",
+  "title": "PT independent exploratory cgroup resource observation v1",
+  "description": "Diagnostic whole-cgroup counter evidence, not benchmark/semantic qualification. CPU/memory deltas, clock order, freshness, completion and capability consistency require the inspector in addition to this closed schema.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "mode", "confirmatory_eligible", "endpoint", "scope", "memory_metric", "configuration", "launcher", "host_metadata", "group", "capabilities", "run_attempted", "process", "enrollment", "snapshots", "sampling", "cleanup", "cpu_delta_usec", "peak_charged_bytes", "sampled_current_max_bytes", "memory_events_delta", "errors", "failure_reasons", "limitations", "status", "whole_boundary_accounting_complete", "clock"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "cgroup_resource_observation"},
+    "mode": {"const": "exploratory_unqualified"}, "confirmatory_eligible": {"type": "boolean", "const": false},
+    "endpoint": {"const": "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"},
+    "scope": {"const": "subject_exec_and_all_future_inheriting_cgroup_descendants"},
+    "memory_metric": {"const": "cgroup_v2_charged_memory_not_rss_or_pss"},
+    "configuration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["argv", "cwd", "timeout_seconds", "cgroup_parent", "allow_missing_peak", "sample_interval_ns", "cleanup_grace_ns"],
+      "properties": {
+        "argv": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/argv"},
+        "cwd": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+        "timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400},
+        "cgroup_parent": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"}]},
+        "allow_missing_peak": {"type": "boolean"},
+        "sample_interval_ns": {"type": "integer", "minimum": 1000000, "maximum": 1000000000},
+        "cleanup_grace_ns": {"type": "integer", "minimum": 0, "maximum": 10000000000}
+      }
+    },
+    "launcher": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"}, "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}
+    },
+    "host_metadata": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"},
+    "group": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false, "required": ["path", "identity", "removed"],
+          "properties": {
+            "path": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+            "identity": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/uint"}},
+            "removed": {"type": "boolean"}
+          }
+        }
+      ]
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cpu_stat", "memory_current", "memory_peak", "memory_events", "population", "kill", "enrollment"],
+      "properties": {
+        "cpu_stat": {"$ref": "#/$defs/capability"}, "memory_current": {"$ref": "#/$defs/capability"},
+        "memory_peak": {"$ref": "#/$defs/capability"}, "memory_events": {"$ref": "#/$defs/capability"},
+        "population": {"$ref": "#/$defs/capability"}, "kill": {"$ref": "#/$defs/capability"}, "enrollment": {"$ref": "#/$defs/capability"}
+      }
+    },
+    "run_attempted": {"type": "boolean"},
+    "process": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/result"}]},
+    "enrollment": {
+      "type": "object", "additionalProperties": false, "required": ["status", "control"],
+      "properties": {"status": {"enum": ["not_started", "confirmed", "failed"]}, "control": {"type": ["string", "null"], "maxLength": 513}}
+    },
+    "snapshots": {
+      "type": "object", "additionalProperties": false, "required": ["initial", "command_return", "final"],
+      "properties": {"initial": {"$ref": "#/$defs/nullable_snapshot"}, "command_return": {"$ref": "#/$defs/nullable_snapshot"}, "final": {"$ref": "#/$defs/nullable_snapshot"}}
+    },
+    "sampling": {
+      "type": "object", "additionalProperties": false, "required": ["interval_ns", "observations", "truncated"],
+      "properties": {
+        "interval_ns": {"type": "integer", "minimum": 1000000, "maximum": 1000000000},
+        "observations": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/current_reading"}},
+        "truncated": {"type": "boolean"}
+      }
+    },
+    "cleanup": {
+      "type": "object", "additionalProperties": false, "required": ["residual_at_command_return", "kill_requested"],
+      "properties": {"residual_at_command_return": {"type": ["boolean", "null"]}, "kill_requested": {"type": "boolean"}}
+    },
+    "cpu_delta_usec": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/cpu_delta"}]},
+    "peak_charged_bytes": {"$ref": "#/$defs/nullable_uint"}, "sampled_current_max_bytes": {"$ref": "#/$defs/nullable_uint"},
+    "memory_events_delta": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/memory_events"}]},
+    "errors": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false, "required": ["stage", "error"],
+        "properties": {
+          "stage": {"enum": ["setup_or_control", "measurement", "initial", "command_return", "final", "sampling", "cleanup", "derivation"]},
+          "error": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "failure_reasons": {
+      "type": "array", "uniqueItems": true,
+      "items": {"enum": ["boundary_not_fresh", "group_not_removed", "forced_boundary_termination", "measurement_not_observed", "process_incomplete", "subject_enrollment_or_exec_unconfirmed", "background_work_outlived_command", "boundary_not_empty", "cpu_accounting_incomplete", "peak_accounting_incomplete", "oom_observed", "sampling_truncated"]}
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "status": {"enum": ["unsupported", "partial_unsupported", "observed_unqualified", "failed"]},
+    "whole_boundary_accounting_complete": {"type": "boolean"},
+    "clock": {
+      "type": "object", "additionalProperties": false, "required": ["monotonic_start_ns", "monotonic_end_ns", "elapsed_ns", "clock_domain"],
+      "properties": {
+        "monotonic_start_ns": {"$ref": "#/$defs/uint"}, "monotonic_end_ns": {"$ref": "#/$defs/uint"},
+        "elapsed_ns": {"$ref": "#/$defs/uint"}, "clock_domain": {"const": "harness_process_monotonic"}
+      }
+    }
+  },
+  "$defs": {
+    "uint": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+    "nullable_uint": {"type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615},
+    "counter_map": {
+      "type": "object", "minProperties": 1, "maxProperties": 64,
+      "patternProperties": {"^[a-z_]+$": {"$ref": "#/$defs/uint"}}, "additionalProperties": false
+    },
+    "cpu_stat": {"$ref": "#/$defs/counter_map", "required": ["usage_usec", "user_usec", "system_usec"]},
+    "cpu_delta": {
+      "type": "object", "additionalProperties": false, "required": ["usage_usec", "user_usec", "system_usec"],
+      "properties": {"usage_usec": {"$ref": "#/$defs/uint"}, "user_usec": {"$ref": "#/$defs/uint"}, "system_usec": {"$ref": "#/$defs/uint"}}
+    },
+    "memory_events": {"$ref": "#/$defs/counter_map", "required": ["oom", "oom_kill"]},
+    "capability": {
+      "type": "object", "additionalProperties": false, "required": ["supported", "reason"],
+      "properties": {"supported": {"type": "boolean"}, "reason": {"type": ["string", "null"], "minLength": 1}},
+      "allOf": [{
+        "if": {"properties": {"supported": {"const": true}}},
+        "then": {"properties": {"reason": {"type": "null"}}},
+        "else": {"properties": {"reason": {"type": "string", "minLength": 1}}}
+      }]
+    },
+    "nullable_snapshot": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/snapshot"}]},
+    "snapshot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["monotonic_start_ns", "monotonic_end_ns", "cpu_stat", "memory_current", "memory_peak", "memory_events", "population"],
+      "properties": {
+        "monotonic_start_ns": {"$ref": "#/$defs/uint"}, "monotonic_end_ns": {"$ref": "#/$defs/uint"},
+        "cpu_stat": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/cpu_stat"}]},
+        "memory_current": {"$ref": "#/$defs/nullable_uint"}, "memory_peak": {"$ref": "#/$defs/nullable_uint"},
+        "memory_events": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/memory_events"}]},
+        "population": {"type": ["integer", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "current_reading": {
+      "type": "object", "additionalProperties": false, "required": ["monotonic_start_ns", "monotonic_end_ns", "memory_current_bytes"],
+      "properties": {
+        "monotonic_start_ns": {"$ref": "#/$defs/uint"}, "monotonic_end_ns": {"$ref": "#/$defs/uint"}, "memory_current_bytes": {"$ref": "#/$defs/uint"}
+      }
+    }
+  }
+}

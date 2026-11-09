@@ -51,6 +51,8 @@ this does not qualify a runner or close the later work-package/release gates.
   retained report bytes, abort accounting and endpoint-specific analysis.
 - [Version-2 evidence validation](docs/wp01-evidence-v2.md): closed plan/sample/receipt
   schemas and malformed-record controls, not completion of WP01 or the runner.
+- [Whole-cgroup resource observations](docs/wp01-resources.md): opt-in CPU/charged-memory
+  diagnostics, background-work controls and explicit unsupported peak accounting.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

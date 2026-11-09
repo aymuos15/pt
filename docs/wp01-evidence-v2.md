@@ -136,3 +136,8 @@ in the [prerequisite register](wp01-status.md).
 
 Rust/bridge, corpus materializations, PT conformance and performance campaigns
 were not rerun or qualified. No dependency, lock, toolchain or support pins changed.
+
+The subsequent [resource-accounting follow-up](wp01-resources.md) adds a separate
+diagnostic resource record type, not new fields in these closed v2 formats. Its
+native peak path is still unqualified on this development host and does not close
+the resource/campaign acceptance gaps above.

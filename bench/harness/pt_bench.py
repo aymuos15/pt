@@ -112,7 +112,8 @@ def _timing(start: int) -> dict[str, Any]:
 
 
 def measure(argv: Sequence[str], cwd: str, timeout: float, *,
-            raw_bundle: Path | None = None, raw_limit_bytes: int = 10 * 1024 * 1024) -> dict[str, Any]:
+            raw_bundle: Path | None = None, raw_limit_bytes: int = 10 * 1024 * 1024,
+            _pass_fds: tuple[int, ...] = ()) -> dict[str, Any]:
     """Time launch through leader/pipe completion and optional raw finalization.
 
     Argument/cwd checks precede the clock; sample-record publication follows it.
@@ -123,6 +124,9 @@ def measure(argv: Sequence[str], cwd: str, timeout: float, *,
         raise ValueError("command must have a nonempty executable and string arguments")
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("timeout must be finite and positive")
+    if (type(_pass_fds) is not tuple or any(type(fd) is not int or fd < 0 for fd in _pass_fds)
+            or (_pass_fds and os.name != "posix")):
+        raise ValueError("invalid private launcher descriptors")
     if raw_bundle is not None:
         if os.name != "posix":
             raise ValueError("raw output capture is supported only on POSIX")
@@ -140,6 +144,7 @@ def measure(argv: Sequence[str], cwd: str, timeout: float, *,
         process = subprocess.Popen(
             list(argv), cwd=cwd_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             start_new_session=(os.name == "posix"),
+            **({"pass_fds": _pass_fds} if _pass_fds else {}),
         )
     except OSError as exc:
         return {

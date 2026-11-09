@@ -58,6 +58,16 @@ Version-2 production/inspection now also enforce [closed evidence schemas and
 strict type/consistency checks](wp01-evidence-v2.md); schema acceptance is not
 semantic qualification or complete WP01 acceptance.
 
+An opt-in [cgroup resource pass](wp01-resources.md) now records whole-cgroup CPU
+and charged-memory observations without changing default paired timing. The
+Linux native tests may create/remove private `pt-bench-<uuid>` children under an
+already delegated, owned, memory-enabled ancestor of the current cgroup, or the
+explicit `PT_BENCH_CGROUP_PARENT` test setting. They do not enable controllers,
+change limits, clear caches or adopt existing processes. Native peak checks skip
+with the exact capability reason when `memory.peak` is unavailable; synthetic
+counter checks are not kernel or PT qualification. Only an explicit diagnostic
+option permits partial CPU/current observations, with peak remaining unknown.
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create
