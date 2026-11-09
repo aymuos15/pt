@@ -54,6 +54,9 @@ not qualify pytest work or generations. The paired driver now defaults to
 publication-inclusive version-2 stage receipts with retained report bytes;
 explicit command-only mode remains for legacy observations. See the
 [standalone](wp01-lifecycle.md) and [paired endpoint contracts](wp01-paired-lifecycle.md).
+Version-2 production/inspection now also enforce [closed evidence schemas and
+strict type/consistency checks](wp01-evidence-v2.md); schema acceptance is not
+semantic qualification or complete WP01 acceptance.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

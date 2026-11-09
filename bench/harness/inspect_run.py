@@ -15,6 +15,7 @@ from typing import Any
 import jsonschema
 
 from artifact_check import _digest_status
+from finalization import parse_json
 from guards import check_observation, validate_expectations
 from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT
 from schedule import paired_schedule
@@ -27,15 +28,6 @@ class InspectionError(ValueError):
     pass
 
 
-def _object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise InspectionError(f"duplicate JSON key: {key}")
-        result[key] = value
-    return result
-
-
 def _read(path: Path) -> dict[str, Any]:
     try:
         if path.is_symlink() or not path.is_file():
@@ -44,13 +36,9 @@ def _read(path: Path) -> dict[str, Any]:
             raw = source.read(MAX_RECORD_BYTES + 1)
         if len(raw) > MAX_RECORD_BYTES:
             raise InspectionError(f"oversized record: {path.name}")
-        value = json.loads(raw, object_pairs_hook=_object,
-                           parse_constant=lambda _: (_ for _ in ()).throw(
-                               InspectionError("non-finite JSON value")))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        value = parse_json(raw)
+    except (OSError, UnicodeError, ValueError) as exc:
         raise InspectionError(f"{path.name}: {exc}") from exc
-    if not isinstance(value, dict):
-        raise InspectionError(f"{path.name}: expected JSON object")
     return value
 
 
@@ -104,20 +92,22 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
 
 def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Reject missing or inconsistent records; never qualify their contents."""
+    plan = _read(directory / "schedule.json")
+    if plan.get("timing_endpoint") == LIFECYCLE_ENDPOINT:
+        if type(plan.get("schema_version")) is not int or plan["schema_version"] != 2:
+            raise InspectionError("do not mix: publication-inclusive records require a version-2 plan and receipts")
+        from finalization import read_json
+        from paired_lifecycle import inspect_pairs
+        plan, _ = read_json(directory / "schedule.json")
+        return inspect_pairs(directory, plan, observations=_observations)
+    if plan.get("timing_endpoint", COMMAND_ENDPOINT) != COMMAND_ENDPOINT:
+        raise InspectionError("unsupported paired timing endpoint; do not mix command and lifecycle intervals")
     schema = _read(SAMPLE_SCHEMA_PATH)
     try:
         jsonschema.Draft202012Validator.check_schema(schema)
     except jsonschema.SchemaError as exc:
         raise InspectionError(f"invalid exploratory sample schema: {exc.message}") from exc
     validator = jsonschema.Draft202012Validator(schema)
-    plan = _read(directory / "schedule.json")
-    if plan.get("timing_endpoint") == LIFECYCLE_ENDPOINT:
-        if type(plan.get("schema_version")) is not int or plan["schema_version"] != 2:
-            raise InspectionError("do not mix: publication-inclusive records require a version-2 plan and receipts")
-        from paired_lifecycle import inspect_pairs
-        return inspect_pairs(directory, plan, observations=_observations)
-    if plan.get("timing_endpoint", COMMAND_ENDPOINT) != COMMAND_ENDPOINT:
-        raise InspectionError("unsupported paired timing endpoint; do not mix command and lifecycle intervals")
     schedule, seed, cwd = plan.get("schedule"), plan.get("seed"), plan.get("cwd")
     if (type(plan.get("schema_version")) is not int or plan["schema_version"] != 1
             or plan.get("mode") != "exploratory_unqualified"

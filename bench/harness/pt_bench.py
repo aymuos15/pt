@@ -257,9 +257,10 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
     require_safe_lookup()
     contract = requirements(required_finalization)
     extended = context is not None or guard_expectations is not None or archive_bundle is not None
+    if extended:
+        from evidence import validate_context, validate_v2
+        validate_context(context)
     if context is not None:
-        if not isinstance(context, dict):
-            raise ValueError("sample context must be a JSON object")
         context = json.loads(json.dumps(context, allow_nan=False))
     if guard_expectations is not None:
         from guards import validate_expectations
@@ -305,6 +306,8 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
             record.update(context=context, guard_expectations=guard_expectations,
                           observation_guard=guard, artifact_archive=archived)
         try:
+            if extended:
+                validate_v2("sample", record)
             expected = (json.dumps(record, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
             if len(expected) > MAX_RECORD_BYTES:
                 raise ValueError("sample exceeds lifecycle record byte limit")
@@ -346,6 +349,7 @@ def measure_and_publish(argv: Sequence[str], cwd: str, timeout: float, output: P
     if extended:
         receipt.update(context=context, guard_expectations=guard_expectations,
                        observation_guard=guard, artifact_archive=archived)
+        validate_v2("receipt", receipt)
     if len(json.dumps(receipt, sort_keys=True, allow_nan=False).encode("utf-8")) > MAX_RECEIPT_BYTES:
         raise ValueError("lifecycle receipt exceeds byte limit; sample alone is unconfirmed")
     return receipt
@@ -359,6 +363,8 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any], *, archived_bundle:
               "cwd", "raw_bundle", "required_finalization", "errors", "limitations"}
     extended = isinstance(receipt, dict) and type(receipt.get("schema_version")) is int and receipt["schema_version"] == 2
     if extended:
+        from evidence import validate_v2
+        validate_v2("receipt", receipt)
         fields |= {"context", "guard_expectations", "observation_guard", "artifact_archive"}
     if (not isinstance(receipt, dict) or set(receipt) != fields
             or type(receipt["schema_version"]) is not int or receipt["schema_version"] not in (1, 2)
@@ -415,6 +421,15 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any], *, archived_bundle:
     raw = receipt["raw_bundle"]
     if raw is not None and (not isinstance(raw, str) or not Path(raw).is_absolute()):
         raise ValueError("invalid lifecycle raw bundle")
+    if extended and result is not None:
+        from finalization import validate_observed
+        if result["cwd"] != receipt["cwd"]:
+            raise ValueError("command cwd differs from lifecycle receipt")
+        before, after = evidence["before_publication"], evidence["after_publication"]
+        for observed in (before, after):
+            validate_observed(result, contract, observed, capture_raw=raw is not None)
+        if (not _same_json(before, after)) != any(item["stage"] == "required_finalization" for item in errors):
+            raise ValueError("changed finalization observations conflict with error evidence")
     expected_record = {"schema_version": 2 if extended else 1, "mode": "exploratory", "result": result,
                        "required_finalization": {"requirements": contract, "observed": evidence["before_publication"]}}
     if extended:
@@ -432,10 +447,14 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any], *, archived_bundle:
                  if expectation is not None and result is not None else None)
         if not _same_json(guard, receipt["observation_guard"]):
             raise ValueError("observation guard differs from lifecycle result")
+        if bool(archive_value and archive_value["errors"]) != any(item["stage"] == "artifact_archive" for item in errors):
+            raise ValueError("artifact archival conflicts with error evidence")
         expected_record.update({key: receipt[key] for key in
                                 ("context", "guard_expectations", "observation_guard", "artifact_archive")})
     if sample is not None:
         record, observed = read_json(output)
+        if extended:
+            validate_v2("sample", record)
         if (not isinstance(sample, dict) or set(sample) != {"name", "bytes", "sha256"}
                 or type(sample["bytes"]) is not int or sample["name"] != output.name
                 or sample["bytes"] != observed["bytes"] or sample["sha256"] != observed["sha256"]
@@ -449,6 +468,8 @@ def inspect_lifecycle(output: Path, receipt: dict[str, Any], *, archived_bundle:
             archive_root = archived_bundle if archived_bundle is not None else Path(receipt["artifact_archive"]["bundle"])
             historical = archived_check(result, contract, evidence["before_publication"],
                                         receipt["artifact_archive"], archive_root, capture_raw=raw is not None)
+            if not _same_json(historical, evidence["before_publication"]):
+                raise ValueError("historical finalization evidence contradicts retained bytes or checks")
         if archived_bundle is not None:
             if historical is None:
                 raise ValueError("historical inspection requires archived evidence")

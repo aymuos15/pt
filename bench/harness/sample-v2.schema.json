@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:sample-v2",
+  "title": "PT exploratory invoked or skipped lifecycle sample v2",
+  "$ref": "urn:pt:bench:lifecycle-v2#/$defs/sample"
+}

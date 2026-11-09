@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager, ExitStack
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -16,6 +17,7 @@ MAX_RECORD_BYTES = 1024 * 1024
 MAX_RECEIPT_BYTES = 4 * MAX_RECORD_BYTES
 MAX_ARTIFACT_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 512 * 1024 * 1024
+MAX_JSON_DEPTH = 64
 SCOPE = "declared_files_absences_and_process_observations_only"
 
 
@@ -133,19 +135,23 @@ def _absent(root: Path, value: str) -> bool:
         return False
 
 
+def _process_ok(result: dict) -> bool:
+    return (result.get("status") == "exited_unqualified"
+            and result.get("process_reaped") is True and result.get("output_complete") is True
+            and type(result.get("returncode")) is int
+            and all(type(result.get(f"{stream}_bytes")) is int and result[f"{stream}_bytes"] >= 0
+                    and isinstance(result.get(f"{stream}_sha256"), str)
+                    and re.fullmatch(r"[0-9a-f]{64}", result[f"{stream}_sha256"]) is not None
+                    for stream in ("stdout", "stderr")))
+
+
 def check(result: dict[str, Any] | None, root: Path, contract: dict[str, Any],
           raw_bundle: Path | None = None) -> dict[str, Any]:
     """Observe all declared checks without repairing/retrying any mismatch."""
     require_safe_lookup()
     contract = requirements(contract)
     result = result or {}
-    process_ok = (result.get("status") == "exited_unqualified"
-                  and result.get("process_reaped") is True and result.get("output_complete") is True
-                  and type(result.get("returncode")) is int
-                  and all(type(result.get(f"{stream}_bytes")) is int and result[f"{stream}_bytes"] >= 0
-                          and isinstance(result.get(f"{stream}_sha256"), str)
-                          and re.fullmatch(r"[0-9a-f]{64}", result[f"{stream}_sha256"]) is not None
-                          for stream in ("stdout", "stderr")))
+    process_ok = _process_ok(result)
     checks = [{"kind": "process", "matched": process_ok}]
     expected = contract["expected_exit_code"]
     if expected is not None:
@@ -197,6 +203,55 @@ def check(result: dict[str, Any] | None, root: Path, contract: dict[str, Any],
     elif capture is not None:
         checks.append({"kind": "raw_capture", "matched": False, "error": "raw capture without required bundle"})
     return {"scope": SCOPE, "matched": all(item["matched"] for item in checks), "checks": checks}
+
+
+def validate_observed(result: dict, contract: dict, observed: dict, *, capture_raw: bool) -> None:
+    """Cross-check schema-validated historical facts without rereading a worktree.
+
+    Failed checks are valid evidence; invented, duplicate, omitted or internally
+    contradictory checks are not. Historical stat/absence claims remain unauthenticated.
+    """
+    expected = [("process", None)]
+    process_ok = _process_ok(result)
+    matches = {("process", None): process_ok}
+    if contract["expected_exit_code"] is not None:
+        expected.append(("expected_exit_code", None))
+        matches[expected[-1]] = process_ok and result.get("returncode") == contract["expected_exit_code"]
+    files = {("artifact", item["path"]): item for item in contract["artifacts"]}
+    expected.extend(files)
+    expected.extend(("absent", path) for path in contract["absent"])
+    capture = result.get("raw_capture")
+    if capture_raw and result["status"] != "launch_error":
+        if capture is None:
+            expected.append(("raw_capture", None))
+        else:
+            for stream in ("stdout", "stderr"):
+                item, total = capture[stream], result[f"{stream}_bytes"]
+                if (item["stored_bytes"] != min(total, capture["limit_per_stream_bytes"])
+                        or item["truncated"] != (item["stored_bytes"] < total)
+                        or (not item["truncated"] and item["sha256"] != result[f"{stream}_sha256"])):
+                    raise ValueError("raw capture contradicts command byte counts or digests")
+                key = (f"raw_{stream}", item["sha256"])
+                expected.append(key)
+                files[key] = {"bytes": item["stored_bytes"], "sha256": item["sha256"]}
+    elif capture is not None:
+        expected.append(("raw_capture", None))
+    recorded = observed["checks"]
+    if [(item["kind"], item.get("path")) for item in recorded] != expected:
+        raise ValueError("historical finalization check references differ from contract")
+    for item in recorded:
+        key = item["kind"], item.get("path")
+        if key in matches and item["matched"] != matches[key]:
+            raise ValueError("historical process/exit check contradicts command result")
+        if key in files and "bytes" in item:
+            target = files[key]
+            if item["bytes"] > target["bytes"] or item["identity"][2] != item["bytes"]:
+                raise ValueError("historical file observation exceeds byte budget or conflicts with identity")
+            matched = item["bytes"] == target["bytes"] and item["sha256"] == target["sha256"]
+            if item["matched"] != matched:
+                raise ValueError("historical file check contradicts observed bytes/digest")
+    if observed["matched"] != all(item["matched"] for item in recorded):
+        raise ValueError("historical finalization aggregate contradicts checks")
 
 
 def archive(root: Path, observed: dict, bundle: Path) -> dict:
@@ -287,6 +342,8 @@ def archived_check(result: dict, contract: dict, observed: dict, archived: dict,
     if not set(references).union(archive_errors).issubset(declared):
         raise ValueError("undeclared archived artifact")
     by_path = {(item["kind"], item.get("path")): item for item in recorded}
+    if any("identity" not in by_path.get(("artifact", path), {}) for path in archive_errors):
+        raise ValueError("artifact-archive error names an unobserved file")
     for expected in contract["artifacts"]:
         path = expected["path"]
         item = by_path.get(("artifact", path))
@@ -324,9 +381,27 @@ def parse_json(raw: str | bytes) -> dict[str, Any]:
     def invalid_constant(value):
         raise ValueError(f"non-finite JSON value: {value}")
 
-    value = json.loads(raw, object_pairs_hook=unique, parse_constant=invalid_constant)
+    def finite_float(value):
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("non-finite JSON number")
+        return number
+
+    try:
+        value = json.loads(raw, object_pairs_hook=unique, parse_constant=invalid_constant, parse_float=finite_float)
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder limit") from exc
     if not isinstance(value, dict):
         raise ValueError("expected JSON object")
+    pending = [(value, 0)]
+    while pending:
+        item, depth = pending.pop()
+        if depth > MAX_JSON_DEPTH:
+            raise ValueError("JSON nesting exceeds record limit")
+        if isinstance(item, dict):
+            pending.extend((child, depth + 1) for child in item.values())
+        elif isinstance(item, list):
+            pending.extend((child, depth + 1) for child in item)
     return value
 
 

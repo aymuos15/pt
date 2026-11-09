@@ -82,9 +82,19 @@ whole-block percentile bootstrap using `--bootstrap-resamples N --bootstrap-seed
 S`. These values remain exploratory: input independence, equal work, sample
 adequacy, and release criteria are not established by the calculation.
 `sample.schema.json` describes legacy version-1 command-only arm records. New
-version-2 samples/receipts are checked against their stage context, contract,
-typed process observations and exact sample/retained-byte bindings; neither is
-the complete WP01 raw-evidence format or establishes benchmark validity.
+version-2 plans, samples, receipts and aborts use `paired-plan-v2.schema.json`,
+`sample-v2.schema.json`, `receipt-v2.schema.json` and `paired-abort-v2.schema.json`,
+with shared definitions in `lifecycle-v2.schema.json`. `evidence.validate_v2()`
+resolves only bundled schema URNs, rejects unknown/missing fields and requires
+actual integer tokens (not booleans or `1.0`) for integer fields. Strict decoding
+also rejects duplicate keys, nonfinite/overflowed numbers and nesting beyond 64
+levels. A standard JSON Schema validator alone does not enforce that integer-token
+policy. Production and inspection validate these formats, then check stage
+context, contracts, guards, both finalization observations, clocks and exact
+sample/retained-byte bindings. Valid failed or skipped observations remain
+inspectable and unqualified; unexplained omissions and contradictory evidence do
+not. None is the complete WP01 raw-evidence format or establishes benchmark
+validity. See [the schema contract and retained failures](../../docs/wp01-evidence-v2.md).
 `junit_inventory.py` compares ordered JUnit classname/name/outcome attributes,
 preserving duplicates. JUnit is not authoritative pytest collection or phase
 evidence; the comparison omits tracebacks and must not be used as an oracle.
@@ -195,6 +205,7 @@ Publication/finalization regression commands:
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_lifecycle.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_finalization.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_lifecycle.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_evidence_v2.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

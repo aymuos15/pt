@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from evidence import validate_v2
 from finalization import MAX_RECORD_BYTES, MAX_RECEIPT_BYTES, inspect_file, read_json, requirements, require_safe_lookup
 from guards import check_observation, validate_expectations
 from metadata import collect_metadata
@@ -32,8 +33,9 @@ def _command(value):
     return value.copy()
 
 
-def _publish(path: Path, value: dict, *, limit: int = MAX_RECEIPT_BYTES) -> None:
+def _publish(path: Path, value: dict, *, kind: str, limit: int = MAX_RECEIPT_BYTES) -> None:
     """Persist observer metadata and verify it, outside the subject interval."""
+    validate_v2(kind, value)
     expected = (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
     if len(expected) > limit:
         raise ValueError("paired observer record exceeds byte limit")
@@ -77,7 +79,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
     """New format v2; retain receipts before any subsequent stage may run."""
     require_safe_lookup()
     schedule = paired_schedule(blocks, seed)
-    if not math.isfinite(timeout) or timeout <= 0:
+    if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("timeout must be finite and positive")
     capture_raw, limit = options.get("capture_raw", False), options.get("raw_limit_bytes", 10 * 1024 * 1024)
     if type(capture_raw) is not bool or type(limit) is not int or limit < 0:
@@ -111,9 +113,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 raise ValueError("state-probe guard requires expected exit zero")
             contracts[arm][stage], guards[arm][stage] = contract, expectation
     output = Path(os.path.abspath(output))
-    output.mkdir(mode=0o700)
     bundle = output / "blobs"
-    bundle.mkdir(mode=0o700)
     plan = {"schema_version": 2, "mode": "exploratory_unqualified", "timing_endpoint": LIFECYCLE_ENDPOINT,
             "schedule": schedule, "seed": seed, "cwd": str(cwd), "timeout_seconds": timeout,
             "arm_cwds": {arm: str(path) for arm, path in arm_cwds.items()},
@@ -122,11 +122,15 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
             "host_metadata": collect_metadata(),
             "limitations": ["historical file/absence observations only", "receipt persistence outside subject interval",
                             "no semantic, generation, resource or confirmatory qualification"]}
-    _publish(output / "schedule.json", plan, limit=MAX_RECORD_BYTES)
+    validate_v2("paired-plan", plan)
+    output.mkdir(mode=0o700)
+    bundle.mkdir(mode=0o700)
+    _publish(output / "schedule.json", plan, kind="paired-plan", limit=MAX_RECORD_BYTES)
 
     def abort(context, reason, error, receipt=None):
         _publish(output / "abort.json", {"schema_version": 2, "mode": "exploratory_unqualified",
-                                        "context": context, "reason": reason, "error": error, "receipt": receipt})
+                                        "context": context, "reason": reason, "error": error, "receipt": receipt},
+                 kind="paired-abort")
         raise PairedLifecycleAborted(f"{context}: {reason}: {error}; remaining arms not run")
 
     for block in schedule:
@@ -138,7 +142,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                     if stage == "measurement":
                         _publish(output / _filename(stage, block["block"], arm), {
                             "schema_version": 2, "mode": "exploratory_unqualified", "context": context,
-                            "result": {"status": skipped}})
+                            "result": {"status": skipped}}, kind="sample", limit=MAX_RECORD_BYTES)
                     continue
                 command = commands[arm][stage]
                 if command is None:
@@ -154,7 +158,7 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                 except (ValueError, OSError) as exc:
                     abort(context, "harness_error", str(exc))
                 try:
-                    _publish(output / f"receipt-{filename}", receipt)
+                    _publish(output / f"receipt-{filename}", receipt, kind="receipt")
                 except (ValueError, OSError) as exc:
                     abort(context, "receipt_publication_failed", str(exc), receipt)
                 if not _safe_to_continue(receipt):
@@ -167,22 +171,10 @@ def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = No
     """Historical inspection requires retained artifact bytes, not live cwd files."""
     from inspect_run import _measurement
 
-    if (type(plan.get("schema_version")) is not int or plan["schema_version"] != 2
-            or plan.get("mode") != "exploratory_unqualified" or plan.get("timing_endpoint") != LIFECYCLE_ENDPOINT
-            or type(plan.get("seed")) is not int or not isinstance(plan.get("schedule"), list)
-            or not plan["schedule"] or not _same_json(plan["schedule"], paired_schedule(len(plan["schedule"]), plan["seed"]))
-            or plan.get("bundle_directory") != "blobs" or type(plan.get("capture_raw")) is not bool
-            or type(plan.get("raw_limit_bytes")) is not int or plan["raw_limit_bytes"] < 0):
-        raise ValueError("invalid paired lifecycle plan")
-    for key in ("commands", "finalization", "guards", "arm_cwds"):
-        if not isinstance(plan.get(key), dict) or set(plan[key]) != set(ARMS):
-            raise ValueError(f"invalid paired {key}")
+    validate_v2("paired-plan", plan)
+    if not _same_json(plan["schedule"], paired_schedule(len(plan["schedule"]), plan["seed"])):
+        raise ValueError("paired schedule differs from seed or block numbering")
     for arm in ARMS:
-        if not isinstance(plan["arm_cwds"][arm], str) or not Path(plan["arm_cwds"][arm]).is_absolute():
-            raise ValueError("invalid paired cwd")
-        for key in ("commands", "finalization", "guards"):
-            if not isinstance(plan[key][arm], dict) or set(plan[key][arm]) != set(STAGES):
-                raise ValueError("invalid stage configuration")
         for stage in STAGES:
             command, contract, guard = (plan[key][arm][stage] for key in ("commands", "finalization", "guards"))
             if command is None:
@@ -205,19 +197,15 @@ def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = No
     abort = None
     if (directory / "abort.json").exists():
         abort, _ = read_json(directory / "abort.json", limit=MAX_RECEIPT_BYTES)
-        if (set(abort) != {"schema_version", "mode", "context", "reason", "error", "receipt"}
-                or type(abort["schema_version"]) is not int or abort["schema_version"] != 2
-                or abort["mode"] != "exploratory_unqualified"
-                or abort["reason"] not in ("harness_error", "receipt_publication_failed", "required_finalization_failed")
-                or not isinstance(abort["error"], str) or not abort["error"]):
-            raise ValueError("invalid paired abort evidence")
+        validate_v2("paired-abort", abort)
         expected.add("abort.json")
     stopped, found_abort, last_end = False, False, None
     counts, lifecycle_counts, guard_counts = Counter(), Counter(), Counter()
     observed_arms = 0
 
-    def read(path):
-        value, _ = read_json(directory / path, limit=MAX_RECEIPT_BYTES)
+    def read(path, *, kind="receipt"):
+        value, _ = read_json(directory / path, limit=MAX_RECORD_BYTES if kind == "sample" else MAX_RECEIPT_BYTES)
+        validate_v2(kind, value)
         expected.add(path)
         return value
 
@@ -241,7 +229,7 @@ def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = No
                     is_abort = abort is not None and _same_json(abort["context"], context)
                     if skipped is not None:
                         if stage == "measurement":
-                            record = read(filename)
+                            record = read(filename, kind="sample")
                             if not _same_json(record, {"schema_version": 2, "mode": "exploratory_unqualified",
                                                        "context": context, "result": {"status": skipped}}):
                                 raise ValueError("invalid skipped-arm evidence")
@@ -268,7 +256,7 @@ def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = No
                                 raise ValueError("failed receipt publication differs from diagnostic copy")
                     else:
                         receipt = read(receipt_name)
-                    if (not isinstance(receipt, dict) or not _same_json(receipt.get("context"), context)
+                    if (not _same_json(receipt.get("context"), context)
                             or not _same_json(receipt.get("required_finalization", {}).get("requirements"), plan["finalization"][arm][stage])
                             or not _same_json(receipt.get("guard_expectations"), plan["guards"][arm][stage])
                             or receipt.get("cwd") != plan["arm_cwds"][arm]

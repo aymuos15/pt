@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:paired-plan-v2",
+  "title": "PT exploratory paired lifecycle plan v2",
+  "$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan"
+}

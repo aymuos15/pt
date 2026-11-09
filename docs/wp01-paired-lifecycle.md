@@ -96,7 +96,11 @@ Unknown/missing files, missing required receipts/blobs, inconsistent clocks,
 changed contracts and endpoint relabelling are rejected. Guard/JSON comparisons
 preserve types (`True` is not an integer assertion). The legacy
 `sample.schema.json` is still the **version-1 command record schema**, not a
-claim to describe the complete version-2 or WP01 raw-evidence format.
+claim to describe the complete version-2 or WP01 raw-evidence format. A subsequent
+[closed-schema follow-up](wp01-evidence-v2.md) explicitly defines version-2 plans,
+invoked/skipped samples, nullable failure receipts and aborts, enforcing structural
+types before the separate semantic/byte checks. The verification below is the
+historical paired-integration batch; current schema-batch results are in that follow-up.
 
 Ordinary failed preparation/probes skip their arm and remain in the denominator;
 known complete timeout/nonzero observations can be retained without pretending
