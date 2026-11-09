@@ -197,12 +197,13 @@ all considered sessions were cleanly unsupported without subjects. Inspector exi
 passing tests. Summary exit **0** means nonblocked diagnostics, **1** means blocked
 with retained observations, and **2** means malformed evidence/unsupported options.
 
-Current `result_card.py` explicitly refuses this new resource-replay kind,
+At `3857899`, `result_card.py` explicitly refused this new resource-replay kind,
 including no-return aborts, rather than relabelling it as legacy resources or
-latency. Evidence-bound resource-replay cards are a separate next step. Existing
-21-/24-field card schemas are unchanged, and no unknown qualification field is
-filled from this separate diagnostic. Routing changes do change reader source
-bytes: historical `97fb1b6` cards require the matching historical reader for exact
+latency. The subsequent [resource-replay card integration](wp01-replay-resource-cards.md)
+now provides its own closed recursive format. Existing 21-/24-field card schemas
+are unchanged, and all 24 qualification fields stay null in the new cards too.
+Routing changes do change reader source bytes: historical cards require their
+matching reader revision (`3857899` for this batch's base) for exact
 reconstruction. Paths, arguments, reports, raw prefixes and hashes can disclose
 secrets; retain privately and review before sharing. Raw evidence is not committed.
 
@@ -337,14 +338,15 @@ Direct CLI/API production and read-only CLI evidence is outside the repository a
   clock, omitted shutdown with rebound transport/digests, reused group, invented
   zero peak, wrong coordinator provenance, missing abort, unexpected later unit,
   extra file and false failure abort) each made inspection exit **2**, without
-  traceback. Unsupported bootstrap and resource-card requests also exit **2**;
+  traceback. At `3857899`, unsupported bootstrap and resource-card requests also exit **2**;
   a too-small watchdog fails before output creation or subject work.
 
 ## Remaining prerequisites
 
 This closes the focused **paired whole-session resource scheduling/inspection/
-summary** step, not WP01 acceptance. Evidence-bound resource-replay cards remain
-open, with existing qualification gaps preserved. Native peak qualification,
+summary** step, not WP01 acceptance. The later
+[evidence-bound resource-replay cards](wp01-replay-resource-cards.md) now preserve
+all outcomes and qualification gaps through offline reconstruction. Native peak qualification,
 resource-budget equivalence, idle-only attribution, actual semantic/work/generation/
 input/reset validation, scenario/edit replays, observer-overhead characterization,
 frozen campaigns and independent review remain open. Missing `memory.peak` gates

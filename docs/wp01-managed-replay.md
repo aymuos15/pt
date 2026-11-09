@@ -268,8 +268,9 @@ separate diagnostic invocation including preparation, idle/background work,
 shutdown and driver reporting. It does not add resource values to these retained
 latency-only receipts or qualify resource budgets/idle-only costs. The later
 [paired resource integration](wp01-paired-replay-resources.md) now schedules fresh
-whole-session diagnostics separately. Resource replay cards remain open; no
-per-step independent units are invented.
+whole-session diagnostics separately. Its distinct
+[resource-replay cards](wp01-replay-resource-cards.md) now preserve that evidence
+offline without filling qualification fields. No per-step independent units are invented.
 Missing `memory.peak` gates native peak qualification, **not further implementation**.
 WP02/WP03, WP04 completion, the real backend and qualification/release dependencies
 remain open in the [prerequisite register](wp01-status.md). Rust/bridge builds,

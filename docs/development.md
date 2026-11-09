@@ -101,9 +101,11 @@ Driver overhead is included; outer observer/sampler overhead is excluded from
 cgroup totals. Missing peak remains unsupported unless explicitly accepted as a
 partial diagnostic. [Paired whole-session resource campaigns](wp01-paired-replay-resources.md)
 now schedule fresh diagnostic units and preserve unsupported/failed/not-run/unknown
-sessions through routed inspection and resource-only summaries. Resource replay
-cards remain open; existing latency observations are not rerun or relabelled, and
-steps are not independent samples.
+sessions through routed inspection and resource-only summaries. The distinct
+[resource-replay cards](wp01-replay-resource-cards.md) now bind those campaigns
+offline, preserving all outcomes, missing metrics and 24 null qualification fields.
+Existing latency observations are not rerun or relabelled, and steps are not
+independent samples.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

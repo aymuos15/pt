@@ -710,11 +710,18 @@ class PairedReplayResourceTests(PairedResourceFixture, ObservedBoundaryTests):
             with self.assertRaises(ValueError):
                 pairs.validate("plan", changed)
 
-    def test_card_tools_refuse_new_resource_format_explicitly_even_for_no_return_aborts(self):
+    def test_card_tools_dispatch_resource_format_and_preserve_no_return_aborts(self):
         with mock.patch.object(diagnostic, "run_observation", side_effect=OSError("fixture-only missing return")):
             self.produce()
-        with self.assertRaisesRegex(ValueError, "paired replay resource result cards are not implemented"):
-            cards.generate_result_card(self.output)
+        # Match the CLI's import path for this new lazy card reader even when
+        # this one regression is run without the card test module imported.
+        with mock.patch.object(sys, "path", [str(HARNESS), *sys.path]):
+            card = cards.generate_result_card(self.output)
+        self.assertEqual(card["kind"], "paired_replay_resource_exploratory_result_card")
+        self.assertEqual(card["denominators"]["unknown_session_invocations"], 1)
+        self.assertEqual(card["denominators"]["known_not_invoked_sessions"], 3)
+        self.assertEqual(card["statistics"]["status"], "blocked")
+        self.assertTrue(all(value is None for value in card["qualification"]["unresolved_fields"].values()))
 
     def test_cli_unsupported_campaign_routes_to_inspection_and_blocked_resource_summary(self):
         paths = {}

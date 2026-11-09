@@ -69,6 +69,8 @@ this does not qualify a runner or close the later work-package/release gates.
   diagnostic cgroup covering preparation, idle/background work and shutdown.
 - [Paired whole-session resources](docs/wp01-paired-replay-resources.md): fresh
   per-session groups, complete planned denominators and resource-only summaries.
+- [Resource-replay result cards](docs/wp01-replay-resource-cards.md): offline
+  recursive bindings, preserved missing metrics and 24 unresolved qualification fields.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

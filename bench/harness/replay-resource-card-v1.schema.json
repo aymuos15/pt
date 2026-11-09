@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:replay-resource-card-v1",
+  "title": "PT evidence-bound exploratory paired whole-session resource replay card v1",
+  "description": "Diagnostic resources only. Full source-bound reconstruction is mandatory; counters, declarations and accounting flags never fill qualification fields or authorize latency estimates.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "classification", "confirmatory_eligible", "sample_unit", "measurement_layer", "resource_endpoint", "resource_scope", "overhead_policy", "clock_alignment", "qualification", "denominators", "session_observations", "campaign", "blockers", "analysis_request", "statistics", "context", "evidence", "generator", "reconstruction_sha256", "limitations"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_replay_resource_exploratory_result_card"},
+    "classification": {"const": "exploratory"}, "confirmatory_eligible": {"type": "boolean", "const": false},
+    "sample_unit": {"const": "complete_managed_session_replay"}, "measurement_layer": {"const": "resource_diagnostic"},
+    "resource_endpoint": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/endpoint"},
+    "resource_scope": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/scope"},
+    "overhead_policy": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/overhead_policy"},
+    "clock_alignment": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/receipt/properties/clock_alignment"},
+    "qualification": {"$ref": "urn:pt:bench:replay-result-card-v1#/properties/qualification"},
+    "denominators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_blocks", "planned_sessions", "observed_sessions", "unit_observation_count", "known_session_invocations", "unknown_session_invocations", "known_not_invoked_sessions", "known_boundary_invocations", "unknown_boundary_invocations", "known_not_invoked_boundaries", "session_status_counts", "replay_session_status_counts", "planned_phase_count", "phase_status_counts", "known_phase_invocation_attempts", "known_not_invoked_phases", "unknown_phase_invocations", "planned_interaction_count", "interaction_status_counts", "verified_independent_sessions", "verified_independent_blocks"],
+      "properties": {
+        "planned_blocks": {"type": "integer", "minimum": 1, "maximum": 64}, "planned_sessions": {"type": "integer", "minimum": 2, "maximum": 128},
+        "observed_sessions": {"$ref": "#/$defs/count"}, "unit_observation_count": {"$ref": "#/$defs/count"},
+        "known_session_invocations": {"$ref": "#/$defs/count"}, "unknown_session_invocations": {"$ref": "#/$defs/count"}, "known_not_invoked_sessions": {"$ref": "#/$defs/count"},
+        "known_boundary_invocations": {"$ref": "#/$defs/count"}, "unknown_boundary_invocations": {"$ref": "#/$defs/count"}, "known_not_invoked_boundaries": {"$ref": "#/$defs/count"},
+        "session_status_counts": {"$ref": "#/$defs/unit_counts"}, "replay_session_status_counts": {"$ref": "#/$defs/replay_counts"},
+        "planned_phase_count": {"$ref": "#/$defs/count"}, "phase_status_counts": {"$ref": "#/$defs/phase_counts"},
+        "known_phase_invocation_attempts": {"$ref": "#/$defs/count"}, "known_not_invoked_phases": {"$ref": "#/$defs/count"}, "unknown_phase_invocations": {"$ref": "#/$defs/count"},
+        "planned_interaction_count": {"$ref": "#/$defs/count"}, "interaction_status_counts": {"$ref": "#/$defs/phase_counts"},
+        "verified_independent_sessions": {"type": "null"}, "verified_independent_blocks": {"type": "null"}
+      }
+    },
+    "session_observations": {"type": "array", "minItems": 2, "maxItems": 128, "items": {"$ref": "#/$defs/session"}},
+    "campaign": {
+      "type": "object", "additionalProperties": false, "required": ["record_consistency", "recorded_interval_order", "all_session_accounting_complete", "abort"],
+      "properties": {"record_consistency": {"enum": ["complete", "aborted"]}, "recorded_interval_order": {"const": "nonoverlapping_coordinator_and_outer_observer_only"},
+                     "all_session_accounting_complete": {"type": "boolean"}, "abort": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/abort"}]}}
+    },
+    "blockers": {"$ref": "urn:pt:bench:replay-result-card-v1#/properties/blockers"},
+    "analysis_request": {"type": "object", "additionalProperties": false, "required": ["bootstrap_resamples", "bootstrap_seed"],
+      "properties": {"bootstrap_resamples": {"type": "null"}, "bootstrap_seed": {"type": "null"}}},
+    "statistics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "per_arm_resources", "per_arm_resources_unit", "memory_metric", "whole_campaign_peak_charged_bytes", "idle_only_resource_metrics", "per_phase_resource_metrics", "ratio", "absolute_latency_ns", "bootstrap"],
+      "properties": {
+        "status": {"enum": ["blocked", "diagnostic_resource_observations"]},
+        "per_arm_resources": {"type": "object", "additionalProperties": false, "required": ["baseline", "candidate"],
+          "properties": {"baseline": {"$ref": "#/$defs/arm_resources"}, "candidate": {"$ref": "#/$defs/arm_resources"}}},
+        "per_arm_resources_unit": {"const": "complete_session_including_driver_not_measurement_stage_only"},
+        "memory_metric": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/memory_metric"},
+        "whole_campaign_peak_charged_bytes": {"type": "null"}, "idle_only_resource_metrics": {"type": "null"}, "per_phase_resource_metrics": {"type": "null"},
+        "ratio": {"type": "null"}, "absolute_latency_ns": {"type": "null"}, "bootstrap": {"type": "null"}
+      }
+    },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schedule", "schedule_seed", "sessions", "pairing", "pairing_identity_status", "resources", "driver", "observer_process", "original_output_root", "host_observations"],
+      "properties": {
+        "schedule": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/schedule"}, "schedule_seed": {"type": "integer"},
+        "sessions": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/sessions"}, "pairing": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/pairing"},
+        "pairing_identity_status": {"enum": ["unresolved", "declared_only_unverified"]},
+        "resources": {"$ref": "urn:pt:bench:paired-replay-resource-v1#/$defs/plan/properties/resources"},
+        "driver": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/driver"}, "observer_process": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/process_clock"},
+        "original_output_root": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"}, "host_observations": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"}
+      }
+    },
+    "evidence": {"$ref": "#/$defs/inventory"},
+    "generator": {"type": "object", "additionalProperties": false, "required": ["implementation", "runtime"],
+      "properties": {"implementation": {"$ref": "#/$defs/inventory"}, "runtime": {"$ref": "urn:pt:bench:result-card-v1#/properties/generator/properties/runtime"}}},
+    "reconstruction_sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}, "limitations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1}, "count": {"type": "integer", "minimum": 0}, "nullable_count": {"type": ["integer", "null"], "minimum": 0},
+    "unit_status": {"enum": ["observed_unqualified", "partial_unsupported", "unsupported", "failed", "harness_error", "not_run_run_aborted", "not_run_plan_changed"]},
+    "replay_status": {"enum": ["completed_unqualified", "aborted", "unknown", "not_run_unsupported", "not_run_boundary_failed", "not_run_run_aborted", "not_run_plan_changed"]},
+    "phase_status": {"anyOf": [{"$ref": "urn:pt:bench:managed-replay-v1#/$defs/step_observation/properties/status"},
+                               {"enum": ["unknown", "not_run_unsupported", "not_run_boundary_failed", "not_run_run_aborted"]}]},
+    "unit_counts": {"type": "object", "propertyNames": {"$ref": "#/$defs/unit_status"}, "additionalProperties": {"$ref": "#/$defs/count"}},
+    "replay_counts": {"type": "object", "propertyNames": {"$ref": "#/$defs/replay_status"}, "additionalProperties": {"$ref": "#/$defs/count"}},
+    "phase_counts": {"type": "object", "propertyNames": {"$ref": "#/$defs/phase_status"}, "additionalProperties": {"$ref": "#/$defs/count"}},
+    "nullable_process": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/process_clock"}]},
+    "session": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context", "measurement_layer", "sample_unit", "status", "resource_status", "session_status", "session_invocation_attempted", "boundary_run_attempted", "unit_observation_returned", "receipt_record_committed", "session_record_committed", "phase_guard_counts", "elapsed_ns", "planned_phase_count", "planned_interaction_count", "phase_status_counts", "interaction_status_counts", "known_phase_invocation_attempts", "known_not_invoked_phases", "unknown_phase_invocations", "shutdown_status", "driver_completion_confirmed", "resource_record_confirmed", "counter_boundary_accounting_complete", "whole_session_accounting_complete", "observer_process", "driver_process", "cpu_delta_usec", "peak_charged_bytes", "sampled_current_max_bytes", "memory_events_delta", "unsupported_capabilities", "resource_failure_reasons", "failure_reasons", "resource_group", "resource_enrollment", "resource_cleanup", "resource_errors", "observer_errors", "driver_error", "replay_outcome"],
+      "properties": {
+        "context": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"}, "measurement_layer": {"const": "resource_diagnostic"}, "sample_unit": {"const": "complete_managed_session_replay"},
+        "status": {"$ref": "#/$defs/unit_status"}, "resource_status": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1#/properties/status"}]},
+        "session_status": {"$ref": "#/$defs/replay_status"}, "session_invocation_attempted": {"type": ["boolean", "null"]}, "boundary_run_attempted": {"type": ["boolean", "null"]},
+        "unit_observation_returned": {"type": "boolean"}, "receipt_record_committed": {"type": "boolean"}, "session_record_committed": {"type": "boolean"}, "elapsed_ns": {"type": "null"},
+        "phase_guard_counts": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:result-card-v1#/$defs/guard_counts"}]},
+        "planned_phase_count": {"type": "integer", "minimum": 3, "maximum": 34}, "planned_interaction_count": {"type": "integer", "minimum": 1, "maximum": 32},
+        "phase_status_counts": {"$ref": "#/$defs/phase_counts"}, "interaction_status_counts": {"$ref": "#/$defs/phase_counts"},
+        "known_phase_invocation_attempts": {"$ref": "#/$defs/count"}, "known_not_invoked_phases": {"$ref": "#/$defs/count"}, "unknown_phase_invocations": {"$ref": "#/$defs/count"},
+        "shutdown_status": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/step_observation/properties/status"}]},
+        "driver_completion_confirmed": {"type": "boolean"}, "resource_record_confirmed": {"type": "boolean"}, "counter_boundary_accounting_complete": {"type": "boolean"}, "whole_session_accounting_complete": {"type": "boolean"},
+        "observer_process": {"$ref": "#/$defs/nullable_process"}, "driver_process": {"$ref": "#/$defs/nullable_process"},
+        "cpu_delta_usec": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/cpu_delta_usec"},
+        "peak_charged_bytes": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/peak_charged_bytes"}, "sampled_current_max_bytes": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/sampled_current_max_bytes"},
+        "memory_events_delta": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/memory_events_delta"},
+        "unsupported_capabilities": {"oneOf": [{"type": "null"}, {"type": "object", "propertyNames": {"enum": ["cpu_stat", "memory_current", "memory_peak", "memory_events", "population", "kill", "enrollment"]}, "additionalProperties": {"$ref": "#/$defs/text"}}]},
+        "resource_failure_reasons": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1#/properties/failure_reasons"}]},
+        "failure_reasons": {"type": "array", "items": {"$ref": "#/$defs/text"}},
+        "resource_group": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/group"},
+        "resource_enrollment": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1#/properties/enrollment"}]},
+        "resource_cleanup": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1#/properties/cleanup"}]},
+        "resource_errors": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1#/properties/errors"}]},
+        "observer_errors": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/receipt/properties/errors"}]},
+        "driver_error": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/driver/properties/error"},
+        "replay_outcome": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false,
+          "required": ["status", "outcome_reasons", "raw_capture_truncated_phase_count", "unconfirmed_diagnostic_fragment_count"],
+          "properties": {"status": {"enum": ["completed_unqualified", "aborted"]}, "outcome_reasons": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/outcome/properties/reasons"},
+                         "raw_capture_truncated_phase_count": {"$ref": "#/$defs/count"}, "unconfirmed_diagnostic_fragment_count": {"$ref": "#/$defs/count"}}}]}
+      }
+    },
+    "arm_resources": {
+      "type": "object", "additionalProperties": false, "required": ["planned_sessions", "unit_observations", "completed_replay_observations", "complete_accounting_sessions", "cpu_usage_usec", "peak_charged_bytes", "sampled_current_max_bytes"],
+      "properties": {"planned_sessions": {"$ref": "#/$defs/count"}, "unit_observations": {"$ref": "#/$defs/count"}, "completed_replay_observations": {"$ref": "#/$defs/count"}, "complete_accounting_sessions": {"$ref": "#/$defs/count"},
+                     "cpu_usage_usec": {"$ref": "#/$defs/cpu_summary"}, "peak_charged_bytes": {"$ref": "#/$defs/memory_summary"}, "sampled_current_max_bytes": {"$ref": "#/$defs/memory_summary"}}
+    },
+    "cpu_summary": {"type": "object", "additionalProperties": false, "required": ["observed_units", "unknown_units", "observed_sum"],
+      "properties": {"observed_units": {"$ref": "#/$defs/count"}, "unknown_units": {"$ref": "#/$defs/count"}, "observed_sum": {"$ref": "#/$defs/nullable_count"}}},
+    "memory_summary": {"type": "object", "additionalProperties": false, "required": ["observed_units", "unknown_units", "maximum_observed_per_session"],
+      "properties": {"observed_units": {"$ref": "#/$defs/count"}, "unknown_units": {"$ref": "#/$defs/count"}, "maximum_observed_per_session": {"$ref": "#/$defs/nullable_count"}}},
+    "abort": {
+      "type": "object", "additionalProperties": false, "required": ["context", "reason", "error", "diagnostic_receipt_present", "diagnostic_session_present", "diagnostic_inputs_present"],
+      "properties": {"context": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"}, "reason": {"$ref": "urn:pt:bench:paired-replay-resource-v1#/$defs/abort/properties/reason"},
+                     "error": {"$ref": "#/$defs/text"}, "diagnostic_receipt_present": {"type": "boolean"}, "diagnostic_session_present": {"type": "boolean"}, "diagnostic_inputs_present": {"type": "boolean"}}
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false, "required": ["format", "sha256", "total_bytes", "directories", "files"],
+      "properties": {"format": {"const": "sha256_canonical_recursive_resource_replay_inventory_v1"}, "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"},
+        "total_bytes": {"type": "integer", "minimum": 0, "maximum": 1073741824},
+        "directories": {"type": "array", "maxItems": 384, "uniqueItems": true, "items": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/relative_path"}},
+        "files": {"type": "array", "minItems": 1, "maxItems": 8192, "items": {"type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"],
+          "properties": {"path": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/relative_path"}, "bytes": {"type": "integer", "minimum": 0, "maximum": 134217728}, "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}}}
+      }
+    }
+  }
+}

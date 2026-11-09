@@ -117,10 +117,32 @@ invent a campaign-wide peak or replace missing data with zero. Unsupported,
 partial, failed, unknown, unconfirmed or unguarded/incompletely declared campaigns
 have blocked summaries. Even fully observed diagnostic campaigns have null latency
 ratio/absolute comparison/bootstrap and unknown verified independence. Bootstrap
-requests are rejected; result-card commands explicitly refuse this new resource
-format pending its own reporting integration. Existing cards and schemas are not
-relabeled; old cards require their matching reader revision after routing changes.
+requests are rejected. The subsequent resource-card integration below adds a
+distinct reporting format, never relabelling existing cards/schemas; old cards
+require their matching reader revision after routing changes.
 See [layout, status accounting, native controls and reproduction](../../docs/wp01-paired-replay-resources.md).
+
+The existing `result_card.py <retained-campaign> --output <new-card.json>` and
+`inspect_result_card.py <card.json> --run <retained-campaign>` now route paired
+whole-session resource evidence to
+[`replay_resource_card.py`](replay_resource_card.py) and its distinct closed
+[`replay-resource-card-v1.schema.json`](replay-resource-card-v1.schema.json).
+Generation/reconstruction is offline: no commands, resets, resource passes or
+current-worktree checks. Every planned session and nested retained byte/directory
+is bound, including fragments after a lost return; diagnostic files alone never
+become confirmed outcomes or metrics.
+
+Cards preserve combined diagnostic/managed replay statuses, separate boundary/
+session invocation certainty, phase/interaction counts, publication flags, errors,
+cleanup and descriptive observed costs. Failed-unit CPU remains counted; missing
+metrics stay null and memory maxima stay per observed session. All **24**
+qualification fields remain required null, even with complete diagnostic accounting.
+There is no latency ratio/bootstrap, campaign-wide peak, isolated idle attribution,
+verified independence or qualification upgrade. Full source-bound reconstruction,
+not schema validation or a matching digest alone, is required. Publish outside
+the evidence tree; output is private/no-overwrite and observed source/reader
+mutation fails without retries. Generator exit 1 retains a blocked card; inspector
+exit 0 is consistency only. See [scope, reproduction and adverse controls](../../docs/wp01-replay-resource-cards.md).
 
 `paired.py --timing-endpoint resource` now integrates these observations into a
 **distinct resource-diagnostic campaign**, not an extra run attached to a latency
@@ -512,6 +534,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_result_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay_resources.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resource_card.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

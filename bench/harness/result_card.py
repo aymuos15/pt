@@ -153,6 +153,9 @@ def _validator():
 def validate_card(card):
     """Structural/size checks only; source-bound reconstruction is mandatory."""
     validate_json_types(card)
+    if isinstance(card, dict) and card.get("kind") == "paired_replay_resource_exploratory_result_card":
+        from replay_resource_card import validate_card as validate_resource_replay_card
+        return validate_resource_replay_card(card)
     if isinstance(card, dict) and card.get("kind") == "paired_replay_exploratory_result_card":
         from replay_result_card import validate_card as validate_replay_card
         return validate_replay_card(card)
@@ -232,7 +235,8 @@ def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
     directory = Path(os.path.abspath(directory))
     declaration, _ = read_json(directory / "schedule.json")
     if declaration.get("kind") == "paired_replay_resource_campaign":
-        raise ValueError("paired replay resource result cards are not implemented; use the resource-only summary")
+        from replay_resource_card import build
+        return build(directory, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)
     if declaration.get("kind") == "paired_managed_replay_campaign":
         from replay_result_card import build
         return build(directory, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)
@@ -294,6 +298,9 @@ def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
 
 def _unchanged(token):
     if len(token) == 4:
+        if token[3] == "paired_replay_resource_result_card":
+            from replay_resource_card import unchanged
+            return unchanged(token)
         from replay_result_card import unchanged
         return unchanged(token)
     directory, evidence, implementation = token
@@ -308,6 +315,9 @@ def generate_result_card(directory, *, bootstrap_resamples=None, bootstrap_seed=
 def inspect_result_card(card, directory):
     """Rebuild from bound evidence and exact options; matching hashes alone do not approve a card."""
     validate_card(card)
+    if card.get("kind") == "paired_replay_resource_exploratory_result_card":
+        from replay_resource_card import inspect_card
+        return inspect_card(card, directory)
     if card.get("kind") == "paired_replay_exploratory_result_card":
         from replay_result_card import inspect_card
         return inspect_card(card, directory)
@@ -351,7 +361,8 @@ def main():
     except (OSError, ValueError) as exc:
         parser.exit(2, f"result-card: {exc}\n")
     count = ({"planned_session_count": card["denominators"]["planned_sessions"]}
-             if card["kind"] == "paired_replay_exploratory_result_card" else {"planned_arm_count": card["denominators"]["planned_arms"]})
+             if card["kind"] in ("paired_replay_exploratory_result_card", "paired_replay_resource_exploratory_result_card")
+             else {"planned_arm_count": card["denominators"]["planned_arms"]})
     print(json.dumps({"classification": "exploratory", "qualification": "not_established", "confirmatory_eligible": False,
                       "output": str(args.output), **count,
                       "status": card["statistics"]["status"], "reconstruction_sha256": card["reconstruction_sha256"]}, sort_keys=True))

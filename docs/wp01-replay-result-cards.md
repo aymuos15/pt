@@ -229,8 +229,10 @@ This completes the focused evidence-bound replay reporting integration, **not
 WP01 acceptance**. The later [whole-session resource mode](wp01-replay-resources.md)
 provides one separate diagnostic replay, without relabelling these cards or filling
 their qualification fields. [Paired resource replay scheduling and summaries](wp01-paired-replay-resources.md)
-are now a separate diagnostic profile. Resource replay card integration, native peak
-qualification, actual work/generation/input/reset equivalence, semantic manifests,
+are now a separate diagnostic profile, with distinct
+[resource-replay cards](wp01-replay-resource-cards.md) preserving all missing metrics
+and unresolved qualification fields. Native peak qualification, actual
+work/generation/input/reset equivalence, semantic manifests,
 scenario/edit replays,
 observer overhead, frozen campaigns, corpus governance and independent review
 remain open. Missing `memory.peak` gates native peak qualification only, not further

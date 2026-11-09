@@ -137,7 +137,9 @@ adds a distinct closed recursive reporting format, including no-return aborts.
 The later [whole-session resource mode](wp01-replay-resources.md) now accounts for
 one separate diagnostic replay, not these latency samples. The subsequent
 [paired resource integration](wp01-paired-replay-resources.md) adds resource-only
-campaigns without relabelling latency replays; resource replay cards remain open.
+campaigns without relabelling latency replays. The distinct
+[resource-replay cards](wp01-replay-resource-cards.md) now bind that evidence
+offline while retaining every qualification gap.
 Changed reader source bytes require the
 appropriate historical reader to reconstruct older result cards; `ffd6568` is
 the base reader for this batch.
