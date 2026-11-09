@@ -185,6 +185,40 @@ fn invalid_request_and_prelaunch_cancellation_do_not_start_project_work() {
     assert!(supervise(&invocation, &AtomicI32::new(0)).is_err());
 }
 
+#[test]
+fn terminal_stdin_is_rejected_before_launch() {
+    if std::env::var_os("PT_TEST_STDIN_FIXTURE").is_some() {
+        let root = TestDir::new();
+        let invocation = request(&root.0, "open('must-not-run','w').close()");
+        let error = supervise(&invocation, &AtomicI32::new(0)).unwrap_err();
+        assert!(error.0.contains("interactive stdin"));
+        assert!(!root.0.join("must-not-run").exists());
+        return;
+    }
+    // Run this exact validation fixture under a real PTY input descriptor,
+    // without changing the parent test process's stdin or signal handling.
+    let result = std::process::Command::new(
+        std::env::var_os("PT_TEST_PYTHON").unwrap_or_else(|| "python3".into()),
+    )
+    .args(["-c", r#"
+import os,pty,subprocess,sys
+master,slave=pty.openpty()
+try:
+    result=subprocess.run([sys.argv[1],'--exact','terminal_stdin_is_rejected_before_launch','--nocapture'],
+                          stdin=slave,capture_output=True,timeout=10)
+    sys.stdout.buffer.write(result.stdout)
+    sys.stderr.buffer.write(result.stderr)
+    sys.exit(result.returncode)
+finally:
+    os.close(master)
+    os.close(slave)
+"#])
+    .arg(std::env::current_exe().unwrap())
+    .env("PT_TEST_STDIN_FIXTURE", "1")
+    .output().unwrap();
+    assert!(result.status.success(), "{:?}", result);
+}
+
 const TREE: &str = r#"
 import os, sys, subprocess, time
 from pathlib import Path

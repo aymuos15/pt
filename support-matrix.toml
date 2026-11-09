@@ -11,6 +11,7 @@ interpreter = "CPython 3.12.12 (GIL-enabled)"
 pytest = "8.4.2"
 backend = "serial real pytest"
 invocation_profiles = ["python -m pytest", "pytest console entrypoint"]
+stdin_profiles = ["non-terminal input; interactive job control pending qualification"]
 evidence = "Pytest-only feasibility probes; no PT conformance. See docs/baseline-contract-v1.md."
 
 [unsupported]

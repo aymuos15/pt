@@ -4,6 +4,11 @@ Linux-only development implementation; **not a pytest backend or conformance
 claim**. `supervise` launches an OS argv vector in a fresh process group, with
 the requested cwd, inherited environment, and inherited stdin/stdout/stderr.
 There is no shell, retry, Python import, plugin policy, or environment install.
+The initial scope is **non-terminal stdin**. A terminal input descriptor is
+rejected before execution: a new process group needs foreground job control for
+interactive reads, which is not implemented/qualified yet. PT does not silently
+redirect input or claim unchanged interactive behavior. Output descriptors are
+inherited, but interactive terminal equivalence remains unqualified.
 
 The execution deadline is followed by a finite cleanup period (at most 30 s).
 Hard timeout sends SIGKILL to the group; cancellation sends SIGTERM then

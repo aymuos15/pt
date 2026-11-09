@@ -9,7 +9,7 @@ use std::error::Error;
 use std::ffi::OsString;
 use std::fmt;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, IsTerminal, Read};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
@@ -53,6 +53,11 @@ impl ProcessRequest {
         }
         if !self.cwd.is_dir() {
             return Err(RequestError("cwd must be an existing directory".into()));
+        }
+        if io::stdin().is_terminal() {
+            return Err(RequestError(
+                "interactive stdin is unsupported until terminal job control is qualified; supply non-terminal input explicitly".into(),
+            ));
         }
         let now = Instant::now();
         if self.timeout.is_zero()

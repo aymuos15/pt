@@ -46,7 +46,10 @@ initial no-live-members check; inability to verify it is cleanup uncertainty.
 Zombies are not live workers, but the direct child must be reaped.
 
 Inherited output preserves the caller's TTY/capture behavior without a new PT
-output buffer. It can be blocked by a slow consumer; timeout control must not
+output buffer, but inherited descriptors alone do not establish interactive
+foreground job control. The initial WP04 implementation must reject terminal
+stdin before work until that behavior is implemented and tested; explicitly
+redirected/non-terminal input is the bounded target. Output can be blocked by a slow consumer; timeout control must not
 depend on that consumer. No stdout control messages or pass-count scraping.
 Structured artifacts, when requested later, are additive and opt-in; secrets
 are not collected as raw environment metadata. Detached descendants and external
