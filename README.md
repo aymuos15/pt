@@ -10,7 +10,10 @@ The project is in early development. A Linux-only Rust process supervisor and
 diagnostic `pt exec` command now exist. There is **no PT pytest backend, qualified
 support profile, complete benchmark harness, or measured performance claim yet**. The
 specification is a design proposal, not evidence of implementation or support.
-Its example PT commands are proposed interfaces and cannot be run yet.
+An explicit metadata-only `pt doctor` and bridge distribution skeleton are also
+available; neither observes or executes pytest test sessions. The initial
+supervisor rejects terminal stdin until foreground job control is qualified.
+Most proposed product commands, including `pt run`, are not implemented yet.
 
 ## Start here
 
@@ -35,6 +38,8 @@ Its example PT commands are proposed interfaces and cannot be run yet.
   [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
+- [WP04 evidence and open gates](docs/wp04-status.md), including the bridge
+  packaging smoke check and explicit terminal/process ownership limits.
 - [Benchmark review checklist](docs/benchmark-review-checklist.md): review
   criteria, all initially unreviewed.
 - [Campaign template](bench/benchmark-campaign.template.yaml) and

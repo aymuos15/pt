@@ -25,7 +25,7 @@ cargo fmt --version
 cargo clippy --version
 uv sync --locked --project bench/harness --python 3.12.12
 uv run --locked --project bench/harness --python 3.12.12 python -c 'import sys, pytest; print(sys.version); print("pytest", pytest.__version__)'
-PT_TEST_PYTHON="$PWD/bench/harness/.venv/bin/python" cargo test --locked --workspace
+PT_TEST_PYTHON="$PWD/bench/harness/.venv/bin/python" cargo test --locked --workspace </dev/null
 cargo fmt --all --check
 cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo build --locked --release -p pt-cli
