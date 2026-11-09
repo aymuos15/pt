@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:replay-result-card-v1",
+  "title": "PT evidence-bound exploratory paired complete-session result card v1",
+  "description": "Whole sessions only. Complete source-bound reconstruction is required in addition to schema validation; no qualification field can be inferred from declarations or hashes.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "classification", "confirmatory_eligible", "sample_unit", "measurement_layer", "timing_endpoint", "qualification", "denominators", "session_observations", "campaign", "blockers", "analysis_request", "statistics", "context", "evidence", "generator", "reconstruction_sha256", "limitations"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_replay_exploratory_result_card"},
+    "classification": {"const": "exploratory"}, "confirmatory_eligible": {"type": "boolean", "const": false},
+    "sample_unit": {"const": "complete_managed_session_replay"}, "measurement_layer": {"const": "managed_replay"},
+    "timing_endpoint": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/plan/properties/timing_endpoint"},
+    "qualification": {
+      "type": "object", "additionalProperties": false, "required": ["status", "qualified_session_count", "unresolved_fields"],
+      "properties": {
+        "status": {"const": "not_established"}, "qualified_session_count": {"type": "integer", "const": 0},
+        "unresolved_fields": {
+          "type": "object",
+          "required": ["candidate_revision", "baseline_revision", "candidate_binary_sha256", "baseline_binary_sha256", "arm_python_pytest_plugin_identities", "repository_revision", "scenario_and_cache_state", "machine_profile_and_resource_budget", "semantic_contract_and_equal_work", "collection_occurrences", "execution_occurrences", "independent_session_count", "generation_validity", "reset_policy_compliance", "coverage_configuration_and_artifacts", "fallback_accounting", "exclusion_policy_and_accounting", "full_session_and_idle_cost", "observer_effects", "corpus_eligibility_and_partitions", "preregistration_and_review", "matched_replay_inputs_and_external_state", "independent_block_count", "whole_session_resource_accounting"],
+          "propertyNames": {"enum": ["candidate_revision", "baseline_revision", "candidate_binary_sha256", "baseline_binary_sha256", "arm_python_pytest_plugin_identities", "repository_revision", "scenario_and_cache_state", "machine_profile_and_resource_budget", "semantic_contract_and_equal_work", "collection_occurrences", "execution_occurrences", "independent_session_count", "generation_validity", "reset_policy_compliance", "coverage_configuration_and_artifacts", "fallback_accounting", "exclusion_policy_and_accounting", "full_session_and_idle_cost", "observer_effects", "corpus_eligibility_and_partitions", "preregistration_and_review", "matched_replay_inputs_and_external_state", "independent_block_count", "whole_session_resource_accounting"]},
+          "additionalProperties": {"type": "null"}
+        }
+      }
+    },
+    "denominators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_blocks", "planned_sessions", "observed_sessions", "known_session_invocations", "unknown_session_invocations", "known_not_invoked_sessions", "session_status_counts", "planned_phase_count", "observed_phase_status_counts", "not_run_phase_count", "unknown_phase_count", "planned_interaction_count", "observed_interaction_status_counts", "not_run_interaction_count", "unknown_interaction_count", "verified_independent_sessions", "verified_independent_blocks"],
+      "properties": {
+        "planned_blocks": {"type": "integer", "minimum": 1, "maximum": 64}, "planned_sessions": {"type": "integer", "minimum": 2, "maximum": 128},
+        "observed_sessions": {"$ref": "#/$defs/count"}, "known_session_invocations": {"$ref": "#/$defs/count"},
+        "unknown_session_invocations": {"$ref": "#/$defs/count"}, "known_not_invoked_sessions": {"$ref": "#/$defs/count"},
+        "session_status_counts": {"$ref": "#/$defs/session_counts"}, "planned_phase_count": {"$ref": "#/$defs/count"},
+        "observed_phase_status_counts": {"$ref": "#/$defs/phase_counts"}, "not_run_phase_count": {"$ref": "#/$defs/count"},
+        "unknown_phase_count": {"$ref": "#/$defs/count"}, "planned_interaction_count": {"$ref": "#/$defs/count"},
+        "observed_interaction_status_counts": {"$ref": "#/$defs/phase_counts"}, "not_run_interaction_count": {"$ref": "#/$defs/count"},
+        "unknown_interaction_count": {"$ref": "#/$defs/count"}, "verified_independent_sessions": {"type": "null"}, "verified_independent_blocks": {"type": "null"}
+      }
+    },
+    "session_observations": {"type": "array", "minItems": 2, "maxItems": 128, "items": {"$ref": "#/$defs/session"}},
+    "campaign": {
+      "type": "object", "additionalProperties": false, "required": ["record_consistency", "recorded_interval_order", "infrastructure_failure", "abort"],
+      "properties": {
+        "record_consistency": {"enum": ["complete", "aborted"]}, "recorded_interval_order": {"const": "nonoverlapping"}, "infrastructure_failure": {"type": "boolean"},
+        "abort": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/abort"}]}
+      }
+    },
+    "blockers": {
+      "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["context", "reasons"],
+        "properties": {"context": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"}]},
+                       "reasons": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}}}
+    },
+    "analysis_request": {"$ref": "urn:pt:bench:result-card-v1#/properties/analysis_request"},
+    "statistics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "ratio_direction", "ratio", "absolute_latency_ns", "bootstrap", "latency_unit", "resampling_unit", "resource_observation", "whole_boundary_resource_accounting_complete"],
+      "properties": {
+        "status": {"enum": ["blocked", "exploratory_point_estimate"]}, "ratio_direction": {"const": "baseline_over_candidate"},
+        "ratio": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "absolute_latency_ns": {"$ref": "urn:pt:bench:result-card-v1#/properties/statistics/properties/absolute_latency_ns"},
+        "bootstrap": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bootstrap"}]},
+        "latency_unit": {"const": "complete_managed_session_replay"}, "resampling_unit": {"const": "whole_paired_complete_sessions"},
+        "resource_observation": {"type": "null"}, "whole_boundary_resource_accounting_complete": {"type": "boolean", "const": false}
+      }
+    },
+    "context": {
+      "type": "object", "additionalProperties": false, "required": ["schedule", "schedule_seed", "sessions", "pairing", "pairing_identity_status", "host_observations"],
+      "properties": {
+        "schedule": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/schedule"}, "schedule_seed": {"type": "integer"},
+        "sessions": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/sessions"}, "pairing": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/pairing"},
+        "pairing_identity_status": {"enum": ["unresolved", "declared_only_unverified"]}, "host_observations": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"}
+      }
+    },
+    "evidence": {"$ref": "#/$defs/inventory"},
+    "generator": {"type": "object", "additionalProperties": false, "required": ["implementation", "runtime"],
+      "properties": {"implementation": {"$ref": "#/$defs/inventory"}, "runtime": {"$ref": "urn:pt:bench:result-card-v1#/properties/generator/properties/runtime"}}},
+    "reconstruction_sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"},
+    "limitations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1}, "count": {"type": "integer", "minimum": 0},
+    "session_status": {"enum": ["completed_unqualified", "aborted", "harness_error", "not_run_run_aborted", "not_run_plan_changed"]},
+    "session_counts": {"type": "object", "propertyNames": {"$ref": "#/$defs/session_status"}, "additionalProperties": {"$ref": "#/$defs/count"}},
+    "phase_counts": {"type": "object", "propertyNames": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/step_observation/properties/status"}, "additionalProperties": {"$ref": "#/$defs/count"}},
+    "session": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context", "sample_unit", "measurement_layer", "status", "invocation_attempted", "receipt_record_committed", "session_record_committed", "elapsed_ns", "phase_guard_counts", "failure_reasons", "planned_phase_count", "planned_interaction_count", "observed_phase_status_counts", "observed_interaction_status_counts", "phase_invocation_counts", "shutdown_status", "raw_capture_truncated_phase_count", "unconfirmed_diagnostic_fragment_count", "outcome_reasons"],
+      "properties": {
+        "context": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"}, "sample_unit": {"const": "complete_managed_session_replay"},
+        "measurement_layer": {"const": "managed_replay"}, "status": {"$ref": "#/$defs/session_status"}, "invocation_attempted": {"type": ["boolean", "null"]},
+        "receipt_record_committed": {"type": "boolean"}, "session_record_committed": {"type": "boolean"}, "elapsed_ns": {"type": ["integer", "null"], "minimum": 0},
+        "phase_guard_counts": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:result-card-v1#/$defs/guard_counts"}]},
+        "failure_reasons": {"type": "array", "items": {"$ref": "#/$defs/text"}},
+        "planned_phase_count": {"type": "integer", "minimum": 3, "maximum": 34}, "planned_interaction_count": {"type": "integer", "minimum": 1, "maximum": 32},
+        "observed_phase_status_counts": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/phase_counts"}]},
+        "observed_interaction_status_counts": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/phase_counts"}]},
+        "phase_invocation_counts": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["known_attempted", "unknown", "not_invoked"],
+          "properties": {"known_attempted": {"$ref": "#/$defs/count"}, "unknown": {"$ref": "#/$defs/count"}, "not_invoked": {"$ref": "#/$defs/count"}}}]},
+        "shutdown_status": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/step_observation/properties/status"}]},
+        "raw_capture_truncated_phase_count": {"type": ["integer", "null"], "minimum": 0}, "unconfirmed_diagnostic_fragment_count": {"type": ["integer", "null"], "minimum": 0},
+        "outcome_reasons": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/outcome/properties/reasons"}]}
+      }
+    },
+    "abort": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context", "reason", "error", "diagnostic_receipt_present", "diagnostic_session_present", "diagnostic_inputs_present"],
+      "properties": {"context": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"}, "reason": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/abort/properties/reason"},
+                     "error": {"$ref": "#/$defs/text"}, "diagnostic_receipt_present": {"type": "boolean"}, "diagnostic_session_present": {"type": "boolean"}, "diagnostic_inputs_present": {"type": "boolean"}}
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false, "required": ["format", "sha256", "total_bytes", "directories", "files"],
+      "properties": {
+        "format": {"const": "sha256_canonical_recursive_replay_inventory_v1"}, "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"},
+        "total_bytes": {"type": "integer", "minimum": 0, "maximum": 1073741824},
+        "directories": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/relative_path"}},
+        "files": {"type": "array", "minItems": 1, "maxItems": 8192, "items": {
+          "type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"],
+          "properties": {"path": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/relative_path"}, "bytes": {"type": "integer", "minimum": 0, "maximum": 134217728},
+                         "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}
+        }}
+      }
+    },
+    "bootstrap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "ratio_direction", "point_estimate", "interval_method", "confidence_level", "interval_lower", "interval_upper", "blocks", "bootstrap_resamples", "bootstrap_seed", "timing_endpoint"],
+      "properties": {
+        "mode": {"const": "exploratory_unqualified"}, "ratio_direction": {"const": "baseline_over_candidate"}, "point_estimate": {"type": "number", "exclusiveMinimum": 0},
+        "interval_method": {"const": "percentile_whole_paired_blocks_linear_quantile"}, "confidence_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "interval_lower": {"type": "number", "exclusiveMinimum": 0}, "interval_upper": {"type": "number", "exclusiveMinimum": 0},
+        "blocks": {"type": "integer", "minimum": 2, "maximum": 64}, "bootstrap_resamples": {"type": "integer", "minimum": 2, "maximum": 1000000},
+        "bootstrap_seed": {"type": "integer"}, "timing_endpoint": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/plan/properties/timing_endpoint"}
+      }
+    }
+  }
+}

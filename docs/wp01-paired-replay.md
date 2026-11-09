@@ -130,10 +130,11 @@ invalidate an inferential interpretation. Every output stays exploratory and
 
 Whole-session CPU, memory, idle residency, resource budgets, generations, actual
 matching work and reset equivalence remain unknown. Existing resource counters
-are not copied from other runs or imputed as zero. The current result-card format
-explicitly rejects paired replay, including no-return aborts, instead of relabelling
-it as command/lifecycle latency or emitting a traceback. Replay cards and resource
-integration remain separate follow-ups. Changed reader source bytes require the
+are not copied from other runs or imputed as zero. At `fe8adbe`, the card CLI
+explicitly rejected replay rather than relabelling it as command/lifecycle latency.
+The subsequent [paired-replay card follow-up](wp01-replay-result-cards.md) now
+adds a distinct closed recursive reporting format, including no-return aborts.
+Replay resource integration remains open. Changed reader source bytes require the
 appropriate historical reader to reconstruct older result cards; `ffd6568` is
 the base reader for this batch.
 
@@ -254,14 +255,15 @@ Eight malformed copies (bad schedule, missing receipt, wrong receipt binding,
 early call clock, omitted shutdown with rebound unit/receipt digests, unexpected
 later executed session, missing abort and corrupt blob) each make inspection exit
 **2** without traceback. A mismatched idle declaration is rejected before output
-creation/project execution, and the existing card CLI explicitly rejects replay
-without creating a card. No failed control is excluded into a favorable estimate.
+creation/project execution. At that commit, the card CLI explicitly rejected replay
+without creating a card; the linked follow-up adds the separate format. No failed
+control is excluded into a favorable estimate.
 
 ## Remaining prerequisites
 
 This closes the focused bounded pairing/whole-session-analysis implementation
 step, **not WP01 acceptance**. Actual work/generation/reset/input-state validation,
-replay resource and result-card integration, semantic manifests, scenario/edit
+replay resource integration, semantic manifests, scenario/edit
 replays, overhead characterization, frozen campaigns and independent review remain
 open. Native `memory.peak` is still unavailable here; that gates native peak
 qualification, not further implementation. WP02–WP04 completion, the real backend/

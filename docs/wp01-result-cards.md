@@ -7,6 +7,11 @@ Date: **2026-11-09**. Base: `7b5cfcd`. This follows
 runner, oracle, benchmark campaign, support profile or release. `pt run` remains
 unavailable; no test-runner speedup is established.
 
+The later [paired-replay card integration](wp01-replay-result-cards.md) uses a
+distinct closed schema and recursive evidence inventory through the same commands.
+The original command/lifecycle/resource format and historical verification below
+remain distinct; reader source changes require the appropriate historical reader.
+
 ## Generate from evidence, not another subject invocation
 
 [`result_card.py`](../bench/harness/result_card.py) consumes one retained paired

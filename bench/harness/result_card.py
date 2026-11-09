@@ -153,6 +153,9 @@ def _validator():
 def validate_card(card):
     """Structural/size checks only; source-bound reconstruction is mandatory."""
     validate_json_types(card)
+    if isinstance(card, dict) and card.get("kind") == "paired_replay_exploratory_result_card":
+        from replay_result_card import validate_card as validate_replay_card
+        return validate_replay_card(card)
     error = next(_validator().iter_errors(card), None)
     if error is not None:
         path = "/" + "/".join(str(part) for part in error.absolute_path)
@@ -229,7 +232,8 @@ def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
     directory = Path(os.path.abspath(directory))
     declaration, _ = read_json(directory / "schedule.json")
     if declaration.get("kind") == "paired_managed_replay_campaign":
-        raise ValueError("paired replay result cards are not implemented; use the complete-session summary")
+        from replay_result_card import build
+        return build(directory, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)
     evidence, evidence_identity = capture_run(directory)
     implementation, implementation_identity = capture_implementation()
     observations = []
@@ -287,6 +291,9 @@ def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
 
 
 def _unchanged(token):
+    if len(token) == 4:
+        from replay_result_card import unchanged
+        return unchanged(token)
     directory, evidence, implementation = token
     if capture_run(directory) != evidence or capture_implementation() != implementation:
         raise ValueError("result-card evidence or implementation changed during generation/publication")
@@ -299,6 +306,9 @@ def generate_result_card(directory, *, bootstrap_resamples=None, bootstrap_seed=
 def inspect_result_card(card, directory):
     """Rebuild from bound evidence and exact options; matching hashes alone do not approve a card."""
     validate_card(card)
+    if card.get("kind") == "paired_replay_exploratory_result_card":
+        from replay_result_card import inspect_card
+        return inspect_card(card, directory)
     expected = generate_result_card(directory, **card["analysis_request"])
     if not _same_json(expected, card):
         raise ValueError("result card differs from reconstructed evidence, generator, analysis or qualification fields")
@@ -338,8 +348,10 @@ def main():
         card = write_result_card(args.directory, args.output, bootstrap_resamples=args.bootstrap_resamples, bootstrap_seed=args.bootstrap_seed)
     except (OSError, ValueError) as exc:
         parser.exit(2, f"result-card: {exc}\n")
+    count = ({"planned_session_count": card["denominators"]["planned_sessions"]}
+             if card["kind"] == "paired_replay_exploratory_result_card" else {"planned_arm_count": card["denominators"]["planned_arms"]})
     print(json.dumps({"classification": "exploratory", "qualification": "not_established", "confirmatory_eligible": False,
-                      "output": str(args.output), "planned_arm_count": card["denominators"]["planned_arms"],
+                      "output": str(args.output), **count,
                       "status": card["statistics"]["status"], "reconstruction_sha256": card["reconstruction_sha256"]}, sort_keys=True))
     return 1 if card["statistics"]["status"] == "blocked" else 0
 

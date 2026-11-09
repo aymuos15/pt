@@ -92,8 +92,10 @@ read-only historical inspection. Its fresh serial commands do not qualify daemon
 reuse, reset semantics, generations or resource totals. The
 [paired complete-session follow-up](wp01-paired-replay.md) now balances whole
 replays and preserves failed/not-run/unknown sessions through routed inspection
-and exploratory summaries. Replay resource/result-card integration remains open;
-interaction steps are not independent samples.
+and exploratory summaries. [Paired-replay result cards](wp01-replay-result-cards.md)
+now recursively bind those campaigns, preserving failed/not-run/unknown sessions
+and all qualification gaps through independent reconstruction. Replay resource
+integration remains open; interaction steps are not independent samples.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

@@ -251,13 +251,17 @@ Direct CLI evidence is retained outside the repository at
 This implements the focused bounded session-replay execution deliverable, not a
 qualified amortized-workflow result. The [paired complete-session follow-up](wp01-paired-replay.md)
 now integrates bounded AB/BA replay and whole-session summaries. Actual matching
-edit/input seeds and external state, replay result cards, real scenario/request/edit endpoints,
+edit/input seeds and external state, real scenario/request/edit endpoints,
 generation/work validation, semantic manifests, non-file resource release and
 frozen-campaign governance remain open. The existing command/lifecycle/resource
 and paired result-card formats remain distinct; no replay record is silently
 accepted by those tools. Existing result cards bind reader source bytes; historical
 `eea5e41` cards still require that reader for exact reconstruction after the
 analysis guard change.
+
+The subsequent [paired-replay card integration](wp01-replay-result-cards.md) now
+adds a distinct recursive, reconstructible reporting format. It does not upgrade
+the standalone observations to qualified work, resources or independent samples.
 
 Whole-session CPU/memory/idle residency and resource-budget equivalence remain
 unknown. A separate future native resource integration must include preparation,

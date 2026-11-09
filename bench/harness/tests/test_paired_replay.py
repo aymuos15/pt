@@ -683,11 +683,14 @@ class PairedReplayTests(ObservedBoundaryTests):
             with self.assertRaises(ValueError):
                 summarize_run(self.output, **options)
 
-    def test_legacy_result_cards_reject_replay_format_explicitly_including_no_return_aborts(self):
+    def test_result_cards_dispatch_no_return_aborts_without_relabelling_legacy_formats(self):
         with mock.patch.object(replay, "run_replay", side_effect=OSError("injected missing return")):
             self.produce()
-        with self.assertRaisesRegex(ValueError, "paired replay result cards are not implemented"):
-            cards.generate_result_card(self.output)
+        card = cards.generate_result_card(self.output)
+        self.assertEqual(card["kind"], "paired_replay_exploratory_result_card")
+        self.assertEqual(card["statistics"]["status"], "blocked")
+        self.assertEqual(card["denominators"]["unknown_session_invocations"], 1)
+        self.assertEqual(card["denominators"]["known_not_invoked_sessions"], 3)
 
     def test_cli_routes_accounted_abort_through_inspection_and_blocked_summary(self):
         self.plans["baseline"]["interactions"][0]["argv"][-1] = "fail"

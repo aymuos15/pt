@@ -264,9 +264,9 @@ only and requires all planned complete sessions, confirmed publication, guards
 on every phase, untruncated raw capture and resolved shared declarations. Any
 failure/not-run/unknown session blocks the entire comparison, not just its pair.
 Bootstrap draws whole paired sessions; verified independent sessions/blocks,
-work/generation validity and whole-session resources remain unknown. Current
-paired result cards explicitly reject replay input; command, lifecycle and
-resource formats are unchanged. See
+work/generation validity and whole-session resources remain unknown. Paired-replay
+result cards now have the distinct format described below; command, lifecycle
+and resource formats are unchanged. See
 [layout, reproducible controls, limits and remaining gates](../../docs/wp01-paired-replay.md).
 
 `analysis.py` implements a paired geometric point estimator and exploratory
@@ -312,22 +312,24 @@ schema/lock bytes, generator runtime versions and exact optional bootstrap
 request. A domain-separated reconstruction digest combines those inputs.
 Before/after file fingerprints reject observed mutation during generation and
 publication without retries. The output must be outside the run directory and
-cannot overwrite an existing file. Limits are 4096 evidence files, 128 MiB per
+cannot overwrite an existing file. In the original command/lifecycle/resource
+card format, limits are 4096 evidence files, 128 MiB per
 blob, 512 MiB aggregate input and 4 MiB per card; oversize evidence/cards fail
 instead of dropping arms or truncating entries. Existing stricter record limits
 still apply. This is safe POSIX, caller-owned-path bookkeeping, not authentication
 or an atomic snapshot.
 
-`inspect_result_card.py <card.json> --run <run-directory>` validates
-[`result-card-v1.schema.json`](result-card-v1.schema.json), then independently
+`inspect_result_card.py <card.json> --run <run-directory>` validates the distinct
+closed card schema (`result-card-v1.schema.json` for command/lifecycle/resource
+cards), then independently
 reconstructs the whole card from the source bundle with the recorded analysis
 request. A standalone schema match or edited inventory hash cannot approve a
 card. Changed source bytes, omitted outcomes/null fields, fabricated metrics,
 reader/runtime differences and qualification upgrades are rejected. Byte-identical
 copies of a retained bundle can be relocated without changing the card.
 
-All cards are `classification: exploratory`, with false confirmatory eligibility
-and zero qualified arms. The 21 unresolved fields include real arm/source pins,
+All card formats are `classification: exploratory`, with false confirmatory
+eligibility and zero qualified units. The original format's 21 unresolved fields include real arm/source pins,
 pytest/plugins, test-work counts, independence, generation, budgets, reset,
 coverage, fallbacks, exclusions, full-session/idle costs and review. Generator
 Python and plan host metadata are not measured-arm identities. No campaign
@@ -338,6 +340,36 @@ Generator exit 0 means a nonblocked exploratory report, 1 means a preserved
 blocked report, and 2 means invalid evidence/publication. Inspector exit 0 means
 consistent reconstruction, including consistent failures, not a qualified result.
 See [bindings, denominators, CLI examples and retained limits](../../docs/wp01-result-cards.md).
+
+The same card commands now dispatch paired-replay campaigns to
+[`replay_result_card.py`](replay_result_card.py) and the separate closed
+[`replay-result-card-v1.schema.json`](replay-result-card-v1.schema.json). They do
+not rerun any session or reinterpret interactions as independent samples. Every
+planned session remains in schedule order, including aborted, not-run and unknown
+returns. Phase/interaction counts, shutdown outcomes, publication flags, diagnostic
+fragments and abort causes remain visible; unknown elapsed/phase observations
+remain null. The existing whole-session summary and all its blockers are retained.
+
+Replay cards bind every root record and nested session file/blob by full relative
+path, byte count and SHA-256, including diagnostics and empty retained directories.
+The new recursive inventory and reconstruction digests also bind reader/schema/lock
+bytes, runtime versions and exact analysis options. Before/after snapshots span
+generation and publication; independently reconstructed cards must match in full.
+Changing just a digest, omitting failed sessions, relabelling unknown effects or
+inventing independence/resources cannot approve a card. Limits are 8192 files,
+1 GiB source bytes and 4 MiB per card, with the stricter replay/record limits still
+enforced. Oversize data fails without truncating records or dropping sessions.
+
+All **24** replay qualification fields are mandatory nulls: the original 21 plus
+actual matching replay inputs/state, independent block count and whole-session
+resource accounting. Shared declared pins do not fill them. The card includes
+complete declared arm plans and basic host observations, not verified arm identities.
+Qualified-session count remains zero; CPU/memory/idle resources and verified
+independent counts remain unknown. Existing card generator/inspector exit rules
+remain unchanged; replay generator output reports `planned_session_count` rather
+than relabelling sessions as command arms. See
+[replay-card fields, reproduction and observed controls](../../docs/wp01-replay-result-cards.md).
+
 `artifact_check.py <manifest> <bundle>` separately checks the manifest's listed
 artifact digests against regular files named by SHA-256 in a supplied local
 bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolved
@@ -409,6 +441,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_result_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_managed_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_result_card.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

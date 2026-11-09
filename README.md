@@ -63,6 +63,8 @@ this does not qualify a runner or close the later work-package/release gates.
   interactions and required shutdown bound as one unqualified session unit.
 - [Paired complete-session replay](docs/wp01-paired-replay.md): balanced session
   pairs, explicit abort/not-run accounting and whole-session exploratory analysis.
+- [Paired-replay result cards](docs/wp01-replay-result-cards.md): recursive evidence
+  bindings, preserved session uncertainty and explicit unresolved qualification.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge
