@@ -24,6 +24,11 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
             raise ValueError("bootstrap requires an integer seed and 2 to 1000000 resamples")
     observations: list[dict[str, Any]] = []
     inspection = inspect_run(directory, _observations=observations)
+    if inspection.get("measurement_layer") == "resource_diagnostic":
+        if bootstrap_resamples is not None:
+            raise ValueError("bootstrap is unsupported for separate resource diagnostic campaigns")
+        from paired_resources import summarize
+        return summarize(inspection, observations)
     if bootstrap_resamples is not None and bootstrap_resamples * inspection["blocks"] > 10_000_000:
         raise ValueError("bootstrap exceeds the exploratory computation limit")
     blockers = []
@@ -110,7 +115,7 @@ def main() -> int:
         print(f"summarize-run: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] == "exploratory_point_estimate" else 1
+    return 0 if result["status"] in ("exploratory_point_estimate", "diagnostic_resource_observations") else 1
 
 
 if __name__ == "__main__":

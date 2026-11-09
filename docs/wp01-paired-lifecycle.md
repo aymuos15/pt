@@ -136,6 +136,11 @@ command-only observations, not upgraded lifecycle samples. Legacy tests select
 this mode explicitly; the new default is covered separately. Version-1 plans
 cannot be relabelled as version-2, and the analyzer will not mix their intervals.
 
+The separate [paired resource mode](wp01-paired-resources.md) now records bound
+cgroup observations and explicit capability/failure denominators. It is not a
+new field in these closed v2 records or a source of lifecycle latency estimates;
+this endpoint and its default behavior remain unchanged.
+
 This closes the focused paired publication/receipt integration gap, not WP01's
 acceptance gate. Complete semantic manifests/raw formats/result cards,
 scenario/request/replay endpoints and amortization, whole-boundary CPU/memory,

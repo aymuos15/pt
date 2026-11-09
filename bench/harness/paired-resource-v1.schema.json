@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:paired-resource-v1",
+  "title": "PT paired resource-diagnostic campaign v1",
+  "description": "Distinct from paired latency records. Context/byte bindings, schedule, resource settings, archives, clocks, aborts and denominators require semantic inspection as well.",
+  "oneOf": [{"$ref": "#/$defs/plan"}, {"$ref": "#/$defs/stage"}, {"$ref": "#/$defs/skipped"}, {"$ref": "#/$defs/abort"}],
+  "$defs": {
+    "plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "measurement_layer", "timing_endpoint", "schedule", "seed", "cwd", "timeout_seconds", "arm_cwds", "commands", "finalization", "guards", "resources", "bundle_directory", "host_metadata", "limitations"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_resource_campaign"},
+        "mode": {"const": "exploratory_unqualified"}, "measurement_layer": {"const": "resource_diagnostic"},
+        "timing_endpoint": {"const": "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"},
+        "schedule": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/schedule"},
+        "seed": {"type": "integer"}, "cwd": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+        "timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400},
+        "arm_cwds": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/arm_cwds"},
+        "commands": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/commands"},
+        "finalization": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/finalization"},
+        "guards": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/guards"},
+        "resources": {
+          "type": "object", "additionalProperties": false,
+          "required": ["parents", "allow_missing_peak", "sample_interval_ns", "cleanup_grace_ns"],
+          "properties": {
+            "parents": {
+              "type": "object", "additionalProperties": false, "required": ["baseline", "candidate"],
+              "properties": {"baseline": {"$ref": "#/$defs/parent"}, "candidate": {"$ref": "#/$defs/parent"}}
+            },
+            "allow_missing_peak": {"type": "boolean"},
+            "sample_interval_ns": {"type": "integer", "minimum": 1000000, "maximum": 1000000000},
+            "cleanup_grace_ns": {"type": "integer", "minimum": 0, "maximum": 10000000000}
+          }
+        },
+        "bundle_directory": {"const": "blobs"},
+        "host_metadata": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "parent": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"}]},
+    "binding": {
+      "type": "object", "additionalProperties": false, "required": ["name", "bytes", "sha256"],
+      "properties": {
+        "name": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/filename"},
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 4194304},
+        "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}
+      }
+    },
+    "stage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "resource", "observer_clock", "guard_expectations", "observation_guard", "required_finalization", "artifact_archive", "errors"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_resource_stage"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/context"}, "resource": {"$ref": "#/$defs/binding"},
+        "observer_clock": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/clock"},
+        "guard_expectations": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/nullable_guard"},
+        "observation_guard": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/guard_verdict"}]},
+        "required_finalization": {
+          "type": "object", "additionalProperties": false, "required": ["requirements", "observed"],
+          "properties": {
+            "requirements": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/contract"},
+            "observed": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/observed"}]}
+          }
+        },
+        "artifact_archive": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/archive"}]},
+        "errors": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false, "required": ["stage", "error"],
+            "properties": {"stage": {"enum": ["finalization_observation", "artifact_archive"]}, "error": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "skipped": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "kind", "mode", "context", "result"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_resource_not_run"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/context", "properties": {"stage": {"const": "measurement"}}},
+        "result": {"type": "object", "additionalProperties": false, "required": ["status"], "properties": {
+          "status": {"enum": ["not_run_preparation_failed", "not_run_probe_failed", "not_run_preparation_resource_unsupported", "not_run_probe_resource_unsupported"]}
+        }}
+      }
+    },
+    "abort": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "reason", "error", "diagnostic_resource", "diagnostic_stage", "diagnostic_skipped"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_resource_abort"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/context"},
+        "reason": {"enum": ["harness_error", "resource_publication_failed", "stage_publication_failed", "skipped_publication_failed", "resource_observation_failed", "required_finalization_failed"]},
+        "error": {"type": "string", "minLength": 1},
+        "diagnostic_resource": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:resource-observation-v1"}]},
+        "diagnostic_stage": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/stage"}]},
+        "diagnostic_skipped": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/skipped"}]}
+      },
+      "allOf": [
+        {"if": {"properties": {"reason": {"const": "resource_publication_failed"}}},
+         "then": {"properties": {"diagnostic_resource": {"$ref": "urn:pt:bench:resource-observation-v1"}, "diagnostic_stage": {"type": "null"}}},
+         "else": {"properties": {"diagnostic_resource": {"type": "null"}}}},
+        {"if": {"properties": {"reason": {"const": "stage_publication_failed"}}},
+         "then": {"properties": {"diagnostic_stage": {"$ref": "#/$defs/stage"}}},
+         "else": {"properties": {"diagnostic_stage": {"type": "null"}}}},
+        {"if": {"properties": {"reason": {"const": "skipped_publication_failed"}}},
+         "then": {"properties": {"diagnostic_skipped": {"$ref": "#/$defs/skipped"}}},
+         "else": {"properties": {"diagnostic_skipped": {"type": "null"}}}}
+      ]
+    }
+  }
+}

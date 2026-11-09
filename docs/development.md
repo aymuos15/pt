@@ -68,6 +68,12 @@ with the exact capability reason when `memory.peak` is unavailable; synthetic
 counter checks are not kernel or PT qualification. Only an explicit diagnostic
 option permits partial CPU/current observations, with peak remaining unknown.
 
+The [paired resource-diagnostic mode](wp01-paired-resources.md) now binds those
+observations to a fixed paired stage plan and preserves unsupported, failed,
+skipped and uncertain outcomes in summaries. Select it explicitly with
+`--timing-endpoint resource`; no existing latency sample is replayed or upgraded.
+It does not qualify a native peak, frozen benchmark campaign or PT execution.
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create

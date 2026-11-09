@@ -17,7 +17,7 @@ import jsonschema
 from artifact_check import _digest_status
 from finalization import parse_json
 from guards import check_observation, validate_expectations
-from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT
+from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT, RESOURCE_ENDPOINT
 from schedule import paired_schedule
 
 MAX_RECORD_BYTES = 1024 * 1024
@@ -93,6 +93,12 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
 def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Reject missing or inconsistent records; never qualify their contents."""
     plan = _read(directory / "schedule.json")
+    if (plan.get("kind") == "paired_resource_campaign"
+            or plan.get("timing_endpoint") == RESOURCE_ENDPOINT):
+        from finalization import read_json
+        from paired_resources import inspect_pairs as inspect_resource_pairs
+        plan, _ = read_json(directory / "schedule.json")
+        return inspect_resource_pairs(directory, plan, observations=_observations)
     if plan.get("timing_endpoint") == LIFECYCLE_ENDPOINT:
         if type(plan.get("schema_version")) is not int or plan["schema_version"] != 2:
             raise InspectionError("do not mix: publication-inclusive records require a version-2 plan and receipts")

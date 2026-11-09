@@ -53,6 +53,8 @@ this does not qualify a runner or close the later work-package/release gates.
   schemas and malformed-record controls, not completion of WP01 or the runner.
 - [Whole-cgroup resource observations](docs/wp01-resources.md): opt-in CPU/charged-memory
   diagnostics, background-work controls and explicit unsupported peak accounting.
+- [Paired resource campaigns](docs/wp01-paired-resources.md): bound stage observations,
+  unsupported/failed/not-run denominators and resource-only summaries, not latency claims.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

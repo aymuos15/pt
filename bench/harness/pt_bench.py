@@ -225,6 +225,7 @@ def write_record(path: str, record: dict[str, Any]) -> None:
 
 COMMAND_ENDPOINT = "process_launch_through_exit_pipes_and_optional_raw_finalization_v1"
 LIFECYCLE_ENDPOINT = "invocation_through_sample_publication_and_declared_finalization_v1"
+RESOURCE_ENDPOINT = "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"
 LIFECYCLE_LIMITATIONS = [
     "post-commit receipt serialization and transport are outside the measured endpoint",
     "undeclared work, resources and artifacts are not verified",

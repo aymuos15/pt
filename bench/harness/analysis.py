@@ -13,6 +13,12 @@ def _paired_log_ratios(samples: Sequence[Mapping[str, Any]], *,
     """Validate and return log ratios in stable block-identifier order."""
     if not samples:
         raise ValueError("at least one complete block is required")
+    # Keep this standalone estimator importable without process/harness modules.
+    # The paired resource endpoint is a different measurement layer, not latency.
+    if any(sample.get("measurement_layer") == "resource_diagnostic"
+           or sample.get("timing_endpoint") == "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"
+           for sample in samples):
+        raise ValueError("resource diagnostic observations are not latency samples")
     endpoints = [sample.get("timing_endpoint") for sample in samples]
     if any(value is not None for value in endpoints):
         if any(not isinstance(value, str) or not value for value in endpoints) or len(set(endpoints)) != 1:

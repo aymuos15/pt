@@ -9,10 +9,14 @@ import os
 from pathlib import Path
 from typing import Any
 
-from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT, measure, write_record
+from pt_bench import COMMAND_ENDPOINT, LIFECYCLE_ENDPOINT, RESOURCE_ENDPOINT, measure, write_record
 from schedule import paired_schedule
 from metadata import collect_metadata
 from guards import check_observation, validate_expectations
+
+
+RESOURCE_OPTIONS = {"resource_cgroup_parent", "baseline_resource_cgroup_parent", "candidate_resource_cgroup_parent",
+                    "resource_allow_missing_peak", "resource_sample_interval", "resource_cleanup_grace"}
 
 
 class RunAbortedError(RuntimeError):
@@ -184,13 +188,23 @@ def _run_command_pairs(output: Path, cwd: Path, baseline: list[str], candidate: 
 
 def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
               blocks: int, seed: int, timeout: float, *, timing_endpoint: str = LIFECYCLE_ENDPOINT,
-              **options) -> None:
-    allowed = {"capture_raw", "raw_limit_bytes"}
+              **options) -> dict | None:
+    allowed = {"capture_raw", "raw_limit_bytes"} | RESOURCE_OPTIONS
     for arm in ("baseline", "candidate"):
         allowed.update(f"{arm}_{suffix}" for suffix in
                        ("prepare", "probe", "probe_guard", "guard", "cwd", "finalization", "prepare_finalization", "probe_finalization"))
     if set(options) - allowed:
         raise ValueError("unknown paired options")
+    # Resource diagnostics are an explicit measurement layer, never an implicit
+    # rerun or additional fields grafted onto closed v1/v2 latency records.
+    if timing_endpoint == RESOURCE_ENDPOINT:
+        from paired_resources import PairedResourceAborted, run_pairs as run_resource_pairs
+        try:
+            return run_resource_pairs(output, cwd, baseline, candidate, blocks, seed, timeout, **options)
+        except PairedResourceAborted as exc:
+            raise RunAbortedError(str(exc)) from exc
+    if any(key in options for key in RESOURCE_OPTIONS):
+        raise ValueError("resource options require the explicit resource diagnostic timing mode")
     if timing_endpoint == LIFECYCLE_ENDPOINT:
         from paired_lifecycle import PairedLifecycleAborted, run_pairs as run_lifecycle_pairs
         try:
@@ -235,14 +249,23 @@ def main() -> int:
     parser.add_argument("--blocks", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--timeout", type=float, required=True)
-    parser.add_argument("--timing-endpoint", choices=("lifecycle", "command"), default="lifecycle",
-                        help="new publication-inclusive observations (default) or explicit legacy command timing")
+    parser.add_argument("--timing-endpoint", choices=("lifecycle", "command", "resource"), default="lifecycle",
+                        help="publication-inclusive observations (default), legacy command timing or separate resource diagnostics")
+    parser.add_argument("--resource-cgroup-parent", type=Path, help="existing delegated parent for resource mode only")
+    parser.add_argument("--baseline-resource-cgroup-parent", type=Path)
+    parser.add_argument("--candidate-resource-cgroup-parent", type=Path)
+    parser.add_argument("--resource-allow-missing-peak", action="store_true", default=None,
+                        help="explicit partial resource diagnostic; never invents a native peak")
+    parser.add_argument("--resource-sample-interval", type=float)
+    parser.add_argument("--resource-cleanup-grace", type=float)
     for arm in ("baseline", "candidate"):
         for suffix in ("", "-prepare", "-probe"):
             parser.add_argument(f"--{arm}{suffix}-finalization-json", help="declared stage exit/artifacts/absences")
     args = parser.parse_args()
     try:
-        run_pairs(args.output, args.cwd, json.loads(args.baseline_json),
+        endpoint = {"lifecycle": LIFECYCLE_ENDPOINT, "command": COMMAND_ENDPOINT,
+                    "resource": RESOURCE_ENDPOINT}[args.timing_endpoint]
+        report = run_pairs(args.output, args.cwd, json.loads(args.baseline_json),
                   json.loads(args.candidate_json), args.blocks, args.seed, args.timeout,
                   baseline_prepare=(_command(json.loads(args.baseline_prepare_json))
                                     if args.baseline_prepare_json is not None else None),
@@ -262,11 +285,18 @@ def main() -> int:
                                    if args.candidate_guard_json is not None else None),
                   baseline_cwd=args.baseline_cwd, candidate_cwd=args.candidate_cwd,
                   capture_raw=args.capture_raw, raw_limit_bytes=args.raw_limit_bytes,
-                  timing_endpoint=LIFECYCLE_ENDPOINT if args.timing_endpoint == "lifecycle" else COMMAND_ENDPOINT,
+                  timing_endpoint=endpoint,
+                  **{key: getattr(args, key) for key in RESOURCE_OPTIONS if getattr(args, key) is not None},
                   **{f"{arm}{suffix}_finalization": _json_object(getattr(args, f"{arm}{suffix}_finalization_json"))
                      for arm in ("baseline", "candidate") for suffix in ("", "_prepare", "_probe")})
     except (ValueError, OSError, RunAbortedError) as exc:
         parser.exit(2, f"paired: {exc}\n")
+    if args.timing_endpoint == "resource":
+        if report["diagnostic_complete"]:
+            return 0
+        if report["observed_arm_count"] == 0 and report["record_consistency"] == "complete":
+            return 3 if any(item["resource_status"] == "unsupported" for item in report["stage_resource_observations"]) else 1
+        return 1
     return 0
 
 

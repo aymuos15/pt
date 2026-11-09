@@ -2,8 +2,7 @@
 
 This is an independent command timer and supporting prototype. It does **not**
 qualify outcomes, compare work, capture resource totals in its default paired path,
-semantically validate campaign
-manifests, reset state, retain raw output by default, or implement
+semantically validate campaign manifests, reset state, retain raw output by default, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
 Known-delay regression tests cover process startup, shutdown, pipe drainage,
 controlled real-pytest collection/teardown, test-owned reporting, real coverage.py
@@ -54,6 +53,41 @@ cannot authenticate the history or account for escaped/external pre-existing
 work. A whole replay can be one fresh resource unit; a whole paired-campaign
 wrapper is **not** per-arm accounting and must not be divided into per-arm peaks.
 See [resource scope, CLI exit codes, native capability limits and evidence](../../docs/wp01-resources.md).
+
+`paired.py --timing-endpoint resource` now integrates these observations into a
+**distinct resource-diagnostic campaign**, not an extra run attached to a latency
+sample. Its closed [`paired-resource-v1.schema.json`](paired-resource-v1.schema.json)
+plan binds exact per-stage commands, contracts, guards and resource settings.
+Each requested preparation/probe/measurement uses one fresh resource invocation;
+stage metadata binds its retained raw observation by name/size/SHA-256. File checks
+and declared-byte archival follow that resource endpoint as observer work, not
+as a falsely relabelled publication-inclusive latency. Default lifecycle and
+legacy command modes and their schemas remain separate and unchanged.
+
+Use `--resource-cgroup-parent`, or per-arm `--baseline-resource-cgroup-parent` /
+`--candidate-resource-cgroup-parent`, for existing delegated parents. Only
+`--resource-allow-missing-peak` permits partial diagnostics; optional resource
+sample/grace settings have their own `--resource-*` flags. Resource options in
+other timing modes, and raw-prefix capture in resource mode, fail before work.
+`inspect_run.py` validates contexts, settings, byte bindings, distinct groups,
+interval order, guard/file/archive evidence, abort causes and every planned arm.
+Unsupported preparation/probes skip their arm; resource/finalization/storage
+failures stop later work without replay. Valid diagnostic abort copies preserve
+observations when observer publication fails; corrupt/unexplained fragments are
+not deleted or approved to make a campaign complete.
+
+Resource summaries expose all measurement arms and requested stages, including
+unsupported, partial, failed, skipped, aborted and uncertain-invocation outcomes.
+Per-arm resource statistics describe **measurement stages only**; preparation and
+probe costs remain separately visible. Observed CPU sums retain failed-unit costs
+and report unknown-unit counts; they are not complete-campaign cost estimates.
+Memory fields are maxima **per observed unit**, never summed process maxima or
+an invented campaign-wide peak. No missing metric is imputed as zero.
+Resource-mode ratio/absolute-latency/bootstrap fields stay null, even for complete
+diagnostic data; bootstrap requests and direct latency-estimator use of resource
+endpoints are rejected. Partial/unsupported/failing campaigns have blocked
+summaries, not favorable complete-subset estimates. See
+[format, exit codes, denominators and verified limits](../../docs/wp01-paired-resources.md).
 
 `schedule.py` independently generates reproducible balanced AB/BA block orders;
 it does not establish independent observations. `paired.py` can run those
@@ -240,6 +274,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_lifecycle.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_evidence_v2.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_cgroup_accounting.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_resources.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

@@ -130,8 +130,12 @@ command. The peak is the whole independent session's peak, never a secretly
 reset per-request peak. Wrapping a complete paired driver measures the **whole
 campaign**, not per-arm resources; do not divide its peak into arm values. A
 separate resource pass must never be attached to earlier latency observations as
-if it measured that same execution. Per-arm/campaign integration, scenario
-governance and observer-effect characterization remain open.
+if it measured that same execution. The subsequent
+[paired-resource follow-up](wp01-paired-resources.md) implements explicit stage
+units and campaign validation/summaries without changing this counter format.
+Frozen-campaign/scenario governance, latency/resource qualification and
+observer-effect characterization remain open. Verification below is historical
+to this standalone-resource batch; the follow-up records current suite results.
 
 ## Verified controls and remaining limits
 

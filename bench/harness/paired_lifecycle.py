@@ -74,16 +74,8 @@ def _stage_ok(receipt):
                  or receipt["observation_guard"]["matched_expected_observations"]))
 
 
-def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
-              blocks: int, seed: int, timeout: float, **options) -> None:
-    """New format v2; retain receipts before any subsequent stage may run."""
-    require_safe_lookup()
-    schedule = paired_schedule(blocks, seed)
-    if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
-        raise ValueError("timeout must be finite and positive")
-    capture_raw, limit = options.get("capture_raw", False), options.get("raw_limit_bytes", 10 * 1024 * 1024)
-    if type(capture_raw) is not bool or type(limit) is not int or limit < 0:
-        raise ValueError("invalid raw capture configuration")
+def stage_configuration(cwd: Path, baseline: list[str], candidate: list[str], options: dict):
+    """Canonical shared stage requests; performs no invocation or publication."""
     cwd = cwd.resolve(strict=True)
     arm_cwds = {arm: Path(options.get(f"{arm}_cwd") or cwd).resolve(strict=True) for arm in ARMS}
     if not cwd.is_dir() or not all(path.is_dir() for path in arm_cwds.values()):
@@ -112,6 +104,20 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
             if stage == "probe" and expectation is not None and expectation["expected_exit_code"] != 0:
                 raise ValueError("state-probe guard requires expected exit zero")
             contracts[arm][stage], guards[arm][stage] = contract, expectation
+    return cwd, arm_cwds, commands, contracts, guards
+
+
+def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str],
+              blocks: int, seed: int, timeout: float, **options) -> None:
+    """New format v2; retain receipts before any subsequent stage may run."""
+    require_safe_lookup()
+    schedule = paired_schedule(blocks, seed)
+    if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("timeout must be finite and positive")
+    capture_raw, limit = options.get("capture_raw", False), options.get("raw_limit_bytes", 10 * 1024 * 1024)
+    if type(capture_raw) is not bool or type(limit) is not int or limit < 0:
+        raise ValueError("invalid raw capture configuration")
+    cwd, arm_cwds, commands, contracts, guards = stage_configuration(cwd, baseline, candidate, options)
     output = Path(os.path.abspath(output))
     bundle = output / "blobs"
     plan = {"schema_version": 2, "mode": "exploratory_unqualified", "timing_endpoint": LIFECYCLE_ENDPOINT,
@@ -167,13 +173,8 @@ def run_pairs(output: Path, cwd: Path, baseline: list[str], candidate: list[str]
                     skipped = "not_run_preparation_failed" if stage == "preparation" else "not_run_probe_failed"
 
 
-def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = None) -> dict:
-    """Historical inspection requires retained artifact bytes, not live cwd files."""
-    from inspect_run import _measurement
-
-    validate_v2("paired-plan", plan)
-    if not _same_json(plan["schedule"], paired_schedule(len(plan["schedule"]), plan["seed"])):
-        raise ValueError("paired schedule differs from seed or block numbering")
+def validate_stage_configuration(plan: dict) -> None:
+    """Cross-field stage contracts after envelope/schema validation."""
     for arm in ARMS:
         for stage in STAGES:
             command, contract, guard = (plan[key][arm][stage] for key in ("commands", "finalization", "guards"))
@@ -190,6 +191,16 @@ def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = No
                         raise ValueError("stage guard and finalization exit expectations conflict")
                 if stage != "measurement" and contract["expected_exit_code"] != 0:
                     raise ValueError("preparation/probe requires expected exit zero")
+
+
+def inspect_pairs(directory: Path, plan: dict, *, observations: list | None = None) -> dict:
+    """Historical inspection requires retained artifact bytes, not live cwd files."""
+    from inspect_run import _measurement
+
+    validate_v2("paired-plan", plan)
+    if not _same_json(plan["schedule"], paired_schedule(len(plan["schedule"]), plan["seed"])):
+        raise ValueError("paired schedule differs from seed or block numbering")
+    validate_stage_configuration(plan)
     bundle = directory / "blobs"
     if bundle.is_symlink() or not bundle.is_dir():
         raise ValueError("missing or unsafe paired artifact bundle")

@@ -26,7 +26,7 @@ from metadata import collect_metadata
 import pt_bench as timer
 
 
-ENDPOINT = "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"
+ENDPOINT = timer.RESOURCE_ENDPOINT
 SCOPE = "subject_exec_and_all_future_inheriting_cgroup_descendants"
 MEMORY_METRIC = "cgroup_v2_charged_memory_not_rss_or_pss"
 LAUNCHER = Path(__file__).resolve().with_name("cgroup_exec.py")
@@ -194,6 +194,17 @@ def _settle(group, record):
             record["errors"].append({"stage": "cleanup", "error": f"{type(exc).__name__}: {exc}"})
 
 
+def validate_settings(timeout, allow_missing_peak, sample_interval, cleanup_grace):
+    """Shared pre-work validation for standalone and paired diagnostic requests."""
+    for name, value, low, high in (("timeout", timeout, 0, 86400), ("sample interval", sample_interval, 0.001, 1),
+                                   ("cleanup grace", cleanup_grace, 0, 10)):
+        if (type(value) not in (int, float) or not math.isfinite(value)
+                or value < low or value > high or (name == "timeout" and value == 0)):
+            raise ValueError(f"invalid resource {name}")
+    if type(allow_missing_peak) is not bool:
+        raise ValueError("allow_missing_peak must be a boolean")
+
+
 def observe_resources(argv, cwd, timeout, *, cgroup_parent=None, allow_missing_peak=False,
                       sample_interval=0.02, cleanup_grace=0.1):
     """Observe exactly one fresh invocation/session; never silently downgrade peak.
@@ -206,13 +217,7 @@ def observe_resources(argv, cwd, timeout, *, cgroup_parent=None, allow_missing_p
             or any(not isinstance(arg, str) or "\0" in arg for arg in argv)
             or len(json.dumps(argv).encode()) > MAX_RECORD_BYTES):
         raise ValueError("resource command must be a bounded nonempty argv of strings")
-    for name, value, low, high in (("timeout", timeout, 0, 86400), ("sample interval", sample_interval, 0.001, 1),
-                                   ("cleanup grace", cleanup_grace, 0, 10)):
-        if (type(value) not in (int, float) or not math.isfinite(value)
-                or value < low or value > high or (name == "timeout" and value == 0)):
-            raise ValueError(f"invalid resource {name}")
-    if type(allow_missing_peak) is not bool:
-        raise ValueError("allow_missing_peak must be a boolean")
+    validate_settings(timeout, allow_missing_peak, sample_interval, cleanup_grace)
     root = Path(cwd).resolve(strict=True)
     if not root.is_dir():
         raise ValueError("resource cwd must be a directory")
@@ -430,6 +435,7 @@ def publish_resource_record(path, record):
     observed, _ = inspect_file(path.parent, path.name, limit=len(raw))
     if observed["bytes"] != len(raw) or observed["sha256"] != hashlib.sha256(raw).hexdigest():
         raise ValueError("resource observer publication did not commit expected bytes")
+    return {"name": path.name, "bytes": observed["bytes"], "sha256": observed["sha256"]}
 
 
 def main():
