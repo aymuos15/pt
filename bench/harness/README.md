@@ -4,8 +4,12 @@ This is an independent command timer and supporting prototype. It does **not**
 qualify outcomes, compare work, capture resource totals, semantically validate campaign
 manifests, reset state, retain raw output by default, or implement
 the benchmark protocol. It cannot issue confirmatory or performance claims.
-Known-delay regression tests cover process startup, shutdown, and pipe drainage;
-they do not validate every product or campaign timing boundary.
+Known-delay regression tests cover process startup, shutdown, pipe drainage,
+controlled real-pytest collection/teardown, test-owned reporting, real coverage.py
+combine/save/JSON reporting, cooperative resource release, and opt-in raw-capture
+publication/spool cleanup. These are instrumented harness fixtures, not PT
+conformance or coverage qualification. They do not validate every product or
+campaign timing boundary. See [WP01 evidence and open gates](../../docs/wp01-status.md).
 On Linux, a separate timer test exercises timeout termination of an ordinary
 owned child process group. It does not establish PT process supervision or
 containment of hostile or detached descendants.
@@ -88,6 +92,12 @@ may contain sensitive information; review records before sharing.
 New timer records include start/end monotonic nanoseconds and their clock domain;
 only differences within the recorded harness process are meaningful. Older v1
 records without these optional fields remain readable.
+`elapsed_ns` starts immediately before process launch, after argument/cwd checks,
+and ends after leader/pipe handling and any opt-in raw-capture finalization.
+The standalone sample JSON and paired arm/schedule records are published **after**
+their measured intervals. This is not a complete request-to-valid-result or
+campaign-publication endpoint, and drained pipes/reaped leaders do not prove
+required resource cleanup. The timing tests deliberately expose this exclusion.
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
@@ -143,6 +153,25 @@ Targeted regression command (run from the repository root):
 ```sh
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_blob_store.py -v
 ```
+
+Timing-boundary regression command:
+
+```sh
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_timing_boundaries.py -v
+```
+
+The parent holds each observed stage for 0.15 seconds, requires the command to
+remain pending, then checks that its own monotonic hold interval is enclosed by
+the timer. Exact stage order, fixture phases, reports, merged line sets and
+resource-release evidence are checked separately. Six omitted-wait controls and
+six prematurely ended record mutations must be rejected, as must an unreleased
+resource despite zero exit and complete reports. These checks are local to the
+fixture; `measure()` does not acquire a semantic or resource validator from them.
+Coverage.py **7.17.2** is a locked, test-only development dependency on Python
+>=3.11; the coverage-backed stage checks explicitly skip on Python 3.10. Only the
+selected CPython 3.12.12 development profile was exercised. No pytest-cov plugin
+or product dependency was added, and no effective coverage core, branch/context,
+subprocess-coverage or ecosystem support claim follows.
 
 Install the pinned prototype dependencies and run tests from the repository root
 with `uv` (the environment is local to `bench/harness`):

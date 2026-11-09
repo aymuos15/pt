@@ -13,7 +13,9 @@ GIL-enabled CPython 3.12.12 and pytest 8.4.2.
   a verified distribution-artifact digest. A workspace now contains WP04
   process-only primitives; it is not yet a qualified pytest backend.
 - The independent harness uses CPython **3.12.12** for the initial development
-  check and pytest **8.4.2** for its controlled corpus smoke tests. Its Python
+  check and pytest **8.4.2** for its controlled corpus smoke tests. Coverage.py
+  **7.17.2** is a test-only development dependency for instrumented timing-boundary
+  fixtures on Python >=3.11, not a qualified PT coverage profile. Its Python
   dependencies are locked in `bench/harness/uv.lock`. The local `uv` used for
   these instructions was **0.12.3**; installer provenance and interpreter
   artifact hashes still require independent verification for a campaign.

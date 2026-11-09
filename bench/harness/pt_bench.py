@@ -113,7 +113,12 @@ def _timing(start: int) -> dict[str, Any]:
 
 def measure(argv: Sequence[str], cwd: str, timeout: float, *,
             raw_bundle: Path | None = None, raw_limit_bytes: int = 10 * 1024 * 1024) -> dict[str, Any]:
-    """Measure one process through exit and pipe drainage, retaining all outcomes."""
+    """Time launch through leader/pipe completion and optional raw finalization.
+
+    Argument/cwd checks precede the clock; sample-record publication follows it.
+    This interval does not prove all descendants or required resources are gone,
+    or that the command completed any expected test work or artifact contract.
+    """
     if not argv or not all(isinstance(arg, str) for arg in argv) or not argv[0]:
         raise ValueError("command must have a nonempty executable and string arguments")
     if not math.isfinite(timeout) or timeout <= 0:

@@ -43,6 +43,8 @@ this does not qualify a runner or close the later work-package/release gates.
   permissions and conservative fallbacks, not implementation evidence.
 - [Exploratory harness prototype](bench/harness/README.md) and
   [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
+- [WP01 timing evidence and open prerequisites](docs/wp01-status.md): observed
+  stage boundaries, negative controls, and explicit endpoint exclusions.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge
