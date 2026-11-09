@@ -14,8 +14,7 @@ path = "src/main.rs"
 pt-process = { path = "../pt-process" }
 serde_json.workspace = true
 signal-hook.workspace = true
-
-[target.'cfg(target_os = "linux")'.dev-dependencies]
+tempfile.workspace = true
 nix.workspace = true
 
 [lints]

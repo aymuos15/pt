@@ -253,3 +253,33 @@ fn unimplemented_run_and_ambiguous_forwarding_fail_closed() {
     assert_eq!(result.status.code(), Some(0));
     assert!(String::from_utf8_lossy(&result.stdout).contains("not a qualified pytest runner"));
 }
+
+#[test]
+fn doctor_rejects_missing_or_non_interpreters_instead_of_trusting_zero_exit() {
+    for args in [
+        vec!["doctor", "--python", "relative-python"],
+        vec!["doctor"],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_pt"))
+            .args(args)
+            .output()
+            .unwrap();
+        assert_eq!(result.status.code(), Some(4));
+    }
+    // A command returning zero without the private metadata reply is not a
+    // valid interpreter/profile check.
+    let result = Command::new(env!("CARGO_BIN_EXE_pt"))
+        .args(["doctor", "--python", "/bin/true"])
+        .output()
+        .unwrap();
+    assert_eq!(result.status.code(), Some(3));
+    assert!(String::from_utf8_lossy(&result.stderr).contains("doctor reply"));
+    let root = TestDir::new();
+    let result = Command::new(env!("CARGO_BIN_EXE_pt"))
+        .args(["doctor", "--python"])
+        .arg(root.0.join("missing-python"))
+        .output()
+        .unwrap();
+    assert_eq!(result.status.code(), Some(3));
+    assert!(String::from_utf8_lossy(&result.stderr).contains("LaunchError"));
+}

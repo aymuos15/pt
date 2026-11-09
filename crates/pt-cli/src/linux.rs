@@ -4,7 +4,7 @@ use signal_hook::iterator::{Handle, Signals};
 use std::collections::HashSet;
 use std::ffi::OsString;
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -17,16 +17,138 @@ const HELP: &str = "PT development process supervisor (not a qualified pytest ru
 Usage: pt exec [--cwd PATH] [--timeout-seconds N] [--cleanup-seconds N]
                [--report NEW_JSON_FILE] -- PROGRAM [ARG ...]
        pt --version
+       pt doctor --python /absolute/path/to/venv/bin/python
 
 exec launches a fresh process group without a shell. Environment and standard
 streams are inherited; trailing arguments are forwarded exactly. Default execution
 timeout: 300 s; default bounded cleanup: 1 s (maximum 30 s). A zero exec exit is a
 process result only, not evidence of complete test work or valid generations.
+Interactive stdin is rejected until foreground terminal job control is qualified.
+Redirect non-interactive commands explicitly; PT does not redirect input for you.
 
 --report is opt-in, mode 0600, published without overwrite after cleanup. A
 publication error exits 3 even if the child exited zero. No daemon, caching,
 preloading, dependency installation, automatic retry, or pytest plugin injection.
 pt run is not implemented yet. See docs/baseline-contract-v1.md.";
+
+fn doctor(args: &[OsString]) -> u8 {
+    if args.len() != 3 || args[1] != "--python" || !Path::new(&args[2]).is_absolute() {
+        eprintln!("pt: configuration_error: use doctor --python /absolute/path/to/venv/bin/python");
+        return 4;
+    }
+    let cwd = match std::env::current_dir() {
+        Ok(cwd) => cwd,
+        Err(error) => {
+            eprintln!("pt: configuration_error: {error}");
+            return 4;
+        }
+    };
+    let temp_root = if Path::new("/tmp/opencode").is_dir() {
+        PathBuf::from("/tmp/opencode")
+    } else {
+        std::env::temp_dir()
+    };
+    let reply_directory = match tempfile::Builder::new()
+        .prefix("pt-doctor-")
+        .tempdir_in(temp_root)
+    {
+        Ok(directory) => directory,
+        Err(error) => {
+            eprintln!("pt: infrastructure_error: cannot allocate private doctor reply: {error}");
+            return 3;
+        }
+    };
+    let reply = reply_directory.path().join("reply.json");
+    let request = ProcessRequest {
+        executable: args[2].clone(),
+        args: vec![
+            "-I".into(),
+            "-S".into(),
+            "-B".into(),
+            "-c".into(),
+            include_str!("profile_check.py").into(),
+            reply.clone().into_os_string(),
+        ],
+        cwd,
+        timeout: Duration::from_secs(10),
+        cleanup_timeout: Duration::from_secs(1),
+    };
+    let cancelled = match Cancellation::register() {
+        Ok(cancelled) => cancelled,
+        Err(error) => {
+            eprintln!("pt: infrastructure_error: cannot install cancellation handler: {error}");
+            return 3;
+        }
+    };
+    match supervise(&request, &cancelled.flag) {
+        Ok(result) => {
+            if !matches!(result.termination, Termination::ProcessExited)
+                || matches!(result.cleanup, Cleanup::Uncertain { .. })
+            {
+                eprintln!(
+                    "pt doctor: {:?}; cleanup: {:?}",
+                    result.termination, result.cleanup
+                );
+                return result.exit_code();
+            }
+            let read_reply = || -> Result<serde_json::Value, String> {
+                let file = OpenOptions::new()
+                    .read(true)
+                    .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK)
+                    .open(&reply)
+                    .map_err(|error| error.to_string())?;
+                if !file
+                    .metadata()
+                    .map_err(|error| error.to_string())?
+                    .is_file()
+                {
+                    return Err("doctor reply is not a regular file".into());
+                }
+                let mut raw = Vec::new();
+                file.take(16 * 1024 + 1)
+                    .read_to_end(&mut raw)
+                    .map_err(|error| error.to_string())?;
+                if raw.len() > 16 * 1024 {
+                    return Err("doctor reply exceeds 16 KiB".into());
+                }
+                serde_json::from_slice(&raw).map_err(|error| error.to_string())
+            };
+            let metadata = match read_reply() {
+                Ok(metadata) => metadata,
+                Err(error) => {
+                    eprintln!(
+                        "pt: infrastructure_error: missing or malformed doctor reply: {error}"
+                    );
+                    return 3;
+                }
+            };
+            let Some(errors) = metadata["errors"].as_array() else {
+                eprintln!("pt: infrastructure_error: invalid doctor error accounting");
+                return 3;
+            };
+            let expected_code = if errors.is_empty() { 0 } else { 4 };
+            let shape_valid = metadata["mode"] == "isolated_installation_metadata_only"
+                && metadata["qualified"] == false
+                && errors.iter().all(|error| error.is_string())
+                && (expected_code != 0
+                    || (metadata["status"] == "installed_profile_present_unqualified"
+                        && metadata["target"] == "linux-x86_64-cpython312-pytest842"
+                        && metadata["python"] == serde_json::json!([3, 12, 12])
+                        && metadata["packages"]
+                            == serde_json::json!({"pytest": "8.4.2", "pt-bridge": "0.0.0"})));
+            if !shape_valid || result.exit_code() != expected_code {
+                eprintln!("pt: infrastructure_error: doctor reply and process status disagree");
+                return 3;
+            }
+            println!("{metadata}");
+            expected_code
+        }
+        Err(error) => {
+            eprintln!("pt: configuration_error: {error}");
+            4
+        }
+    }
+}
 
 struct Invocation {
     request: ProcessRequest,
@@ -230,6 +352,9 @@ pub fn main() -> u8 {
             env!("CARGO_PKG_VERSION")
         );
         return 0;
+    }
+    if args.first().is_some_and(|command| command == "doctor") {
+        return doctor(&args);
     }
     let invocation = match parse(args) {
         Ok(invocation) => invocation,
