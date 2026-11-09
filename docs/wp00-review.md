@@ -60,7 +60,7 @@ not authorize implementing a later feature early.
 
 | Gate | Owner/package | Evidence needed before the corresponding claim |
 |---|---|---|
-| G01 | Performance engineer, WP01 | Complete independent harness boundary/resource/broken-candidate checks and overhead characterization; reject incomplete samples and preserve failures. The concurrent existing-blob verification race reproduced below remains open, not waived. Current synthetic/JUnit/coverage-line checks are not the semantic oracle or a confirmatory campaign. |
+| G01 | Performance engineer, WP01 | Complete independent harness boundary/resource/broken-candidate checks and overhead characterization; reject incomplete samples and preserve failures. The specific blob-publication race is fixed in `c6d8822` (follow-up below), not waived; G01 as a whole remains open. Current synthetic/JUnit/coverage-line checks are not the semantic oracle or a confirmatory campaign. |
 | G02 | Test infrastructure engineer, WP02 | Authenticate/pin interpreter, distributions, repository revisions and host/platform identities; two clean materializations with inventories/outcomes, partitions, reset/state probes and visible eligibility/exclusions. Lockfiles/METADATA alone are insufficient. |
 | G03 | Compatibility engineer, WP03 | Real-pytest occurrence/phase oracle, narrowly defined normalizer, independent fixture/import/work sentinels and deliberately broken-runner controls, including stale source, collection failures and subprocess coverage. Retain raw evidence and instability. |
 | G04 | Systems engineer, WP04 | Complete actual entrypoint/profile/interpreter checks without project imports; qualify the diagnostic switches, output/I/O failure paths, cancellation and native ownership boundaries. Earlier process/packaging evidence is partial in [wp04-status.md](wp04-status.md); interactive stdin stays unavailable. |
@@ -101,9 +101,9 @@ actual artifact/environment/generation verification, WP03 oracle, or PT
 conformance/campaign was exercised. Packaging checks were not rerun in this
 protocol-only batch; their earlier bounded evidence remains in `wp04-status.md`.
 
-## Current review verification
+## WP00 review verification at 6d30e15 (historical)
 
-This change is a contract/threat-model acceptance review, not implementation of
+That change was a contract/threat-model acceptance review, not implementation of
 G01–G10. Verification checks document links/traceability, exact target pins against
 the existing schemas/toolchain/package, capability/outcome/invariant/ADR coverage,
 and preservation of unqualified support/campaign status. The existing contract
@@ -146,6 +146,50 @@ The full suite commands remain in [development.md](development.md); the
 concurrent test can be nondeterministic and must not be rerun-until-green to
 erase the original failure. G01 requires a focused safe fix with regression
 coverage, not merely a changed expected outcome.
+
+## G01 blob-publication follow-up: c6d8822
+
+2026-11-09: the specific staging-hardlink/ctime race above is **fixed**, not
+excluded or retried away. `bench/harness/blob_store.py` now publishes its
+synchronized, closed staging file using Linux `renameat2(RENAME_NOREPLACE)`.
+The atomic move removes the staging name as it exposes the final name; later
+creator cleanup therefore cannot change that inode's ctime. A duplicate still
+must pass the existing strict verifier. `_verify_existing` has the same AST as
+before the fix, including device/inode/size/mtime/ctime/type/digest checks, and
+no verification retry was introduced.
+
+Evidence at that code revision, using locked CPython 3.12.12:
+
+- The synchronized regression **failed before the fix**, exposing two links
+  while verification began. It now passes with one link while the creator
+  finishes inside the follower's read window, without sleeps or timestamp
+  granularity assumptions.
+- **15 targeted blob tests passed**: the interleaving, threaded and separate
+  process callers, unchanged strict fingerprint checks (including ctime-only
+  mutation with matching bytes), corrupt/symlink/non-regular destinations,
+  fsync/native errors, missing primitive/wrapper and OS path-byte handling.
+- **169 locked harness tests passed** with ResourceWarning treated as an error.
+  The earlier 159-pass/one-error run remains recorded above; its outcome was
+  not changed by rerunning the old implementation until green.
+- **68 contract/audit tests passed**. A fixed **20 rounds of three concurrency
+  cases (60 checks)** also passed; these are functional regression checks, not
+  independent benchmark/qualification observations.
+
+Blob publication now requires Linux libc/kernel/filesystem no-replace rename
+support. Missing support fails visibly; there is no hard-link or overwriting
+rename fallback. Blob filenames/record fields remain compatible. This is not a
+hostile-directory store, authenticated evidence, power-loss durability, measured
+speedup or a qualified PT profile. Rust/bridge/packaging were not changed or
+requalified. G01's remaining harness acceptance work and every other gate stay
+open; `pt run` and the actual observer/oracle are still missing.
+
+The targeted command and publication limits are in
+[the harness README](../bench/harness/README.md). Full reproduction:
+
+```sh
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/contracts
+```
 
 **Disposition:** WP00's conservative definition/review gate is closed by this
 engineering self-review. All implementation/qualification gates above remain
