@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:final-result:v0",
+  "title": "PT serial final result v0, contract revision 1",
+  "description": "WP00 structure and necessary success conditions, not proof that a report is true. Requires cross-event accounting and external artifact/environment/generation verification. Process-only pt exec records do not match this schema.",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocol_version", "contract_revision", "request_id", "run_id", "generation_id", "session_id", "mode", "scope", "outcome", "cli_exit_code", "backend_exit_code", "backend_signal", "stop_cause", "interruption_signal", "collection_status", "inventory_complete", "accounting", "phase_counts", "incomplete_ordinals", "collection_error_ids", "errors", "required_artifact_ids", "artifacts", "capability_decisions", "accounting_verified", "work_complete", "reporting_complete", "artifacts_verified", "environment_verified", "infrastructure_status", "cleanup", "generation", "terminal_sequences", "current_full_success"],
+  "properties": {
+    "protocol_version": {"type": "integer", "const": 0},
+    "contract_revision": {"type": "integer", "const": 1},
+    "request_id": {"$ref": "urn:pt:protocol:v0#/$defs/id"},
+    "run_id": {"$ref": "urn:pt:protocol:v0#/$defs/id"},
+    "generation_id": {"$ref": "urn:pt:protocol:v0#/$defs/id"},
+    "session_id": {"$ref": "urn:pt:protocol:v0#/$defs/id"},
+    "mode": {"$ref": "urn:pt:protocol:v0#/$defs/mode"},
+    "scope": {"$ref": "urn:pt:protocol:v0#/$defs/scope"},
+    "outcome": {"enum": ["backend_completed", "configuration_error", "unsupported_profile", "launch_error", "backend_terminated", "timeout", "interrupted", "infrastructure_error", "generation_invalid", "abandoned"]},
+    "cli_exit_code": {"type": "integer", "minimum": 0, "maximum": 255},
+    "backend_exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 255},
+    "backend_signal": {"type": ["integer", "null"], "minimum": 1, "maximum": 64},
+    "stop_cause": {"enum": ["none", "timeout", "interrupted"]},
+    "interruption_signal": {"type": ["integer", "null"], "minimum": 1, "maximum": 64},
+    "collection_status": {"enum": ["not_started", "complete", "failed", "interrupted", "unknown"]},
+    "inventory_complete": {"type": "boolean"},
+    "accounting": {"$ref": "urn:pt:protocol:v0#/$defs/accounting"},
+    "phase_counts": {"$ref": "urn:pt:protocol:v0#/$defs/phase_counts"},
+    "incomplete_ordinals": {"type": "array", "items": {"$ref": "urn:pt:protocol:v0#/$defs/ordinal"}, "uniqueItems": true, "maxItems": 100000},
+    "collection_error_ids": {"type": "array", "items": {"$ref": "urn:pt:protocol:v0#/$defs/count"}, "uniqueItems": true, "maxItems": 100000},
+    "errors": {
+      "type": "array", "maxItems": 1024,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["producer_role", "category", "code", "message"],
+        "properties": {"producer_role": {"enum": ["coordinator", "bridge"]}, "category": {"enum": ["configuration", "internal", "usage", "infrastructure", "unsupported"]}, "code": {"$ref": "urn:pt:protocol:v0#/$defs/id"}, "message": {"$ref": "urn:pt:protocol:v0#/$defs/text"}}
+      }
+    },
+    "required_artifact_ids": {"$ref": "urn:pt:protocol:v0#/$defs/ids"},
+    "artifacts": {"type": "array", "maxItems": 1024, "items": {"$ref": "#/$defs/artifact"}},
+    "capability_decisions": {"type": "array", "maxItems": 128, "items": {"$ref": "urn:pt:protocol:v0#/$defs/capability"}},
+    "accounting_verified": {"type": "boolean"},
+    "work_complete": {"type": "boolean"},
+    "reporting_complete": {"type": "boolean"},
+    "artifacts_verified": {"type": "boolean"},
+    "environment_verified": {"type": "boolean"},
+    "infrastructure_status": {"enum": ["ok", "failed", "not_started"]},
+    "cleanup": {"$ref": "urn:pt:protocol:v0#/$defs/cleanup"},
+    "generation": {"$ref": "urn:pt:protocol:v0#/$defs/generation"},
+    "terminal_sequences": {
+      "type": "object", "additionalProperties": false, "required": ["coordinator", "bridge"],
+      "properties": {"coordinator": {"type": ["integer", "null"], "minimum": 0}, "bridge": {"type": ["integer", "null"], "minimum": 0}}
+    },
+    "current_full_success": {"type": "boolean"}
+  },
+  "allOf": [
+    {"if": {"properties": {"backend_signal": {"type": "integer"}}}, "then": {"properties": {"backend_exit_code": {"type": "null"}}}},
+    {"if": {"properties": {"stop_cause": {"enum": ["none", "timeout"]}}}, "then": {"properties": {"interruption_signal": {"type": "null"}}}},
+    {"if": {"properties": {"outcome": {"const": "backend_completed"}}}, "then": {
+      "properties": {
+        "backend_exit_code": {"type": "integer", "minimum": 0, "maximum": 5}, "backend_signal": {"type": "null"},
+        "stop_cause": {"const": "none"}, "accounting_verified": {"const": true}, "reporting_complete": {"const": true},
+        "artifacts_verified": {"const": true}, "environment_verified": {"const": true}, "infrastructure_status": {"const": "ok"},
+        "cleanup": {"properties": {"status": {"const": "complete"}}},
+        "generation": {"properties": {"status": {"const": "current"}, "assurance": {"const": "immutable_snapshot"}}}
+      },
+      "oneOf": [
+        {"properties": {"backend_exit_code": {"const": 0}, "cli_exit_code": {"const": 0}}},
+        {"properties": {"backend_exit_code": {"const": 1}, "cli_exit_code": {"const": 1}}},
+        {"properties": {"backend_exit_code": {"const": 2}, "cli_exit_code": {"const": 2}}},
+        {"properties": {"backend_exit_code": {"const": 3}, "cli_exit_code": {"const": 3}}},
+        {"properties": {"backend_exit_code": {"const": 4}, "cli_exit_code": {"const": 4}}},
+        {"properties": {"backend_exit_code": {"const": 5}, "cli_exit_code": {"const": 5}}}
+      ]
+    }},
+    {"if": {"properties": {"outcome": {"enum": ["configuration_error", "unsupported_profile"]}}}, "then": {"properties": {"cli_exit_code": {"const": 4}, "accounting": {"properties": {"executed_count": {"const": 0}}}}}},
+    {"if": {"properties": {"outcome": {"enum": ["configuration_error", "unsupported_profile", "launch_error"]}}}, "then": {"properties": {
+      "backend_exit_code": {"type": "null"}, "backend_signal": {"type": "null"}, "collection_status": {"const": "not_started"},
+      "inventory_complete": {"const": false}, "work_complete": {"const": false}, "reporting_complete": {"const": false},
+      "accounting_verified": {"const": false}, "cleanup": {"properties": {"status": {"const": "not_started"}}},
+      "accounting": {"properties": {
+        "collected_count": {"const": 0}, "selected_count": {"const": 0}, "deselected_count": {"const": 0},
+        "executed_count": {"const": 0}, "completed_count": {"const": 0}, "not_run_count": {"const": 0},
+        "attempts_started": {"const": 0}, "attempts_completed": {"const": 0}
+      }}
+    }}},
+    {"if": {"properties": {"outcome": {"enum": ["launch_error", "timeout", "infrastructure_error", "generation_invalid", "abandoned"]}}}, "then": {"properties": {"cli_exit_code": {"const": 3}}}},
+    {"if": {"properties": {"outcome": {"const": "launch_error"}}}, "then": {"properties": {"backend_exit_code": {"type": "null"}, "backend_signal": {"type": "null"}}}},
+    {"if": {"properties": {"outcome": {"const": "interrupted"}}}, "then": {"properties": {"cli_exit_code": {"const": 2}, "stop_cause": {"const": "interrupted"}}}},
+    {"if": {"properties": {"outcome": {"const": "timeout"}}}, "then": {"properties": {"stop_cause": {"const": "timeout"}}}},
+    {"if": {"properties": {"collection_status": {"const": "complete"}}}, "then": {"properties": {"inventory_complete": {"const": true}}}, "else": {"properties": {"inventory_complete": {"const": false}}}},
+    {"if": {"properties": {"work_complete": {"const": true}}}, "then": {"properties": {"inventory_complete": {"const": true}, "incomplete_ordinals": {"maxItems": 0}},
+      "allOf": [{"if": {"properties": {"mode": {"const": "run"}}}, "then": {"properties": {"accounting": {"properties": {"not_run_count": {"const": 0}}}}}}]
+    }},
+    {"if": {"properties": {"accounting_verified": {"const": true}}}, "then": {"properties": {"terminal_sequences": {"properties": {"coordinator": {"type": "integer"}, "bridge": {"type": "integer"}}}}}},
+    {"if": {"properties": {"artifacts_verified": {"const": true}}}, "then": {"properties": {
+      "artifacts": {"items": {"allOf": [{"if": {"properties": {"required": {"const": true}}}, "then": {"properties": {"status": {"const": "committed"}, "complete": {"const": true}, "verified": {"const": true}}}}]}}
+    }}},
+    {
+      "if": {"properties": {"outcome": {"const": "backend_terminated"}}},
+      "then": {"oneOf": [
+        {"properties": {"backend_signal": {"type": "integer"}, "backend_exit_code": {"type": "null"}, "cli_exit_code": {"minimum": 129, "maximum": 192}}},
+        {"properties": {"backend_exit_code": {"type": "integer", "minimum": 6}, "backend_signal": {"type": "null"}, "cli_exit_code": {"const": 3}}}
+      ]}
+    },
+    {
+      "if": {"properties": {"current_full_success": {"const": true}}},
+      "then": {"properties": {
+        "mode": {"const": "run"}, "scope": {"const": "full"}, "outcome": {"const": "backend_completed"},
+        "cli_exit_code": {"const": 0}, "backend_exit_code": {"const": 0}, "backend_signal": {"type": "null"}, "stop_cause": {"const": "none"},
+        "collection_status": {"const": "complete"}, "inventory_complete": {"const": true},
+        "accounting_verified": {"const": true}, "work_complete": {"const": true}, "reporting_complete": {"const": true}, "artifacts_verified": {"const": true}, "environment_verified": {"const": true},
+        "infrastructure_status": {"const": "ok"}, "incomplete_ordinals": {"maxItems": 0}, "collection_error_ids": {"maxItems": 0}, "errors": {"maxItems": 0},
+        "accounting": {"properties": {"selected_count": {"minimum": 1}, "executed_count": {"minimum": 1}, "completed_count": {"minimum": 1}, "not_run_count": {"const": 0}}},
+        "cleanup": {"properties": {"status": {"const": "complete"}}},
+        "generation": {"properties": {"status": {"const": "current"}, "assurance": {"const": "immutable_snapshot"}}},
+        "artifacts": {"items": {"allOf": [{"if": {"properties": {"required": {"const": true}}}, "then": {"properties": {"status": {"const": "committed"}, "complete": {"const": true}, "verified": {"const": true}}}}]}}
+      }}
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "required", "status", "sha256", "bytes", "complete", "verified", "failure"],
+      "properties": {
+        "artifact_id": {"$ref": "urn:pt:protocol:v0#/$defs/id"}, "required": {"type": "boolean"}, "status": {"enum": ["committed", "failed", "pending"]},
+        "sha256": {"$ref": "urn:pt:protocol:v0#/$defs/nullable_sha256"}, "bytes": {"type": ["integer", "null"], "minimum": 0}, "complete": {"type": "boolean"}, "verified": {"type": "boolean"},
+        "failure": {"anyOf": [{"$ref": "urn:pt:protocol:v0#/$defs/error"}, {"type": "null"}]}
+      },
+      "allOf": [{"if": {"properties": {"status": {"const": "committed"}}},
+        "then": {"properties": {"sha256": {"$ref": "urn:pt:protocol:v0#/$defs/sha256"}, "bytes": {"type": "integer"}, "verified": {"const": true}}},
+        "else": {"properties": {"sha256": {"type": "null"}, "bytes": {"type": "null"}, "complete": {"const": false}, "verified": {"const": false}}}},
+        {"if": {"properties": {"status": {"const": "failed"}}}, "then": {"properties": {"failure": {"$ref": "urn:pt:protocol:v0#/$defs/error"}}}, "else": {"properties": {"failure": {"type": "null"}}}}
+      ]
+    }
+  }
+}

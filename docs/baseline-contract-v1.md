@@ -104,7 +104,7 @@ JSON, exact version 0 and a session-start handshake. Refuse unknown versions;
 never downgrade or replay after effects begin. Sequence starts at zero and is
 contiguous per producer. Lost/truncated/contradictory frames or early EOF fail
 closed. The later revision-1 contract expands the unreleased five-event draft
-to a typed 31-kind catalog with producer roles and explicit accounting. This is
+to a typed 32-kind catalog with producer roles and explicit accounting. This is
 schema evidence only; the production bridge remains unimplemented. Further
 additions require explicit schema/version review before use.
 
@@ -130,7 +130,10 @@ are qualification obligations, not exclusions to manufacture green results.
 Arbitrary concurrent input mutation is not solved by process freshness. No
 generation-valid full result is authorized without its assurance checks.
 
-WP00's baseline design choices are resolved for WP04; its complete protocol
-catalog and independently reviewed qualification evidence remain open. WP01–03
+WP00's baseline design choices are resolved for WP04. The later
+[protocol contract](protocol-draft.md) and final-result schema specify the
+catalog, accounting, bounds and failure precedence with synthetic checks, not a
+production implementation. Broader WP00 review and product qualification remain
+open (see `wp00-review.md`). WP01–03
 must still meet their acceptance gates before WP05. This review does not declare
 M0 complete, any support profile qualified, or any optimization permitted.

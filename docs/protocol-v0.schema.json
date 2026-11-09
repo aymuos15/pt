@@ -21,6 +21,7 @@
   },
   "oneOf": [
     {"properties": {"kind": {"const": "request_accepted"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/request"}}},
+    {"properties": {"kind": {"const": "request_rejected"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/request_rejection"}}},
     {"properties": {"kind": {"const": "environment_resolved"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/environment"}}},
     {"properties": {"kind": {"const": "session_started"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/handshake"}}},
     {"properties": {"kind": {"const": "collection_started"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/empty"}}},
@@ -93,6 +94,10 @@
       },
       "allOf": [{"if": {"properties": {"retry_policy": {"const": "disabled"}}}, "then": {"properties": {"retry_plugin": {"type": "null"}, "max_attempts": {"const": 1}}}, "else": {"properties": {"retry_plugin": {"$ref": "#/$defs/id"}}}}]
     },
+    "request_rejection": {
+      "type": "object", "additionalProperties": false, "required": ["outcome", "code", "message"],
+      "properties": {"outcome": {"enum": ["configuration_error", "unsupported_profile", "launch_error"]}, "code": {"$ref": "#/$defs/id"}, "message": {"$ref": "#/$defs/text"}}
+    },
     "environment": {
       "type": "object", "additionalProperties": false,
       "required": ["profile_id", "invocation_profile", "interpreter_sha256", "installed_inventory_sha256", "verified"],
@@ -104,7 +109,7 @@
     },
     "handshake": {
       "type": "object", "additionalProperties": false, "required": ["python_version", "pytest_version", "bridge_version", "invocation_profile"],
-      "properties": {"python_version": {"const": "3.12.12"}, "pytest_version": {"const": "8.4.2"}, "bridge_version": {"$ref": "#/$defs/id"}, "invocation_profile": {"$ref": "#/$defs/invocation_profile"}}
+      "properties": {"python_version": {"const": "3.12.12"}, "pytest_version": {"const": "8.4.2"}, "bridge_version": {"const": "0.0.0"}, "invocation_profile": {"$ref": "#/$defs/invocation_profile"}}
     },
     "collection_report": {
       "type": "object", "additionalProperties": false, "required": ["report_id", "nodeid", "outcome", "reason"],
@@ -222,7 +227,7 @@
     "session_terminal": {
       "type": "object", "additionalProperties": false, "required": ["termination", "backend_exit_code", "reporting_complete", "accounting", "phase_counts", "incomplete_ordinals"],
       "properties": {
-        "termination": {"enum": ["backend_exited", "infrastructure_failed", "interrupted"]}, "backend_exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 5},
+        "termination": {"enum": ["backend_exited", "infrastructure_failed", "interrupted"]}, "backend_exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 255},
         "reporting_complete": {"type": "boolean"}, "accounting": {"$ref": "#/$defs/accounting"}, "phase_counts": {"$ref": "#/$defs/phase_counts"},
         "incomplete_ordinals": {"type": "array", "items": {"$ref": "#/$defs/ordinal"}, "uniqueItems": true, "maxItems": 100000}
       },

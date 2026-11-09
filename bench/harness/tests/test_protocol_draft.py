@@ -26,7 +26,7 @@ class DraftProtocolTests(unittest.TestCase):
     def test_every_catalog_kind_has_a_typed_example(self):
         kinds = {branch["properties"]["kind"]["const"] for branch in SCHEMA["oneOf"]}
         self.assertEqual(kinds, examples.COORDINATOR.keys() | examples.BRIDGE.keys())
-        self.assertEqual(len(kinds), 31)
+        self.assertEqual(len(kinds), 32)
         for kind in sorted(kinds):
             with self.subTest(kind=kind):
                 VALIDATOR.validate(event(kind))
@@ -111,6 +111,14 @@ class DraftProtocolTests(unittest.TestCase):
         del old["contract_revision"]
         with self.assertRaises(jsonschema.ValidationError):
             VALIDATOR.validate(old)
+
+    def test_handshake_requires_the_exact_target_version_tuple(self):
+        for field in ("python_version", "pytest_version", "bridge_version"):
+            with self.subTest(field=field):
+                message = event("session_started")
+                message["payload"][field] = "9.9.9"
+                with self.assertRaises(jsonschema.ValidationError):
+                    VALIDATOR.validate(message)
 
 
 if __name__ == "__main__":
