@@ -266,8 +266,10 @@ the standalone observations to qualified work, resources or independent samples.
 The later [whole-session resource mode](wp01-replay-resources.md) now provides a
 separate diagnostic invocation including preparation, idle/background work,
 shutdown and driver reporting. It does not add resource values to these retained
-latency-only receipts or qualify resource budgets/idle-only costs. Paired resource
-replay/card integration remains open; no per-step independent units are invented.
+latency-only receipts or qualify resource budgets/idle-only costs. The later
+[paired resource integration](wp01-paired-replay-resources.md) now schedules fresh
+whole-session diagnostics separately. Resource replay cards remain open; no
+per-step independent units are invented.
 Missing `memory.peak` gates native peak qualification, **not further implementation**.
 WP02/WP03, WP04 completion, the real backend and qualification/release dependencies
 remain open in the [prerequisite register](wp01-status.md). Rust/bridge builds,

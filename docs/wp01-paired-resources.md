@@ -6,6 +6,11 @@ remain open**. Date: **2026-11-09**. Base: `0cba0b6`. This integrates the
 summaries. It does not implement PT's backend/oracle, qualify support or complete
 benchmark/release governance. `pt run` remains unavailable; no speedup is established.
 
+The later [paired whole-session replay mode](wp01-paired-replay-resources.md) uses
+one fresh group for each entire replay, not this original per-stage scope. Its
+closed schema, outcome accounting and resource-only summaries remain distinct;
+neither profile reuses latency observations or divides a campaign-wide peak.
+
 ## Explicit measurement layer and fixed plan
 
 `paired.py --timing-endpoint resource` selects a **resource diagnostic**, not a

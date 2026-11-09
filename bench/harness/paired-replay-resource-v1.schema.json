@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:paired-replay-resource-v1",
+  "title": "PT paired whole-session replay resource diagnostics v1",
+  "description": "Separate diagnostic campaigns. Exact scheduled whole-session requests, unique groups, same-process order, aborts, publications and complete denominators require semantic inspection.",
+  "oneOf": [{"$ref": "#/$defs/plan"}, {"$ref": "#/$defs/session"}, {"$ref": "#/$defs/abort"}],
+  "$defs": {
+    "clock": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/clock"},
+    "binding": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/binding"},
+    "context": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/context"},
+    "plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "measurement_layer", "sample_unit", "resource_endpoint", "scope", "overhead_policy", "clock_alignment", "schedule", "seed", "sessions", "pairing", "resources", "output_root", "driver", "observer_process", "host_metadata", "limitations"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_replay_resource_campaign"}, "mode": {"const": "exploratory_unqualified"},
+        "measurement_layer": {"const": "resource_diagnostic"}, "sample_unit": {"const": "complete_managed_session_replay"},
+        "resource_endpoint": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/endpoint"},
+        "scope": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/scope"},
+        "overhead_policy": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/overhead_policy"},
+        "clock_alignment": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/receipt/properties/clock_alignment"},
+        "schedule": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/schedule"}, "seed": {"type": "integer"},
+        "sessions": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/plan/properties/sessions"}, "pairing": {"$ref": "urn:pt:bench:paired-replay-v1#/$defs/pairing"},
+        "resources": {"type": "object", "additionalProperties": false,
+          "required": ["parents", "outer_timeout_seconds", "allow_missing_peak", "sample_interval_ns", "cleanup_grace_ns"],
+          "properties": {
+            "parents": {"type": "object", "additionalProperties": false, "required": ["baseline", "candidate"],
+              "properties": {"baseline": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/configuration/properties/cgroup_parent"},
+                             "candidate": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/configuration/properties/cgroup_parent"}}},
+            "outer_timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400}, "allow_missing_peak": {"type": "boolean"},
+            "sample_interval_ns": {"type": "integer", "minimum": 1000000, "maximum": 1000000000},
+            "cleanup_grace_ns": {"type": "integer", "minimum": 0, "maximum": 10000000000}
+          }},
+        "output_root": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+        "driver": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/request/properties/driver"},
+        "observer_process": {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/process_clock"},
+        "host_metadata": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"}, "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "session": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "campaign_plan", "receipt", "call_clock", "receipt_publication_clock"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_replay_resource_session"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "#/$defs/context"}, "campaign_plan": {"$ref": "#/$defs/binding"}, "receipt": {"$ref": "#/$defs/binding"},
+        "call_clock": {"$ref": "#/$defs/clock"}, "receipt_publication_clock": {"$ref": "#/$defs/clock"}
+      }
+    },
+    "abort": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "campaign_plan", "reason", "error", "call_clock", "diagnostic_receipt", "diagnostic_session", "diagnostic_inputs"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_replay_resource_abort"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "#/$defs/context"}, "campaign_plan": {"$ref": "#/$defs/binding"},
+        "reason": {"enum": ["plan_binding_failed", "observation_error", "receipt_publication_failed", "session_validation_failed", "session_publication_failed", "session_failed"]},
+        "error": {"type": "string", "minLength": 1}, "call_clock": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/clock"}]},
+        "diagnostic_receipt": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/receipt"}]},
+        "diagnostic_session": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/session"}]},
+        "diagnostic_inputs": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:replay-resource-v1#/$defs/inventory"}]}
+      }
+    }
+  }
+}

@@ -231,6 +231,8 @@ def _measurement_rows(observations, plan, context, directory):
 def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
     directory = Path(os.path.abspath(directory))
     declaration, _ = read_json(directory / "schedule.json")
+    if declaration.get("kind") == "paired_replay_resource_campaign":
+        raise ValueError("paired replay resource result cards are not implemented; use the resource-only summary")
     if declaration.get("kind") == "paired_managed_replay_campaign":
         from replay_result_card import build
         return build(directory, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)

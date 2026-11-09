@@ -83,9 +83,44 @@ clock arithmetic, per-interaction resource imputation, idle-only attribution,
 latency ratio/bootstrap or qualification upgrade. Producer exits are 0 for complete
 unqualified accounting, 1 for explicit partial support, 2 for failure/invalid
 evidence and 3 for unsupported/no subject; inspector exit 0 is consistency only.
-Paired replay resource campaigns/cards remain a separate follow-up; existing
+The standalone mode does not add paired replay resource campaigns/cards; existing
 latency and card formats, including their null qualification fields, are unchanged.
 See [reproduction, exact scope, watchdog limits and native controls](../../docs/wp01-replay-resources.md).
+
+`paired_replay_resources.py --baseline-plan <replay.json> --candidate-plan
+<replay.json> --output <new-directory> --blocks N --seed S --outer-timeout T`
+now pairs **new whole-session resource diagnostics**, using the separate closed
+[`paired-replay-resource-v1.schema.json`](paired-replay-resource-v1.schema.json).
+Each considered arm uses one fresh group through preparation, idle/background
+work, shutdown and driver reporting. The matched-workflow declarations, separate
+arm cwds, common timeout/capture policies and shared input/edit/state declarations
+reuse the existing replay contract, not its latency observations or estimators.
+
+Use `--cgroup-parent` or per-arm `--baseline-cgroup-parent` /
+`--candidate-cgroup-parent` for already-delegated parents. Only explicit
+`--allow-missing-peak` permits partial diagnostics. A clean unsupported check
+continues to the next scheduled arm; a failed or unconfirmed observation,
+cleanup or publication stops **all later sessions** without retry. Their planned
+not-run rows remain visible. Lost returns retain unknown effects and metrics,
+even if a diagnostic unit file exists; publication copies cannot invent commits.
+
+`inspect_run.py` and `summarize_run.py` route this kind explicitly. Inspection
+checks every nested resource/replay binding, exact arm settings/driver, unique
+group paths/invocation IDs, same-process call order and abort cause, with bounded
+before/after snapshots. It accesses neither current worktrees nor cgroups and
+executes no commands. Every planned combined diagnostic and underlying replay
+outcome remains visible, with separate resource/session invocation certainty.
+
+Per-arm summaries retain observed CPU sums **including failed-unit costs**, metric
+observation/missing counts, and maxima per observed **whole session**. They never
+invent a campaign-wide peak or replace missing data with zero. Unsupported,
+partial, failed, unknown, unconfirmed or unguarded/incompletely declared campaigns
+have blocked summaries. Even fully observed diagnostic campaigns have null latency
+ratio/absolute comparison/bootstrap and unknown verified independence. Bootstrap
+requests are rejected; result-card commands explicitly refuse this new resource
+format pending its own reporting integration. Existing cards and schemas are not
+relabeled; old cards require their matching reader revision after routing changes.
+See [layout, status accounting, native controls and reproduction](../../docs/wp01-paired-replay-resources.md).
 
 `paired.py --timing-endpoint resource` now integrates these observations into a
 **distinct resource-diagnostic campaign**, not an extra run attached to a latency
@@ -476,6 +511,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_result_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resources.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay_resources.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

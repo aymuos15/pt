@@ -27,6 +27,11 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
     inspection = inspect_run(directory, _observations=observations)
     if _observations is not None:
         _observations.extend(observations)
+    if inspection.get("kind") == "paired_replay_resource_campaign":
+        if bootstrap_resamples is not None:
+            raise ValueError("bootstrap is unsupported for whole-session resource diagnostic campaigns")
+        from paired_replay_resources import summarize
+        return summarize(inspection, observations)
     if inspection.get("kind") == "paired_managed_replay_campaign":
         from paired_replay import summarize
         return summarize(inspection, observations, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)

@@ -135,8 +135,10 @@ explicitly rejected replay rather than relabelling it as command/lifecycle laten
 The subsequent [paired-replay card follow-up](wp01-replay-result-cards.md) now
 adds a distinct closed recursive reporting format, including no-return aborts.
 The later [whole-session resource mode](wp01-replay-resources.md) now accounts for
-one separate diagnostic replay, not these latency samples. Paired resource
-replay/card integration remains open. Changed reader source bytes require the
+one separate diagnostic replay, not these latency samples. The subsequent
+[paired resource integration](wp01-paired-replay-resources.md) adds resource-only
+campaigns without relabelling latency replays; resource replay cards remain open.
+Changed reader source bytes require the
 appropriate historical reader to reconstruct older result cards; `ffd6568` is
 the base reader for this batch.
 

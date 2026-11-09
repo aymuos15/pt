@@ -329,10 +329,13 @@ at `/tmp/opencode/pt-replay-resource-evidence-o38xi2yc`:
 ## Remaining prerequisites
 
 This completes the focused **single whole-session resource boundary** deliverable,
-not WP01 acceptance. Paired resource replay scheduling/closed reporting and replay
-resource cards remain separate work. Existing latency replays/cards retain their
+not WP01 acceptance. The later [paired resource integration](wp01-paired-replay-resources.md)
+now adds bounded whole-session scheduling, historical inspection and resource-only
+summaries. Resource replay cards remain separate work. Existing latency replays/cards retain their
 unknown resource fields; their 24 qualification fields are not filled by another
-diagnostic. No existing reader source/schema/lock is changed by this integration.
+diagnostic. No existing reader source/schema/lock was changed by the standalone
+`97fb1b6` integration; later routing changes require the appropriate historical
+reader for exact reconstruction of source-bound cards.
 
 Native peak qualification, idle-only attribution, resource-budget equivalence,
 actual work/generation/input/reset validation, semantic manifests, scenario/edit
