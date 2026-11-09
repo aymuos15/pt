@@ -227,6 +227,9 @@ def _measurement_rows(observations, plan, context, directory):
 
 def _build(directory, *, bootstrap_resamples=None, bootstrap_seed=None):
     directory = Path(os.path.abspath(directory))
+    declaration, _ = read_json(directory / "schedule.json")
+    if declaration.get("kind") == "paired_managed_replay_campaign":
+        raise ValueError("paired replay result cards are not implemented; use the complete-session summary")
     evidence, evidence_identity = capture_run(directory)
     implementation, implementation_identity = capture_implementation()
     observations = []

@@ -231,12 +231,43 @@ Phase rows are labelled `managed_replay_step` / `replay_step`; direct latency an
 bootstrap estimators reject either label. Replay summaries have null comparisons,
 bootstraps and resources, and false confirmatory eligibility. Declared bounded
 raw-prefix truncation remains visible, not a claim to have retained full output.
-No paired-replay, result-card, native resource, edit/generation or frozen-campaign
-integration is implemented by this profile. Generator exits are 0 for completed
+The standalone profile does not itself add result-card, native resource,
+edit/generation or frozen-campaign integration. Generator exits are 0 for completed
 unqualified observation, 1 for observed failure/timeout/deadline, and 2 for observer,
 publication or invalid-input errors. Inspector exit 0 means consistent evidence,
 including an accounted abort, not successful tests. See
 [reproduction, boundaries, failure controls and remaining gates](../../docs/wp01-managed-replay.md).
+
+`paired_replay.py --baseline-plan <replay.json> --candidate-plan <replay.json>
+--output <new-directory> --blocks N --seed S` now pairs **complete managed
+sessions**, using a separate closed
+[`paired-replay-v1.schema.json`](paired-replay-v1.schema.json). Each scheduled
+AB/BA arm creates a new replay bundle and includes its own preparation, fixed
+interactions and reserved shutdown. Arm cwds must be separate/nonnested; IDs,
+order, idle waits, timeouts, expected exits and capture policies must match.
+Shared `--pairing-json` declarations name `input_seed`, `edit_sequence_sha256`
+and `external_state_sha256`; omitting the option records all three as explicit
+unknowns, while a supplied object must name every field. They are
+not verified identities, applied edits, injected environment seeds or reset proof.
+
+The first failed or unconfirmed session stops the campaign without retry. The
+fixed schedule and required abort record account for every later not-run session;
+missing returns retain unknown session/effect certainty and bound diagnostic
+bytes where available. Receipts are persisted outside their measured replay
+directories before another session starts. Publication failures cannot invent a
+confirmed commit, and malformed/mixed evidence cannot be approved as an abort.
+
+`inspect_run.py` and `summarize_run.py` route this format explicitly. Analysis
+uses each replay receipt's **whole-session** wall clock, not interaction times or
+a sum of nested clocks. A point estimate/optional seeded bootstrap is exploratory
+only and requires all planned complete sessions, confirmed publication, guards
+on every phase, untruncated raw capture and resolved shared declarations. Any
+failure/not-run/unknown session blocks the entire comparison, not just its pair.
+Bootstrap draws whole paired sessions; verified independent sessions/blocks,
+work/generation validity and whole-session resources remain unknown. Current
+paired result cards explicitly reject replay input; command, lifecycle and
+resource formats are unchanged. See
+[layout, reproducible controls, limits and remaining gates](../../docs/wp01-paired-replay.md).
 
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
@@ -377,6 +408,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_result_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_managed_replay.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

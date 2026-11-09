@@ -93,6 +93,9 @@ def _measurement(result: dict[str, Any], command: Any, cwd: Any) -> None:
 def inspect_run(directory: Path, *, _observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Reject missing or inconsistent records; never qualify their contents."""
     plan = _read(directory / "schedule.json")
+    if plan.get("kind") == "paired_managed_replay_campaign":
+        from paired_replay import inspect_pairs as inspect_replay_pairs
+        return inspect_replay_pairs(directory, plan, observations=_observations)
     if (plan.get("kind") == "paired_resource_campaign"
             or plan.get("timing_endpoint") == RESOURCE_ENDPOINT):
         from finalization import read_json

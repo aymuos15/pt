@@ -249,8 +249,9 @@ Direct CLI evidence is retained outside the repository at
 ## Remaining gates
 
 This implements the focused bounded session-replay execution deliverable, not a
-qualified amortized-workflow result. Paired complete sessions, matching edit/input
-seeds and external state, replay result cards, real scenario/request/edit endpoints,
+qualified amortized-workflow result. The [paired complete-session follow-up](wp01-paired-replay.md)
+now integrates bounded AB/BA replay and whole-session summaries. Actual matching
+edit/input seeds and external state, replay result cards, real scenario/request/edit endpoints,
 generation/work validation, semantic manifests, non-file resource release and
 frozen-campaign governance remain open. The existing command/lifecycle/resource
 and paired result-card formats remain distinct; no replay record is silently

@@ -89,8 +89,11 @@ The separate [managed-replay profile](wp01-managed-replay.md) now accounts for
 preparation, fixed ordered interactions and required shutdown as one wall-timed,
 evidence-bound unit. Capture its stdout receipt outside the run directory for
 read-only historical inspection. Its fresh serial commands do not qualify daemon
-reuse, reset semantics, generations or resource totals. Replay pairing and
-result-card integration remain open; interaction steps are not independent samples.
+reuse, reset semantics, generations or resource totals. The
+[paired complete-session follow-up](wp01-paired-replay.md) now balances whole
+replays and preserves failed/not-run/unknown sessions through routed inspection
+and exploratory summaries. Replay resource/result-card integration remains open;
+interaction steps are not independent samples.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

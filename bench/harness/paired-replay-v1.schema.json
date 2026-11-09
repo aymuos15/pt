@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:paired-replay-v1",
+  "title": "PT exploratory paired complete-session replay v1",
+  "description": "Whole managed sessions only. Schedule, matching declarations, byte bindings, intervals, aborts, diagnostic copies and denominators require semantic inspection.",
+  "oneOf": [{"$ref": "#/$defs/plan"}, {"$ref": "#/$defs/session"}, {"$ref": "#/$defs/abort"}],
+  "$defs": {
+    "text": {"type": "string", "minLength": 1},
+    "clock": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/clock"},
+    "nullable_clock": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/clock"}]},
+    "context": {
+      "type": "object", "additionalProperties": false, "required": ["block", "position", "arm"],
+      "properties": {"block": {"type": "integer", "minimum": 1, "maximum": 64}, "position": {"type": "integer", "enum": [1, 2]},
+                     "arm": {"enum": ["baseline", "candidate"]}}
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false, "required": ["name", "bytes", "sha256"],
+      "properties": {"name": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/filename"}, "bytes": {"type": "integer", "minimum": 1, "maximum": 4194304},
+                     "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}
+    },
+    "pairing": {
+      "type": "object", "additionalProperties": false, "required": ["input_seed", "edit_sequence_sha256", "external_state_sha256"],
+      "properties": {"input_seed": {"type": ["integer", "null"]},
+                     "edit_sequence_sha256": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}]},
+                     "external_state_sha256": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}]}}
+    },
+    "plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "measurement_layer", "timing_endpoint", "sample_unit", "schedule", "seed", "sessions", "pairing", "host_metadata", "limitations"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_managed_replay_campaign"}, "mode": {"const": "exploratory_unqualified"},
+        "measurement_layer": {"const": "managed_replay"}, "timing_endpoint": {"const": "managed_session_api_entry_through_shutdown_unit_publication_and_declared_finalization_v1"},
+        "sample_unit": {"const": "complete_managed_session_replay"}, "seed": {"type": "integer"},
+        "schedule": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/schedule", "maxItems": 64},
+        "sessions": {
+          "type": "object", "additionalProperties": false, "required": ["baseline", "candidate"],
+          "properties": {"baseline": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/plan"}, "candidate": {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/plan"}}
+        },
+        "pairing": {"$ref": "#/$defs/pairing"}, "host_metadata": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"},
+        "limitations": {"type": "array", "items": {"$ref": "#/$defs/text"}}
+      }
+    },
+    "session": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "campaign_plan", "receipt", "call_clock", "receipt_publication_clock"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_managed_replay_session"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "#/$defs/context"}, "campaign_plan": {"$ref": "#/$defs/binding"}, "receipt": {"$ref": "#/$defs/binding"},
+        "call_clock": {"$ref": "#/$defs/clock"}, "receipt_publication_clock": {"$ref": "#/$defs/clock"}
+      }
+    },
+    "abort": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "context", "campaign_plan", "reason", "error", "call_clock", "diagnostic_receipt", "diagnostic_session", "diagnostic_inputs"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_managed_replay_abort"}, "mode": {"const": "exploratory_unqualified"},
+        "context": {"$ref": "#/$defs/context"}, "campaign_plan": {"$ref": "#/$defs/binding"},
+        "reason": {"enum": ["plan_binding_failed", "harness_error", "receipt_publication_failed", "session_validation_failed", "session_publication_failed", "session_failed"]},
+        "error": {"$ref": "#/$defs/text"}, "call_clock": {"$ref": "#/$defs/nullable_clock"},
+        "diagnostic_receipt": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:managed-replay-v1#/$defs/receipt"}]},
+        "diagnostic_session": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/session"}]},
+        "diagnostic_inputs": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:result-card-v1#/$defs/inventory"}]}
+      }
+    }
+  }
+}

@@ -27,6 +27,9 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
     inspection = inspect_run(directory, _observations=observations)
     if _observations is not None:
         _observations.extend(observations)
+    if inspection.get("kind") == "paired_managed_replay_campaign":
+        from paired_replay import summarize
+        return summarize(inspection, observations, bootstrap_resamples=bootstrap_resamples, bootstrap_seed=bootstrap_seed)
     if inspection.get("measurement_layer") == "resource_diagnostic":
         if bootstrap_resamples is not None:
             raise ValueError("bootstrap is unsupported for separate resource diagnostic campaigns")
