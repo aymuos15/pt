@@ -2,6 +2,11 @@
 
 use serde::Serialize;
 
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "linux")]
+pub use linux::{ProcessRequest, RequestError, supervise};
+
 /// The first terminal cause observed by the supervisor, never changed by a
 /// later zero exit. A cleanup failure takes precedence in the CLI exit mapping.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -40,6 +45,7 @@ pub struct ProcessReport {
     pub termination: Termination,
     pub leader_status: Option<LeaderStatus>,
     pub cleanup: Cleanup,
+    pub cleanup_signals: Vec<i32>,
     pub elapsed_ns: u128,
 }
 
@@ -85,6 +91,7 @@ mod tests {
             termination,
             leader_status: status,
             cleanup: Cleanup::Complete,
+            cleanup_signals: vec![],
             elapsed_ns: 1,
         }
     }

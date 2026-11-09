@@ -9,5 +9,8 @@ description = "Fresh-process supervision primitives; not a pytest semantic backe
 [dependencies]
 serde.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+nix.workspace = true
+
 [lints]
 workspace = true

@@ -10,6 +10,7 @@ publish = false
 
 [workspace.dependencies]
 serde = { version = "=1.0.228", features = ["derive"] }
+nix = { version = "=0.30.1", features = ["signal", "process"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
