@@ -5,6 +5,13 @@ it is **not a sandbox**. Hostile test code can read, alter, or exfiltrate anythi
 the user can access and may escape ordinary process-tree ownership. Stronger
 isolation must be provided separately.
 
+The [baseline self-review](baseline-contract-v1.md) selects a private inherited
+descriptor, no named listener, no automatic dependency mutation, and a Linux
+process-group boundary. Malicious same-user code, detached descendants, and
+undeclared external state are not contained by those choices. Production IPC,
+artifact/path handling, and denial-of-service mitigations still need WP09/WP16
+implementation and fault testing.
+
 Protect against accidental or malformed project input, stale state, corrupt
 cache files, malformed protocol messages, unauthorized local IPC clients where
 the platform allows, credential disclosure through metadata, and resource leaks.

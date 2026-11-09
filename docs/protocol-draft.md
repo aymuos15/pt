@@ -3,6 +3,10 @@
 Status: proposed, unimplemented, unreviewed. This is a design boundary, not a
 promise of a stable wire format.
 
+The [baseline decision](baseline-contract-v1.md) selects a private inherited
+Unix socket pair, strict version matching, ownership, and bounded failure rules.
+The event catalog below remains incomplete and requires versioned extension.
+
 Each execution session owns a dedicated local channel, separate from test
 stdout and stderr. Frames consist of a 32-bit unsigned big-endian payload length
 followed by that many bytes of UTF-8 JSON. The receiver rejects zero-length,

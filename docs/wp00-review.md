@@ -5,6 +5,13 @@ it is not independent review, a support claim, or an authorization to enable
 optimizations. The acceptance criteria are in section 21 of the implementation
 specification.
 
+2026-11-09: [baseline contract v1](baseline-contract-v1.md) records an explicit
+engineering self-review and resolves the initial WP04 target, process/output
+boundary, typed terminal precedence, and private descriptor transport. This
+supersedes the corresponding open choices below for baseline development only.
+It is not independent review or support qualification. The full protocol catalog,
+WP01–03 acceptance, and product conformance remain open; M0 is not complete.
+
 | Deliverable or gate | Current evidence | Remaining work |
 |---|---|---|
 | Execution contracts and C01–C12 | `contracts.md` sketches the conservative contract | Review each invariant against specific observable behavior and adverse cases; resolve typed outcomes and complete all exit paths. |

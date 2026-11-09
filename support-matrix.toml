@@ -1,17 +1,17 @@
 schema_version = 1
-status = "proposed-unqualified"
+status = "target-selected-unqualified"
 policy = "No profile is supported until its conformance evidence is reviewed."
 
 [[profile]]
 id = "linux-x86_64-cpython312-pytest842"
-status = "proposed"
+status = "target-selected"
 os = "linux"
 architecture = "x86_64"
 interpreter = "CPython 3.12.12 (GIL-enabled)"
 pytest = "8.4.2"
 backend = "serial real pytest"
 invocation_profiles = ["python -m pytest", "pytest console entrypoint"]
-evidence = "none"
+evidence = "Pytest-only feasibility probes; no PT conformance. See docs/baseline-contract-v1.md."
 
 [unsupported]
 default = "Report unsupported or require explicit passthrough; do not claim conformance."

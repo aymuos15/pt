@@ -4,6 +4,12 @@ Status: **proposed, unreviewed, not implemented or qualified**. The
 [implementation specification](pt-implementation-spec.md) remains authoritative;
 this document begins WP00 and does not close its acceptance criteria.
 
+The later [baseline contract v1](baseline-contract-v1.md) resolves the initial
+target, process/output boundary, exit precedence, and transport choices for
+conservative WP04 engineering. It is explicitly self-reviewed, not qualification.
+The historical proposals below are retained; where they leave those decisions
+open, the later record takes precedence.
+
 ## Serial reference
 
 The initial product delegates execution to real pytest in a fresh Python process
