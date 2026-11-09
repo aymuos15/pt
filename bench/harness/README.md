@@ -202,11 +202,28 @@ lifecycle, resource containment or confirmatory eligibility.
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
 adequacy, or publication gates; calculated intervals are not release evidence.
-`manifest.py` checks YAML syntax and the supplied JSON Schema. Even a structurally
-valid frozen manifest is always reported ineligible for confirmation: artifact,
-reset, eligibility, independence, and other semantic checks are not implemented.
-For drafts it also lists paths that fail frozen-schema requirements; this is a
-structural preview, not verification of the referenced files or hashes.
+`manifest.py` checks bounded regular-file YAML input, strict JSON-compatible
+types and the unchanged campaign schema. Integer fields do not accept booleans
+or integral floats, and numeric/boolean constants retain their declared types.
+Aliases, duplicate keys, excessive nesting, nonfinite/non-JSON values, malformed
+pin strings and NUL command/cwd values are rejected. The reader requires safe
+POSIX relative lookup and does not follow the manifest's final symlink.
+For drafts it still lists paths that fail frozen-schema requirements; this is
+a structural preview, not verification of referenced files or hashes.
+
+The checker now separately reports bounded **declaration** conflicts: affected
+scope labelled equal work, differing declared interpreters for equal work,
+parallel workers under `serial-pytest-v1`, invocation-only amortization/session
+cost, or inconsistent non-cluster resampling and analysis units. It does not
+invent semantics for unknown contracts, parse selectors, run commands, inspect
+actual interpreter builds or prove resets, budgets, work or independence.
+CLI exits are 0 for no known declaration conflict, 1 for structurally valid but
+conflicting declarations, and 2 for malformed/unsupported input. Every output,
+even a structurally frozen manifest with matching-looking pins, remains
+`confirmatory_eligible: false` and lists unchecked requirements. The structural
+loader used by the separate artifact tool remains a structural API; its digest
+checks do not implicitly apply or replace this declaration report. See
+[rules, input policy and observed controls](../../docs/wp01-manifest-checks.md).
 `artifact_check.py <manifest> <bundle>` separately checks the manifest's listed
 artifact digests against regular files named by SHA-256 in a supplied local
 bundle (safe POSIX lookup only). It rejects symlink targets and reports unresolved

@@ -74,6 +74,11 @@ skipped and uncertain outcomes in summaries. Select it explicitly with
 `--timing-endpoint resource`; no existing latency sample is replayed or upgraded.
 It does not qualify a native peak, frozen benchmark campaign or PT execution.
 
+The [campaign declaration checker](wp01-manifest-checks.md) now rejects ambiguous
+typed YAML and reports direct scope/serial-contract/replay/resampling conflicts
+separately from structure. It is read-only, requires safe POSIX manifest lookup,
+and cannot freeze or qualify a campaign. No subject command or reset script runs.
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create

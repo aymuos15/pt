@@ -55,6 +55,8 @@ this does not qualify a runner or close the later work-package/release gates.
   diagnostics, background-work controls and explicit unsupported peak accounting.
 - [Paired resource campaigns](docs/wp01-paired-resources.md): bound stage observations,
   unsupported/failed/not-run denominators and resource-only summaries, not latency claims.
+- [Campaign declaration checks](docs/wp01-manifest-checks.md): strict input types and
+  bounded scope/contract/unit contradictions, not artifact or semantic qualification.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge
