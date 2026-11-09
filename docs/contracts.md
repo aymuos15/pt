@@ -10,6 +10,13 @@ conservative WP04 engineering. It is explicitly self-reviewed, not qualification
 The historical proposals below are retained; where they leave those decisions
 open, the later record takes precedence.
 
+The later [protocol revision 1](protocol-draft.md) and
+[final-result schema](final-result-v0.schema.json) define the typed completion
+flags, collection/attempt accounting, artifacts, all terminal categories and
+precedence, with synthetic consistency tests. These supersede the historical
+unresolved mapping/transport statements below; they do not implement a backend
+or verify actual work, environment or generation evidence.
+
 ## Serial reference
 
 The initial product delegates execution to real pytest in a fresh Python process

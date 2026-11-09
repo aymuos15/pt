@@ -30,6 +30,7 @@ cargo fmt --all --check
 cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo build --locked --release -p pt-cli
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/contracts -v
 uv run --locked --project bench/harness --python 3.12.12 python bench/harness/corpus_inventory.py bench/corpus/manifest.toml
 ```
 
@@ -38,6 +39,11 @@ tests (or explicitly set `PT_TEST_PYTHON` to another available Python). The Rust
 process tests need only Python's standard library, not pytest. `pt exec` is a
 diagnostic process launcher; `pt run` is not implemented, and there is no qualified
 pytest or generation-valid full-run result. See `../crates/pt-cli/README.md`.
+
+The separate `tests/contracts` suite checks synthetic decoded protocol/result
+assertions using schemas and a test-only ledger. It does not implement the
+production bridge, artifact/environment/generation verification, or WP03's real
+semantic oracle. See `../tests/contracts/README.md`.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

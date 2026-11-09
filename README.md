@@ -26,6 +26,8 @@ Most proposed product commands, including `pt run`, are not implemented yet.
   [threat model](docs/threat-model.md), [benchmark charter](docs/benchmark-charter.md),
   and [architecture decisions](docs/adr/README.md): unreviewed WP00 drafts.
 - [WP00 review register](docs/wp00-review.md): outstanding decisions and evidence.
+- [Protocol/result contract tests](tests/contracts/README.md): synthetic WP00
+  accounting and failure checks; not a bridge, semantic oracle or qualification.
 - [Baseline contract v1](docs/baseline-contract-v1.md): self-reviewed process,
   exit, transport, and target decisions for WP04; not support qualification.
 - [Development environment](docs/development.md): provisional toolchain pins

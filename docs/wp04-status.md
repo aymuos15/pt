@@ -82,6 +82,9 @@ unrelated cache was reset; no performance/corpus result is inferred from this.
 - Required work/artifact/generation accounting, private production bridge IPC,
   and full protocol catalog/fault handling remain unimplemented. Process-only
   results cannot be labelled complete generation-valid test results.
+  WP00 now specifies the 32-kind revision-1 catalog and final-result/accounting
+  schemas with synthetic tests (`protocol-draft.md`, `tests/contracts`); those
+  checks do not implement this production boundary or its external verification.
 - The release-profile binary can be built locally, but authenticated builds,
   installable release artifacts, CI/platform qualification, independent review,
   resource accounting, and overhead qualification remain open. No measured speed
