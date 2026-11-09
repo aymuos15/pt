@@ -107,6 +107,13 @@ offline, preserving all outcomes, missing metrics and 24 null qualification fiel
 Existing latency observations are not rerun or relabelled, and steps are not
 independent samples.
 
+The separate [scenario/reset/edit validator](wp01-scenario-replay.md) now binds
+explicit file reset targets, guarded edits and actual seed-bearing request-file
+bytes before and after each command. Mutations require `--apply`, operate only on
+declared ordinary files and stop on uncertainty without retry/rollback. Offline
+inspection/comparison does not execute work. This is bounded file-domain evidence,
+not environment/service/cache, loaded-code, semantic or reset-equivalence qualification.
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create

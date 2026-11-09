@@ -13,6 +13,9 @@ def _paired_log_ratios(samples: Sequence[Mapping[str, Any]], *,
     """Validate and return log ratios in stable block-identifier order."""
     if not samples:
         raise ValueError("at least one complete block is required")
+    if any(sample.get("measurement_layer") == "scenario_validation" or sample.get("sample_unit") == "complete_scenario_edit_replay"
+           for sample in samples):
+        raise ValueError("scenario input/edit validation is not unmodified-product latency or qualified independent samples")
     if any(sample.get("measurement_layer") == "managed_replay_step" or sample.get("sample_unit") == "replay_step"
            for sample in samples):
         raise ValueError("managed replay steps are correlated diagnostics, not independent samples")

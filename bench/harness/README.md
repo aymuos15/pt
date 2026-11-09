@@ -122,6 +122,28 @@ distinct reporting format, never relabelling existing cards/schemas; old cards
 require their matching reader revision after routing changes.
 See [layout, status accounting, native controls and reproduction](../../docs/wp01-paired-replay-resources.md).
 
+The separate `scenario_replay.py run --plan <scenario.json> --payloads <blobs>
+--output <new-directory> --apply` now validates an explicit declared-file scenario:
+reset, guarded create/replace/delete edits, seed-bearing request-file delivery,
+fresh serial request commands and required shutdown. The distinct closed
+[`scenario-replay-v1.schema.json`](scenario-replay-v1.schema.json) preserves exact
+bytes/modes/presence before and after each phase, full planned denominators,
+partial/unknown effects and failed/not-run outcomes. Reset/edit effects are
+nontransactional and never retried or rolled back. Roots must be separate;
+parents must already exist. No service reset, dependency mutation, global-cache
+operation or hidden pytest collection is added.
+
+`scenario_replay.py inspect --directory <run> --receipt <external-receipt.json>`
+reconstructs offline from retained blobs, never later worktree state. The `compare`
+subcommand checks two retained arms' exact declared reset/edit/input/seed/cache/
+timeout policies while retaining all outcomes. Matching files are not proof of
+input consumption, actual loaded code, equal work, cache state, resets or independent
+units. Those qualifications stay null. Environment-change, affected-watch and
+OS-cold profiles (S6/S7/S9) are explicitly unsupported before effects. Scenario
+validation is a correctness-instrumented layer, not a latency/resource sample or
+a new card format; latency estimators reject it. See [scope, CLI, safety and
+adverse controls](../../docs/wp01-scenario-replay.md).
+
 The existing `result_card.py <retained-campaign> --output <new-card.json>` and
 `inspect_result_card.py <card.json> --run <retained-campaign>` now route paired
 whole-session resource evidence to
@@ -535,6 +557,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_replay_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resource_card.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_replay.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`

@@ -269,7 +269,9 @@ Direct offline CLI evidence is outside the repository at
 ## Remaining prerequisites
 
 This completes the focused resource-replay reporting step, **not WP01 acceptance**.
-Scenario/request/edit integration, actual semantic/work/generation/input/reset
+The subsequent [declared-file scenario validator](wp01-scenario-replay.md) now
+binds reset/edit/request-input evidence separately, without upgrading these cards.
+Integration with latency/resource campaigns, actual semantic/work/generation/input/reset
 validation, non-file finalization, complete manifest/qualification/evidence
 integration, native peak qualification, resource budgets, observer-overhead
 characterization, frozen campaigns, corpus governance and independent review

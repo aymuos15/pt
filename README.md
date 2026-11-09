@@ -71,6 +71,8 @@ this does not qualify a runner or close the later work-package/release gates.
   per-session groups, complete planned denominators and resource-only summaries.
 - [Resource-replay result cards](docs/wp01-replay-resource-cards.md): offline
   recursive bindings, preserved missing metrics and 24 unresolved qualification fields.
+- [Scenario/reset/edit validation](docs/wp01-scenario-replay.md): explicit file
+  effects, retained request inputs and historical reset evidence, not a semantic oracle.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge
