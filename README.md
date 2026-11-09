@@ -59,6 +59,8 @@ this does not qualify a runner or close the later work-package/release gates.
   bounded scope/contract/unit contradictions, not artifact or semantic qualification.
 - [Evidence-bound result cards](docs/wp01-result-cards.md): reconstructible exploratory
   reports retaining all planned outcomes and unresolved qualification fields.
+- [Managed session replay](docs/wp01-managed-replay.md): preparation, ordered
+  interactions and required shutdown bound as one unqualified session unit.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

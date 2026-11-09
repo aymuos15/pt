@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:managed-replay-v1",
+  "title": "PT managed serial-command session replay v1",
+  "description": "Exploratory whole-session evidence only. A session is one unit; steps are correlated diagnostics. Byte bindings, clocks, shutdown, skip causes and historical contracts require semantic inspection.",
+  "oneOf": [{"$ref": "#/$defs/plan"}, {"$ref": "#/$defs/sample"}, {"$ref": "#/$defs/receipt"}],
+  "$defs": {
+    "text": {"type": "string", "minLength": 1},
+    "clock": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/clock"},
+    "nullable_clock": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/clock"}]},
+    "binding": {
+      "type": "object", "additionalProperties": false, "required": ["name", "bytes", "sha256"],
+      "properties": {"name": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/filename"},
+                     "bytes": {"type": "integer", "minimum": 1, "maximum": 3145728},
+                     "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}
+    },
+    "error": {
+      "type": "object", "additionalProperties": false, "required": ["stage", "error"],
+      "properties": {
+        "stage": {"enum": ["idle", "observation", "step_validation", "plan_binding", "finalization_observation", "artifact_archive", "unit_publication", "finalization_recheck", "retained_input_binding"]},
+        "error": {"$ref": "#/$defs/text"}
+      }
+    },
+    "step": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "argv", "timeout_seconds", "idle_before_seconds", "guard_expectations", "required_finalization"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_-]*$"},
+        "argv": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/argv"},
+        "timeout_seconds": {"type": "number", "minimum": 0.001, "maximum": 86400},
+        "idle_before_seconds": {"type": "number", "minimum": 0, "maximum": 60},
+        "guard_expectations": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/nullable_guard"},
+        "required_finalization": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/contract", "properties": {"expected_exit_code": {"type": "integer"}}}
+      }
+    },
+    "plan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "sample_unit", "measurement_layer", "timing_endpoint", "scope", "cwd", "execution_timeout_seconds", "preparation", "interactions", "shutdown", "finalization", "capture_raw", "raw_limit_bytes"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "managed_session_replay_plan"}, "mode": {"const": "exploratory_unqualified"},
+        "sample_unit": {"const": "complete_managed_session_replay"}, "measurement_layer": {"const": "managed_replay"},
+        "timing_endpoint": {"const": "managed_session_api_entry_through_shutdown_unit_publication_and_declared_finalization_v1"},
+        "scope": {"const": "fresh_serial_commands_with_declared_state"}, "cwd": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+        "execution_timeout_seconds": {"type": "number", "minimum": 0.001, "maximum": 86400},
+        "preparation": {"$ref": "#/$defs/step", "properties": {"id": {"const": "preparation"}, "idle_before_seconds": {"const": 0}}},
+        "interactions": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/step"}},
+        "shutdown": {"$ref": "#/$defs/step", "properties": {"id": {"const": "shutdown"}, "idle_before_seconds": {"const": 0}, "timeout_seconds": {"maximum": 60}}},
+        "finalization": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/contract", "properties": {"expected_exit_code": {"type": "null"}}},
+        "capture_raw": {"type": "boolean"}, "raw_limit_bytes": {"type": "integer", "minimum": 0, "maximum": 134217728}
+      }
+    },
+    "file_observation": {
+      "type": "object", "additionalProperties": false, "required": ["scope", "matched", "checks"],
+      "properties": {
+        "scope": {"const": "declared_files_and_absences_only"}, "matched": {"type": "boolean"},
+        "checks": {"type": "array", "maxItems": 2000, "items": {"oneOf": [
+          {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/file_check", "properties": {"kind": {"const": "artifact"}}},
+          {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absence_check"}
+        ]}}
+      }
+    },
+    "nullable_file_observation": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/file_observation"}]},
+    "step_observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "role", "id", "status", "measurement_layer", "sample_unit", "invocation_attempted", "effective_timeout_seconds", "timeout_computed_at_ns", "clock", "idle_clock", "receipt", "error"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 1, "maximum": 34}, "role": {"enum": ["preparation", "interaction", "shutdown"]},
+        "measurement_layer": {"const": "managed_replay_step"}, "sample_unit": {"const": "replay_step"},
+        "id": {"$ref": "#/$defs/step/properties/id"},
+        "status": {"enum": ["observed_unqualified", "failed", "harness_error", "not_run_prior_failure", "not_run_execution_deadline", "not_run_interrupted", "not_run_idle_error", "not_run_plan_changed"]},
+        "invocation_attempted": {"type": ["boolean", "null"]}, "effective_timeout_seconds": {"type": ["number", "null"], "exclusiveMinimum": 0, "maximum": 86400},
+        "timeout_computed_at_ns": {"type": ["integer", "null"], "minimum": 0},
+        "clock": {"$ref": "#/$defs/nullable_clock"}, "idle_clock": {"$ref": "#/$defs/nullable_clock"},
+        "receipt": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/receipt"}]},
+        "error": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/error"}]}
+      }
+    },
+    "sample": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "sample_unit", "measurement_layer", "plan", "steps", "required_finalization", "artifact_archive", "errors", "retained_inputs", "diagnostic_fragments", "post_shutdown_clock"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "managed_session_replay_sample"}, "mode": {"const": "exploratory_unqualified"},
+        "sample_unit": {"const": "complete_managed_session_replay"}, "measurement_layer": {"const": "managed_replay"}, "plan": {"$ref": "#/$defs/binding"},
+        "post_shutdown_clock": {"$ref": "#/$defs/clock"},
+        "steps": {"type": "array", "minItems": 3, "maxItems": 34, "items": {"$ref": "#/$defs/step_observation"}},
+        "required_finalization": {
+          "type": "object", "additionalProperties": false, "required": ["requirements", "observed"],
+          "properties": {"requirements": {"$ref": "#/$defs/plan/properties/finalization"}, "observed": {"$ref": "#/$defs/nullable_file_observation"}}
+        },
+        "artifact_archive": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/archive"}]},
+        "errors": {"type": "array", "items": {"$ref": "#/$defs/error"}},
+        "retained_inputs": {"$ref": "urn:pt:bench:result-card-v1#/$defs/inventory"},
+        "diagnostic_fragments": {"type": "array", "items": {"$ref": "urn:pt:bench:result-card-v1#/$defs/inventory/properties/files/items"}}
+      }
+    },
+    "outcome": {
+      "type": "object", "additionalProperties": false, "required": ["status", "reasons", "infrastructure_failure"],
+      "properties": {"status": {"enum": ["completed_unqualified", "aborted"]}, "infrastructure_failure": {"type": "boolean"},
+        "reasons": {"type": "array", "uniqueItems": true, "items": {"enum": ["planned_steps_incomplete_or_failed", "required_shutdown_not_completed", "declared_finalization_not_matched", "unit_publication_unconfirmed", "unconfirmed_diagnostic_fragments", "observer_or_finalization_error"]}}}
+    },
+    "receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "kind", "mode", "confirmatory_eligible", "timing_endpoint", "sample_unit", "clock", "plan_publication_clock", "unit_publication_clock", "finalization_clock", "plan", "sample", "diagnostic_sample", "finalization_after_publication", "errors", "outcome", "limitations"],
+      "properties": {
+        "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "managed_session_replay_receipt"}, "mode": {"const": "exploratory_unqualified"},
+        "confirmatory_eligible": {"type": "boolean", "const": false}, "timing_endpoint": {"$ref": "#/$defs/plan/properties/timing_endpoint"},
+        "sample_unit": {"const": "complete_managed_session_replay"}, "clock": {"$ref": "#/$defs/clock"}, "plan": {"$ref": "#/$defs/binding"},
+        "plan_publication_clock": {"$ref": "#/$defs/clock"}, "unit_publication_clock": {"$ref": "#/$defs/clock"}, "finalization_clock": {"$ref": "#/$defs/clock"},
+        "sample": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/binding"}]},
+        "diagnostic_sample": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sample"}]},
+        "finalization_after_publication": {"$ref": "#/$defs/nullable_file_observation"},
+        "errors": {"type": "array", "items": {"$ref": "#/$defs/error"}}, "outcome": {"$ref": "#/$defs/outcome"},
+        "limitations": {"type": "array", "items": {"$ref": "#/$defs/text"}}
+      },
+      "allOf": [{"if": {"properties": {"sample": {"type": "null"}}},
+                 "then": {"properties": {"diagnostic_sample": {"$ref": "#/$defs/sample"}}},
+                 "else": {"properties": {"diagnostic_sample": {"type": "null"}}}}]
+    }
+  }
+}

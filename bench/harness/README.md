@@ -198,6 +198,46 @@ must finish before the next stage; neither is claimed part of an amortized repla
 See [paired lifecycle format, failures and historical validation](../../docs/wp01-paired-lifecycle.md).
 Neither endpoint establishes a complete generation-valid result, watch/replay
 lifecycle, resource containment or confirmatory eligibility.
+
+`managed_replay.py --plan <fixed-plan.json> --output <new-directory>` now provides
+a **separate bounded whole-session replay endpoint**, not a change to paired
+timing. Its closed [`managed-replay-v1.schema.json`](managed-replay-v1.schema.json)
+requires preparation, 1–32 ordered interactions and shutdown, with explicit argv,
+timeouts, idle waits, optional stdout guards and canonical file contracts. It
+uses fresh serial processes and shared declared state, not a reused execution
+interpreter, daemon/service manager or semantic oracle. Preparation/shutdown
+must expect exit zero; an interaction can explicitly expect a nonzero outcome.
+
+One API-entry wall clock includes validation, plan publication, preparation,
+idle waits, interactions, required shutdown, declared-byte archival, aggregate
+unit publication/read-back and final checks. Failure stops later interactions
+without retry; shutdown is attempted once using its own reserved finite command
+timeout even after the execution budget expires. A missing observation preserves
+unknown invocation certainty. Failed/skipped phases remain in the complete ledger.
+Declared file absences do not prove process containment or external-resource release.
+
+The private bundle contains `plan.json`, observed `step-NNNN.json` files,
+`unit.json` and `blobs/`. The aggregate unit embeds phase receipts and binds every
+retained input by path/bytes/SHA-256. The **post-endpoint session receipt is returned
+on stdout**, not saved into its own measured bundle. Capture it outside that
+directory and pass it separately to
+`inspect_replay.py --directory <run> --receipt <receipt.json>`. Inspection checks
+historical bytes, order, enclosing clocks, budgets, contracts, failure/skip causes,
+publication and shutdown without rerunning commands or rereading a later worktree.
+Missing/corrupt/mixed evidence is not repaired or treated as a completed subset.
+
+Each replay is **one observed session**, with verified independence unknown.
+Phase rows are labelled `managed_replay_step` / `replay_step`; direct latency and
+bootstrap estimators reject either label. Replay summaries have null comparisons,
+bootstraps and resources, and false confirmatory eligibility. Declared bounded
+raw-prefix truncation remains visible, not a claim to have retained full output.
+No paired-replay, result-card, native resource, edit/generation or frozen-campaign
+integration is implemented by this profile. Generator exits are 0 for completed
+unqualified observation, 1 for observed failure/timeout/deadline, and 2 for observer,
+publication or invalid-input errors. Inspector exit 0 means consistent evidence,
+including an accounted abort, not successful tests. See
+[reproduction, boundaries, failure controls and remaining gates](../../docs/wp01-managed-replay.md).
+
 `analysis.py` implements a paired geometric point estimator and exploratory
 whole-block percentile bootstrap for caller-qualified samples. It rejects invalid
 or incomplete blocks but cannot verify qualification, independence, statistical
@@ -336,6 +376,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_cgroup_accounting.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_resources.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_result_card.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_managed_replay.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`
