@@ -14,7 +14,8 @@ from pt_bench import LIFECYCLE_ENDPOINT
 
 
 def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
-                  bootstrap_seed: int | None = None) -> dict[str, Any]:
+                  bootstrap_seed: int | None = None,
+                  _observations: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Inspect once and summarize all arms, or block without discarding any pair."""
     if (bootstrap_resamples is None) != (bootstrap_seed is None):
         raise ValueError("bootstrap resamples and seed must be specified together")
@@ -24,6 +25,8 @@ def summarize_run(directory: Path, *, bootstrap_resamples: int | None = None,
             raise ValueError("bootstrap requires an integer seed and 2 to 1000000 resamples")
     observations: list[dict[str, Any]] = []
     inspection = inspect_run(directory, _observations=observations)
+    if _observations is not None:
+        _observations.extend(observations)
     if inspection.get("measurement_layer") == "resource_diagnostic":
         if bootstrap_resamples is not None:
             raise ValueError("bootstrap is unsupported for separate resource diagnostic campaigns")

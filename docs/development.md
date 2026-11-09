@@ -79,6 +79,12 @@ typed YAML and reports direct scope/serial-contract/replay/resampling conflicts
 separately from structure. It is read-only, requires safe POSIX manifest lookup,
 and cannot freeze or qualify a campaign. No subject command or reset script runs.
 
+The [evidence-bound result-card tools](wp01-result-cards.md) can now produce and
+independently reconstruct exploratory JSON cards from validated paired bundles.
+Publish cards outside their source run. All failed/unsupported/not-run outcomes
+and unresolved qualification fields remain visible; neither generator runtime
+metadata nor matching sentinels establish product support or a qualified result.
+
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It
 does not install them into system Python. Tests execute subprocesses and create

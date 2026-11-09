@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:bench:result-card-v1",
+  "title": "PT evidence-bound exploratory paired result card v1",
+  "description": "Exploratory only. Inventory hashes, denominators, analysis, unresolved fields and source reconstruction require semantic inspection in addition to this closed schema. Integer fields use the harness's strict JSON-token policy.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "classification", "confirmatory_eligible", "qualification", "denominators", "measurement_observations", "stage_resource_observations", "blockers", "analysis_request", "statistics", "context", "evidence", "generator", "reconstruction_sha256", "limitations"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1}, "kind": {"const": "paired_exploratory_result_card"},
+    "classification": {"const": "exploratory"}, "confirmatory_eligible": {"type": "boolean", "const": false},
+    "qualification": {
+      "type": "object", "additionalProperties": false, "required": ["status", "qualified_arm_count", "unresolved_fields"],
+      "properties": {
+        "status": {"const": "not_established"}, "qualified_arm_count": {"type": "integer", "const": 0},
+        "unresolved_fields": {
+          "type": "object", "additionalProperties": false,
+          "required": ["candidate_revision", "baseline_revision", "candidate_binary_sha256", "baseline_binary_sha256", "arm_python_pytest_plugin_identities", "repository_revision", "scenario_and_cache_state", "machine_profile_and_resource_budget", "semantic_contract_and_equal_work", "collection_occurrences", "execution_occurrences", "independent_session_count", "generation_validity", "reset_policy_compliance", "coverage_configuration_and_artifacts", "fallback_accounting", "exclusion_policy_and_accounting", "full_session_and_idle_cost", "observer_effects", "corpus_eligibility_and_partitions", "preregistration_and_review"],
+          "properties": {
+            "candidate_revision": {"type": "null"}, "baseline_revision": {"type": "null"},
+            "candidate_binary_sha256": {"type": "null"}, "baseline_binary_sha256": {"type": "null"},
+            "arm_python_pytest_plugin_identities": {"type": "null"}, "repository_revision": {"type": "null"},
+            "scenario_and_cache_state": {"type": "null"}, "machine_profile_and_resource_budget": {"type": "null"},
+            "semantic_contract_and_equal_work": {"type": "null"}, "collection_occurrences": {"type": "null"},
+            "execution_occurrences": {"type": "null"}, "independent_session_count": {"type": "null"},
+            "generation_validity": {"type": "null"}, "reset_policy_compliance": {"type": "null"},
+            "coverage_configuration_and_artifacts": {"type": "null"}, "fallback_accounting": {"type": "null"},
+            "exclusion_policy_and_accounting": {"type": "null"}, "full_session_and_idle_cost": {"type": "null"},
+            "observer_effects": {"type": "null"}, "corpus_eligibility_and_partitions": {"type": "null"},
+            "preregistration_and_review": {"type": "null"}
+          }
+        }
+      }
+    },
+    "denominators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_blocks", "planned_arms", "source_summary_observed_arms", "known_invocation_attempts", "known_not_invoked_arms", "unknown_invocation_arms", "arm_status_counts", "source_summary_guard_counts", "guard_status_counts", "resource_status_counts", "stage_lifecycle_status_counts", "planned_resource_stage_count", "stage_resource_status_counts"],
+      "properties": {
+        "planned_blocks": {"type": "integer", "minimum": 1}, "planned_arms": {"type": "integer", "minimum": 2},
+        "source_summary_observed_arms": {"$ref": "#/$defs/count"}, "known_invocation_attempts": {"$ref": "#/$defs/count"},
+        "known_not_invoked_arms": {"$ref": "#/$defs/count"}, "unknown_invocation_arms": {"$ref": "#/$defs/count"},
+        "arm_status_counts": {"$ref": "#/$defs/status_counts"}, "source_summary_guard_counts": {"$ref": "#/$defs/guard_counts"},
+        "guard_status_counts": {"$ref": "#/$defs/guard_counts"},
+        "resource_status_counts": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/status_counts"}]},
+        "stage_lifecycle_status_counts": {"$ref": "#/$defs/status_counts"},
+        "planned_resource_stage_count": {"type": ["integer", "null"], "minimum": 0},
+        "stage_resource_status_counts": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/status_counts"}]}
+      }
+    },
+    "measurement_observations": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/observation"}},
+    "stage_resource_observations": {"oneOf": [{"type": "null"}, {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/observation"}}]},
+    "blockers": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false, "required": ["context", "reasons"],
+        "properties": {"context": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/nullable_context"},
+                       "reasons": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}
+      }
+    },
+    "analysis_request": {
+      "type": "object", "additionalProperties": false, "required": ["bootstrap_resamples", "bootstrap_seed"],
+      "properties": {"bootstrap_resamples": {"type": ["integer", "null"], "minimum": 2, "maximum": 1000000}, "bootstrap_seed": {"type": ["integer", "null"]}}
+    },
+    "statistics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "ratio_direction", "ratio", "absolute_latency_ns", "bootstrap", "per_arm_resources", "per_arm_resources_unit"],
+      "properties": {
+        "status": {"enum": ["blocked", "exploratory_point_estimate", "diagnostic_resource_observations"]},
+        "ratio_direction": {"enum": [null, "baseline_over_candidate"]}, "ratio": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "absolute_latency_ns": {
+          "oneOf": [{"type": "null"}, {
+            "type": "object", "additionalProperties": false, "required": ["baseline_mean", "candidate_mean", "mean_paired_baseline_minus_candidate"],
+            "properties": {"baseline_mean": {"type": "number", "exclusiveMinimum": 0}, "candidate_mean": {"type": "number", "exclusiveMinimum": 0},
+                           "mean_paired_baseline_minus_candidate": {"type": "number"}}
+          }]
+        },
+        "bootstrap": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bootstrap"}]},
+        "per_arm_resources": {
+          "oneOf": [{"type": "null"}, {
+            "type": "object", "additionalProperties": false, "required": ["baseline", "candidate"],
+            "properties": {"baseline": {"$ref": "#/$defs/arm_resources"}, "candidate": {"$ref": "#/$defs/arm_resources"}}
+          }]
+        },
+        "per_arm_resources_unit": {"enum": [null, "measurement_stage_only"]}
+      }
+    },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["timing_endpoint", "measurement_layer", "cwd", "arm_cwds", "commands", "guards", "seed", "timeout_seconds", "host_observations"],
+      "properties": {
+        "timing_endpoint": {"enum": ["process_launch_through_exit_pipes_and_optional_raw_finalization_v1", "invocation_through_sample_publication_and_declared_finalization_v1", "resource_api_entry_through_empty_cgroup_final_counters_and_group_removal_v1"]},
+        "measurement_layer": {"enum": ["exploratory_command_timing", "exploratory_lifecycle_timing", "resource_diagnostic"]},
+        "cwd": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/absolute_path"},
+        "arm_cwds": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/arm_cwds"},
+        "commands": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/commands"},
+        "guards": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/paired_plan/properties/guards"},
+        "seed": {"type": "integer"}, "timeout_seconds": {"type": ["number", "null"], "exclusiveMinimum": 0},
+        "host_observations": {"oneOf": [{"type": "null"}, {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/host_metadata"}]}
+      }
+    },
+    "evidence": {"$ref": "#/$defs/inventory"},
+    "reconstruction_sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"},
+    "generator": {
+      "type": "object", "additionalProperties": false, "required": ["implementation", "runtime"],
+      "properties": {
+        "implementation": {"$ref": "#/$defs/inventory"},
+        "runtime": {
+          "type": "object", "additionalProperties": false,
+          "required": ["python_implementation", "python_version", "jsonschema_version", "referencing_version", "pyyaml_version"],
+          "properties": {"python_implementation": {"$ref": "#/$defs/text"}, "python_version": {"$ref": "#/$defs/text"},
+                         "jsonschema_version": {"$ref": "#/$defs/text"}, "referencing_version": {"$ref": "#/$defs/text"}, "pyyaml_version": {"$ref": "#/$defs/text"}}
+        }
+      }
+    },
+    "limitations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1}, "count": {"type": "integer", "minimum": 0},
+    "status_counts": {
+      "type": "object", "propertyNames": {"enum": ["exited_unqualified", "timeout", "launch_error", "harness_error", "not_run_preparation_failed", "not_run_probe_failed", "not_run_run_aborted", "not_run_finalization_failed", "unsupported", "partial_unsupported", "observed_unqualified", "failed", "not_run_preparation_resource_unsupported", "not_run_probe_resource_unsupported", "finalized_unqualified", "finalization_failed"]},
+      "additionalProperties": {"$ref": "#/$defs/count"}
+    },
+    "guard_counts": {
+      "type": "object", "propertyNames": {"enum": ["not_requested", "not_observed", "matched", "mismatched"]},
+      "additionalProperties": {"$ref": "#/$defs/count"}
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false, "required": ["format", "sha256", "total_bytes", "directories", "files"],
+      "properties": {
+        "format": {"const": "sha256_canonical_relative_path_bytes_digest_inventory_v1"},
+        "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}, "total_bytes": {"type": "integer", "minimum": 0, "maximum": 536870912},
+        "directories": {"enum": [[], ["blobs"]]},
+        "files": {
+          "type": "array", "minItems": 1, "maxItems": 4096, "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "bytes", "sha256"],
+            "properties": {"path": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/relative_path"},
+                           "bytes": {"type": "integer", "minimum": 0, "maximum": 134217728}, "sha256": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/sha256"}}
+          }
+        }
+      }
+    },
+    "observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["context", "status", "invocation_attempted", "process_status", "returncode", "elapsed_ns", "guard_status", "lifecycle_finalized", "failure_reasons", "resources"],
+      "properties": {
+        "context": {"$ref": "urn:pt:bench:lifecycle-v2#/$defs/context"}, "status": {"$ref": "#/$defs/text"},
+        "invocation_attempted": {"type": ["boolean", "null"]},
+        "process_status": {"enum": [null, "exited_unqualified", "timeout", "launch_error"]},
+        "returncode": {"type": ["integer", "null"]}, "elapsed_ns": {"type": ["integer", "null"], "minimum": 0},
+        "guard_status": {"enum": ["not_requested", "not_observed", "matched", "mismatched"]},
+        "lifecycle_finalized": {"type": ["boolean", "null"]}, "failure_reasons": {"type": "array", "items": {"$ref": "#/$defs/text"}},
+        "resources": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/resource_metrics"}]}
+      }
+    },
+    "resource_metrics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["whole_boundary_accounting_complete", "cpu_delta_usec", "peak_charged_bytes", "sampled_current_max_bytes", "unsupported_capabilities", "resource_errors", "stage_errors", "archive_complete", "resource_record_committed", "stage_record_committed", "not_run_record_committed", "finalization_matched"],
+      "properties": {
+        "whole_boundary_accounting_complete": {"type": "boolean"},
+        "cpu_delta_usec": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/cpu_delta_usec"},
+        "peak_charged_bytes": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/peak_charged_bytes"},
+        "sampled_current_max_bytes": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/sampled_current_max_bytes"},
+        "unsupported_capabilities": {
+          "type": "object", "propertyNames": {"enum": ["cpu_stat", "memory_current", "memory_peak", "memory_events", "population", "kill", "enrollment"]},
+          "additionalProperties": {"$ref": "#/$defs/text"}
+        },
+        "resource_errors": {"$ref": "urn:pt:bench:resource-observation-v1#/properties/errors"},
+        "stage_errors": {"$ref": "urn:pt:bench:paired-resource-v1#/$defs/stage/properties/errors"},
+        "archive_complete": {"type": ["boolean", "null"]}, "resource_record_committed": {"type": "boolean"},
+        "stage_record_committed": {"type": "boolean"}, "not_run_record_committed": {"type": "boolean"}, "finalization_matched": {"type": ["boolean", "null"]}
+      }
+    },
+    "arm_resources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_units", "invocations_attempted", "invocations_unknown", "complete_accounting_units", "cpu_usage_usec", "peak_charged_bytes", "sampled_current_max_bytes"],
+      "properties": {
+        "planned_units": {"$ref": "#/$defs/count"}, "invocations_attempted": {"$ref": "#/$defs/count"},
+        "invocations_unknown": {"$ref": "#/$defs/count"}, "complete_accounting_units": {"$ref": "#/$defs/count"},
+        "cpu_usage_usec": {
+          "type": "object", "additionalProperties": false, "required": ["observed_units", "unknown_units", "observed_sum"],
+          "properties": {"observed_units": {"$ref": "#/$defs/count"}, "unknown_units": {"$ref": "#/$defs/count"}, "observed_sum": {"type": ["integer", "null"], "minimum": 0}}
+        },
+        "peak_charged_bytes": {"$ref": "#/$defs/memory_units"}, "sampled_current_max_bytes": {"$ref": "#/$defs/memory_units"}
+      }
+    },
+    "memory_units": {
+      "type": "object", "additionalProperties": false, "required": ["observed_units", "unknown_units", "maximum_observed_per_unit"],
+      "properties": {"observed_units": {"$ref": "#/$defs/count"}, "unknown_units": {"$ref": "#/$defs/count"}, "maximum_observed_per_unit": {"type": ["integer", "null"], "minimum": 0}}
+    },
+    "bootstrap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "ratio_direction", "point_estimate", "interval_method", "confidence_level", "interval_lower", "interval_upper", "blocks", "bootstrap_resamples", "bootstrap_seed", "timing_endpoint"],
+      "properties": {
+        "mode": {"const": "exploratory_unqualified"}, "ratio_direction": {"const": "baseline_over_candidate"},
+        "point_estimate": {"type": "number", "exclusiveMinimum": 0}, "interval_method": {"const": "percentile_whole_paired_blocks_linear_quantile"},
+        "confidence_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "interval_lower": {"type": "number", "exclusiveMinimum": 0}, "interval_upper": {"type": "number", "exclusiveMinimum": 0},
+        "blocks": {"type": "integer", "minimum": 2}, "bootstrap_resamples": {"type": "integer", "minimum": 2, "maximum": 1000000},
+        "bootstrap_seed": {"type": "integer"}, "timing_endpoint": {"$ref": "#/properties/context/properties/timing_endpoint"}
+      }
+    }
+  }
+}
