@@ -5,7 +5,9 @@ promise of a stable wire format.
 
 The [baseline decision](baseline-contract-v1.md) selects a private inherited
 Unix socket pair, strict version matching, ownership, and bounded failure rules.
-The event catalog below remains incomplete and requires versioned extension.
+The per-message catalog now covers 31 event kinds in contract revision 1 of the
+unreleased v0 design. Completion/accounting validation is a separate obligation;
+the catalog does not imply a production transport or a supported backend.
 
 Each execution session owns a dedicated local channel, separate from test
 stdout and stderr. Frames consist of a 32-bit unsigned big-endian payload length
@@ -32,14 +34,24 @@ restrict access to the owning user as appropriate to the platform, and handle
 backpressure without unbounded buffering. Test-created descendants must not be
 able to keep a session falsely alive indefinitely.
 
-`protocol-v0.schema.json` proposes a **subset** of per-message payload shapes for
-session start, item occurrences, phase reports, collection errors, and session
-termination. It is not a complete event set or a wire implementation. Duplicate
-node IDs are valid when occurrence ordinals differ. Schema validation alone cannot
-verify frame size in bytes, unique/ordered ordinals, producer sequence continuity,
-cross-message accounting, authentication, artifacts, or completion. A valid
-terminal message is not a successful final result. Tests currently exercise only
-the draft schema, not a bridge or coordinator.
+`protocol-v0.schema.json` defines per-message shapes for request/environment,
+collection, selection/deselection, attempts and phases, warnings, capability and
+resource decisions, output/artifact references, errors, cancellation/timeouts,
+worker exit, cleanup, generation checks, and session termination. Coordinator
+and bridge roles cannot substitute for one another. Duplicate node IDs remain
+valid when occurrence ordinals differ. All raw phase reports and backend-plugin
+retry attempts remain visible; no implicit retry is permitted. The serial v0
+profile cannot grant any optimization capability. Extension/resource event
+shapes do not authorize subtest adapters or managed-resource execution.
+
+This is a breaking completion of an **unreleased draft**, not a downgrade or
+compatibility promise: revision 1 requires request identity, producer role,
+handshake versions, and explicit accounting. The prior five-event examples are
+not valid revision-1 messages. Schema validation alone cannot verify frame size
+in bytes, occurrence/sequence continuity, cross-message accounting, actual file
+bytes, generation evidence, or completion. A valid terminal event is not a
+successful final result. Current tests are synthetic contract checks, not bridge
+or coordinator conformance.
 
 Open decisions include channel implementation, handshake and version negotiation,
 schema evolution, precise identity grammar, artifact authentication, and

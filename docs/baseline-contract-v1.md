@@ -103,8 +103,10 @@ Use the draft 32-bit big-endian framing with a 1 MiB payload cap, UTF-8 strict
 JSON, exact version 0 and a session-start handshake. Refuse unknown versions;
 never downgrade or replay after effects begin. Sequence starts at zero and is
 contiguous per producer. Lost/truncated/contradictory frames or early EOF fail
-closed. The five existing event shapes are a tested **subset**, not the complete
-event catalog. Additions require explicit schema/version review before use.
+closed. The later revision-1 contract expands the unreleased five-event draft
+to a typed 31-kind catalog with producer roles and explicit accounting. This is
+schema evidence only; the production bridge remains unimplemented. Further
+additions require explicit schema/version review before use.
 
 Bound reader queues and aggregate retained data; never buffer unbounded stdout
 or events. If the channel cannot progress inside the deadline, terminate the

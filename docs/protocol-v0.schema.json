@@ -1,92 +1,250 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "PT protocol v0 proposed event subset",
-  "description": "Unreviewed WP00 draft. Validating one message does not validate framing, order, completeness, authorization, or successful work.",
+  "$id": "urn:pt:protocol:v0",
+  "title": "PT protocol v0 serial contract, revision 1",
+  "description": "WP00 contract, not implemented transport or conformance evidence. Per-message validation cannot verify ordering, accounting, artifact bytes, generation integrity, or successful work. This replaces the unreleased five-event draft.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["protocol_version", "run_id", "generation_id", "session_id", "producer_id", "sequence", "kind", "payload"],
+  "required": ["protocol_version", "contract_revision", "request_id", "run_id", "generation_id", "session_id", "producer_id", "producer_role", "sequence", "kind", "payload"],
   "properties": {
-    "protocol_version": {"const": 0},
+    "protocol_version": {"type": "integer", "const": 0},
+    "contract_revision": {"type": "integer", "const": 1},
+    "request_id": {"$ref": "#/$defs/id"},
     "run_id": {"$ref": "#/$defs/id"},
     "generation_id": {"$ref": "#/$defs/id"},
     "session_id": {"$ref": "#/$defs/id"},
     "producer_id": {"$ref": "#/$defs/id"},
-    "sequence": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
-    "kind": {"enum": ["session_started", "item_collected", "phase_report", "collection_error", "session_terminated"]},
+    "producer_role": {"enum": ["coordinator", "bridge"]},
+    "sequence": {"$ref": "#/$defs/count"},
+    "kind": {"type": "string"},
     "payload": {"type": "object"}
   },
   "oneOf": [
-    {
-      "properties": {
-        "kind": {"const": "session_started"},
-        "payload": {"type": "object", "additionalProperties": false, "maxProperties": 0}
-      }
-    },
-    {
-      "properties": {
-        "kind": {"const": "item_collected"},
-        "payload": {
-          "type": "object", "additionalProperties": false,
-          "required": ["ordinal", "nodeid"],
-          "properties": {
-            "ordinal": {"$ref": "#/$defs/ordinal"},
-            "nodeid": {"type": "string", "minLength": 1, "maxLength": 65536}
-          }
-        }
-      }
-    },
-    {
-      "properties": {
-        "kind": {"const": "phase_report"},
-        "payload": {
-          "type": "object", "additionalProperties": false,
-          "required": ["ordinal", "attempt", "phase", "outcome", "reason", "was_xfail"],
-          "properties": {
-            "ordinal": {"$ref": "#/$defs/ordinal"},
-            "attempt": {"$ref": "#/$defs/ordinal"},
-            "phase": {"enum": ["setup", "call", "teardown"]},
-            "outcome": {"enum": ["passed", "failed", "skipped"]},
-            "reason": {"type": ["string", "null"], "maxLength": 65536},
-            "was_xfail": {"type": ["string", "null"], "maxLength": 65536}
-          }
-        }
-      }
-    },
-    {
-      "properties": {
-        "kind": {"const": "collection_error"},
-        "payload": {
-          "type": "object", "additionalProperties": false,
-          "required": ["nodeid", "reason"],
-          "properties": {
-            "nodeid": {"type": "string", "minLength": 1, "maxLength": 65536},
-            "reason": {"type": "string", "maxLength": 65536}
-          }
-        }
-      }
-    },
-    {
-      "properties": {
-        "kind": {"const": "session_terminated"},
-        "payload": {
-          "type": "object", "additionalProperties": false,
-          "required": ["termination", "backend_exit_code"],
-          "properties": {
-            "termination": {"enum": ["backend_exited", "infrastructure_failed", "interrupted"]},
-            "backend_exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 255}
-          },
-          "allOf": [
-            {
-              "if": {"properties": {"termination": {"const": "backend_exited"}}},
-              "then": {"properties": {"backend_exit_code": {"type": "integer"}}}
-            }
-          ]
-        }
-      }
-    }
+    {"properties": {"kind": {"const": "request_accepted"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/request"}}},
+    {"properties": {"kind": {"const": "environment_resolved"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/environment"}}},
+    {"properties": {"kind": {"const": "session_started"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/handshake"}}},
+    {"properties": {"kind": {"const": "collection_started"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/empty"}}},
+    {"properties": {"kind": {"const": "collection_report"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/collection_report"}}},
+    {"properties": {"kind": {"const": "collection_error"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/collection_error"}}},
+    {"properties": {"kind": {"const": "item_collected"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/item"}}},
+    {"properties": {"kind": {"const": "items_selected"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/selection_chunk"}}},
+    {"properties": {"kind": {"const": "items_deselected"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/deselection_chunk"}}},
+    {"properties": {"kind": {"const": "collection_finished"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/collection_finished"}}},
+    {"properties": {"kind": {"const": "capability_decision"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/capability"}}},
+    {"properties": {"kind": {"const": "item_started"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/attempt_key"}}},
+    {"properties": {"kind": {"const": "phase_report"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/phase_report"}}},
+    {"properties": {"kind": {"const": "attempt_finished"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/attempt_finished"}}},
+    {"properties": {"kind": {"const": "item_not_run"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/item_not_run"}}},
+    {"properties": {"kind": {"const": "warning"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/warning"}}},
+    {"properties": {"kind": {"const": "output_reference"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/output_reference"}}},
+    {"properties": {"kind": {"const": "artifact_declared"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/artifact_declaration"}}},
+    {"properties": {"kind": {"const": "artifact_ready"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/artifact_ready"}}},
+    {"properties": {"kind": {"const": "artifact_committed"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/artifact_commit"}}},
+    {"properties": {"kind": {"const": "artifact_failed"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/artifact_failure"}}},
+    {"properties": {"kind": {"const": "session_error"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/session_error"}}},
+    {"properties": {"kind": {"const": "infrastructure_error"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/error"}}},
+    {"properties": {"kind": {"const": "cancellation_requested"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/cancellation"}}},
+    {"properties": {"kind": {"const": "deadline_exceeded"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/deadline"}}},
+    {"properties": {"kind": {"const": "resource_event"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/resource"}}},
+    {"properties": {"kind": {"const": "extension_event"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/extension"}}},
+    {"properties": {"kind": {"const": "session_terminated"}, "producer_role": {"const": "bridge"}, "payload": {"$ref": "#/$defs/session_terminal"}}},
+    {"properties": {"kind": {"const": "worker_exited"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/worker_exit"}}},
+    {"properties": {"kind": {"const": "cleanup_finished"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/cleanup"}}},
+    {"properties": {"kind": {"const": "generation_checked"}, "producer_role": {"const": "coordinator"}, "payload": {"$ref": "#/$defs/generation"}}}
   ],
   "$defs": {
-    "id": {"type": "string", "minLength": 1, "maxLength": 128},
-    "ordinal": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615}
+    "id": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9]", "not": {"pattern": "[^A-Za-z0-9._:-]"}},
+    "count": {"type": "integer", "minimum": 0, "maximum": 18446744073709551615},
+    "ordinal": {"$ref": "#/$defs/count"},
+    "text": {"type": "string", "maxLength": 65536},
+    "reason": {"type": ["string", "null"], "maxLength": 65536},
+    "sha256": {"type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-f]{64}$"},
+    "nullable_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true, "maxItems": 1024},
+    "ordinals": {"type": "array", "items": {"$ref": "#/$defs/ordinal"}, "uniqueItems": true, "maxItems": 4096},
+    "mode": {"enum": ["run", "collect_only"]},
+    "scope": {"enum": ["full", "explicit", "affected"]},
+    "invocation_profile": {"enum": ["pytest_console", "pytest_module"]},
+    "empty": {"type": "object", "additionalProperties": false, "maxProperties": 0},
+    "phase_count": {
+      "type": "object", "additionalProperties": false, "required": ["passed", "failed", "skipped"],
+      "properties": {"passed": {"$ref": "#/$defs/count"}, "failed": {"$ref": "#/$defs/count"}, "skipped": {"$ref": "#/$defs/count"}}
+    },
+    "phase_counts": {
+      "type": "object", "additionalProperties": false, "required": ["setup", "call", "teardown"],
+      "properties": {"setup": {"$ref": "#/$defs/phase_count"}, "call": {"$ref": "#/$defs/phase_count"}, "teardown": {"$ref": "#/$defs/phase_count"}}
+    },
+    "accounting": {
+      "type": "object", "additionalProperties": false,
+      "required": ["collected_count", "selected_count", "deselected_count", "executed_count", "completed_count", "not_run_count", "attempts_started", "attempts_completed"],
+      "properties": {
+        "collected_count": {"$ref": "#/$defs/count"}, "selected_count": {"$ref": "#/$defs/count"}, "deselected_count": {"$ref": "#/$defs/count"},
+        "executed_count": {"$ref": "#/$defs/count"}, "completed_count": {"$ref": "#/$defs/count"}, "not_run_count": {"$ref": "#/$defs/count"},
+        "attempts_started": {"$ref": "#/$defs/count"}, "attempts_completed": {"$ref": "#/$defs/count"}
+      }
+    },
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "scope", "invocation_profile", "required_artifact_ids", "retry_policy", "retry_plugin", "max_attempts"],
+      "properties": {
+        "mode": {"$ref": "#/$defs/mode"}, "scope": {"$ref": "#/$defs/scope"}, "invocation_profile": {"$ref": "#/$defs/invocation_profile"},
+        "required_artifact_ids": {"$ref": "#/$defs/ids"}, "retry_policy": {"enum": ["disabled", "backend_plugin"]},
+        "retry_plugin": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]}, "max_attempts": {"type": "integer", "minimum": 1, "maximum": 32}
+      },
+      "allOf": [{"if": {"properties": {"retry_policy": {"const": "disabled"}}}, "then": {"properties": {"retry_plugin": {"type": "null"}, "max_attempts": {"const": 1}}}, "else": {"properties": {"retry_plugin": {"$ref": "#/$defs/id"}}}}]
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["profile_id", "invocation_profile", "interpreter_sha256", "installed_inventory_sha256", "verified"],
+      "properties": {
+        "profile_id": {"const": "linux-x86_64-cpython312-pytest842"}, "invocation_profile": {"$ref": "#/$defs/invocation_profile"},
+        "interpreter_sha256": {"$ref": "#/$defs/sha256"}, "installed_inventory_sha256": {"$ref": "#/$defs/nullable_sha256"}, "verified": {"type": "boolean"}
+      },
+      "allOf": [{"if": {"properties": {"verified": {"const": true}}}, "then": {"properties": {"installed_inventory_sha256": {"$ref": "#/$defs/sha256"}}}}]
+    },
+    "handshake": {
+      "type": "object", "additionalProperties": false, "required": ["python_version", "pytest_version", "bridge_version", "invocation_profile"],
+      "properties": {"python_version": {"const": "3.12.12"}, "pytest_version": {"const": "8.4.2"}, "bridge_version": {"$ref": "#/$defs/id"}, "invocation_profile": {"$ref": "#/$defs/invocation_profile"}}
+    },
+    "collection_report": {
+      "type": "object", "additionalProperties": false, "required": ["report_id", "nodeid", "outcome", "reason"],
+      "properties": {"report_id": {"$ref": "#/$defs/count"}, "nodeid": {"$ref": "#/$defs/text"}, "outcome": {"enum": ["passed", "failed", "skipped"]}, "reason": {"$ref": "#/$defs/reason"}}
+    },
+    "collection_error": {
+      "type": "object", "additionalProperties": false, "required": ["report_id", "nodeid", "reason"],
+      "properties": {"report_id": {"$ref": "#/$defs/count"}, "nodeid": {"$ref": "#/$defs/text"}, "reason": {"$ref": "#/$defs/text"}}
+    },
+    "item": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "nodeid"],
+      "properties": {"ordinal": {"$ref": "#/$defs/ordinal"}, "nodeid": {"type": "string", "minLength": 1, "maxLength": 65536}}
+    },
+    "selection_chunk": {
+      "type": "object", "additionalProperties": false, "required": ["chunk", "ordinals"],
+      "properties": {"chunk": {"$ref": "#/$defs/count"}, "ordinals": {"$ref": "#/$defs/ordinals"}}
+    },
+    "deselection_chunk": {
+      "type": "object", "additionalProperties": false, "required": ["chunk", "ordinals", "reason"],
+      "properties": {"chunk": {"$ref": "#/$defs/count"}, "ordinals": {"$ref": "#/$defs/ordinals"}, "reason": {"$ref": "#/$defs/reason"}}
+    },
+    "collection_finished": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "inventory_complete", "collected_count", "selected_count", "deselected_count"],
+      "properties": {
+        "status": {"enum": ["complete", "failed", "interrupted"]}, "inventory_complete": {"type": "boolean"},
+        "collected_count": {"$ref": "#/$defs/count"}, "selected_count": {"$ref": "#/$defs/count"}, "deselected_count": {"$ref": "#/$defs/count"}
+      },
+      "allOf": [{"if": {"properties": {"status": {"const": "complete"}}}, "then": {"properties": {"inventory_complete": {"const": true}}}, "else": {"properties": {"inventory_complete": {"const": false}}}}]
+    },
+    "capability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capability", "decision", "scope", "issuer", "issuer_version", "evidence_digest", "input_domain", "reason", "invalidation_conditions"],
+      "properties": {
+        "capability": {"enum": ["collection.metadata_reuse", "collection.runtime_reconstruction", "execution.partition", "execution.reorder", "execution.fork_framework_seed", "execution.fork_project_snapshot", "fixtures.replicate_scope", "resources.reuse_service", "selection.declared_inputs_complete"]},
+        "decision": {"enum": ["deny", "unknown"]}, "scope": {"const": "session"}, "issuer": {"$ref": "#/$defs/id"}, "issuer_version": {"$ref": "#/$defs/id"},
+        "evidence_digest": {"$ref": "#/$defs/nullable_sha256"}, "input_domain": {"$ref": "#/$defs/text"}, "reason": {"$ref": "#/$defs/text"},
+        "invalidation_conditions": {"type": "array", "items": {"$ref": "#/$defs/text"}, "minItems": 1, "maxItems": 128}
+      }
+    },
+    "attempt_key": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "attempt"],
+      "properties": {"ordinal": {"$ref": "#/$defs/ordinal"}, "attempt": {"type": "integer", "minimum": 0, "maximum": 31}}
+    },
+    "phase_report": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "attempt", "phase", "outcome", "reason", "was_xfail", "strict_xpass", "duration_ns", "artifact_ids"],
+      "properties": {
+        "ordinal": {"$ref": "#/$defs/ordinal"}, "attempt": {"type": "integer", "minimum": 0, "maximum": 31}, "phase": {"enum": ["setup", "call", "teardown"]},
+        "outcome": {"enum": ["passed", "failed", "skipped"]}, "reason": {"$ref": "#/$defs/reason"}, "was_xfail": {"$ref": "#/$defs/reason"},
+        "strict_xpass": {"type": "boolean"}, "duration_ns": {"type": ["integer", "null"], "minimum": 0}, "artifact_ids": {"$ref": "#/$defs/ids"}
+      },
+      "allOf": [{"if": {"properties": {"strict_xpass": {"const": true}}}, "then": {"properties": {"phase": {"const": "call"}, "outcome": {"const": "failed"}}}}]
+    },
+    "attempt_finished": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "attempt", "disposition", "reason"],
+      "properties": {"ordinal": {"$ref": "#/$defs/ordinal"}, "attempt": {"type": "integer", "minimum": 0, "maximum": 31}, "disposition": {"enum": ["completed", "retry", "interrupted"]}, "reason": {"$ref": "#/$defs/reason"}}
+    },
+    "item_not_run": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "reason"],
+      "properties": {"ordinal": {"$ref": "#/$defs/ordinal"}, "reason": {"enum": ["fail_fast", "collection_failed", "collect_only", "interrupted"]}}
+    },
+    "warning": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "category", "message", "filename", "line", "when"],
+      "properties": {
+        "ordinal": {"type": ["integer", "null"], "minimum": 0}, "category": {"$ref": "#/$defs/text"}, "message": {"$ref": "#/$defs/text"},
+        "filename": {"$ref": "#/$defs/reason"}, "line": {"type": ["integer", "null"], "minimum": 1}, "when": {"enum": ["configure", "collect", "setup", "call", "teardown", "finalize"]}
+      }
+    },
+    "output_reference": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "stream", "ordinal", "attempt"],
+      "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "stream": {"enum": ["stdout", "stderr"]}, "ordinal": {"type": ["integer", "null"], "minimum": 0}, "attempt": {"type": ["integer", "null"], "minimum": 0, "maximum": 31}},
+      "allOf": [{"if": {"properties": {"ordinal": {"type": "null"}}}, "then": {"properties": {"attempt": {"type": "null"}}}, "else": {"properties": {"attempt": {"type": "integer"}}}}]
+    },
+    "artifact_declaration": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "artifact_kind", "required"],
+      "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "artifact_kind": {"enum": ["report", "coverage", "trace", "stdout", "stderr", "exception", "extension"]}, "required": {"type": "boolean"}}
+    },
+    "artifact_ready": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "sha256", "bytes", "complete"],
+      "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "sha256": {"$ref": "#/$defs/sha256"}, "bytes": {"$ref": "#/$defs/count"}, "complete": {"type": "boolean"}}
+    },
+    "artifact_commit": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "sha256", "bytes", "complete", "verified"],
+      "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "sha256": {"$ref": "#/$defs/sha256"}, "bytes": {"$ref": "#/$defs/count"}, "complete": {"type": "boolean"}, "verified": {"type": "boolean", "const": true}}
+    },
+    "artifact_failure": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "code", "message"],
+      "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "code": {"$ref": "#/$defs/id"}, "message": {"$ref": "#/$defs/text"}}
+    },
+    "error": {
+      "type": "object", "additionalProperties": false, "required": ["code", "message"],
+      "properties": {"code": {"$ref": "#/$defs/id"}, "message": {"$ref": "#/$defs/text"}}
+    },
+    "session_error": {
+      "type": "object", "additionalProperties": false, "required": ["category", "code", "message"],
+      "properties": {"category": {"enum": ["internal", "usage", "infrastructure", "unsupported"]}, "code": {"$ref": "#/$defs/id"}, "message": {"$ref": "#/$defs/text"}}
+    },
+    "cancellation": {
+      "type": "object", "additionalProperties": false, "required": ["origin", "signal"],
+      "properties": {"origin": {"enum": ["signal", "explicit"]}, "signal": {"type": ["integer", "null"], "minimum": 1, "maximum": 64}},
+      "allOf": [{"if": {"properties": {"origin": {"const": "signal"}}}, "then": {"properties": {"signal": {"type": "integer"}}}, "else": {"properties": {"signal": {"type": "null"}}}}]
+    },
+    "deadline": {
+      "type": "object", "additionalProperties": false, "required": ["phase", "timeout_ns"],
+      "properties": {"phase": {"enum": ["configure", "collect", "setup", "call", "teardown", "finalize", "cleanup", "unknown"]}, "timeout_ns": {"type": "integer", "minimum": 1}}
+    },
+    "resource": {
+      "type": "object", "additionalProperties": false, "required": ["resource_id", "state", "reason"],
+      "properties": {"resource_id": {"$ref": "#/$defs/id"}, "state": {"enum": ["requested", "denied", "acquired", "active", "releasing", "released", "expired"]}, "reason": {"$ref": "#/$defs/reason"}}
+    },
+    "extension": {
+      "type": "object", "additionalProperties": false, "required": ["extension_id", "extension_version", "artifact_id", "ordinal", "attempt"],
+      "properties": {"extension_id": {"$ref": "#/$defs/id"}, "extension_version": {"type": "integer", "minimum": 1}, "artifact_id": {"$ref": "#/$defs/id"}, "ordinal": {"type": ["integer", "null"], "minimum": 0}, "attempt": {"type": ["integer", "null"], "minimum": 0, "maximum": 31}}
+    },
+    "session_terminal": {
+      "type": "object", "additionalProperties": false, "required": ["termination", "backend_exit_code", "reporting_complete", "accounting", "phase_counts", "incomplete_ordinals"],
+      "properties": {
+        "termination": {"enum": ["backend_exited", "infrastructure_failed", "interrupted"]}, "backend_exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 5},
+        "reporting_complete": {"type": "boolean"}, "accounting": {"$ref": "#/$defs/accounting"}, "phase_counts": {"$ref": "#/$defs/phase_counts"},
+        "incomplete_ordinals": {"type": "array", "items": {"$ref": "#/$defs/ordinal"}, "uniqueItems": true, "maxItems": 100000}
+      },
+      "allOf": [{"if": {"properties": {"termination": {"const": "backend_exited"}}}, "then": {"properties": {"backend_exit_code": {"type": "integer"}}}}]
+    },
+    "worker_exit": {
+      "type": "object", "additionalProperties": false, "required": ["exit_code", "signal", "core_dumped", "reaped"],
+      "properties": {"exit_code": {"type": ["integer", "null"], "minimum": 0, "maximum": 255}, "signal": {"type": ["integer", "null"], "minimum": 1, "maximum": 64}, "core_dumped": {"type": "boolean"}, "reaped": {"type": "boolean"}},
+      "oneOf": [
+        {"properties": {"exit_code": {"type": "integer"}, "signal": {"type": "null"}, "core_dumped": {"const": false}}},
+        {"properties": {"exit_code": {"type": "null"}, "signal": {"type": "integer"}}}
+      ]
+    },
+    "cleanup": {
+      "type": "object", "additionalProperties": false, "required": ["status", "leader_reaped", "live_members", "reason"],
+      "properties": {"status": {"enum": ["complete", "uncertain", "not_started"]}, "leader_reaped": {"type": "boolean"}, "live_members": {"type": ["integer", "null"], "minimum": 0}, "reason": {"$ref": "#/$defs/reason"}},
+      "allOf": [{"if": {"properties": {"status": {"const": "complete"}}}, "then": {"properties": {"leader_reaped": {"const": true}, "live_members": {"const": 0}}}}]
+    },
+    "generation": {
+      "type": "object", "additionalProperties": false, "required": ["status", "assurance", "identity_sha256", "declared_inputs_complete"],
+      "properties": {"status": {"enum": ["current", "superseded", "uncertain", "unverified"]}, "assurance": {"enum": ["immutable_snapshot", "live_tree", "unverified"]}, "identity_sha256": {"$ref": "#/$defs/nullable_sha256"}, "declared_inputs_complete": {"type": "boolean"}},
+      "allOf": [{"if": {"properties": {"assurance": {"const": "immutable_snapshot"}}}, "then": {"properties": {"identity_sha256": {"$ref": "#/$defs/sha256"}, "declared_inputs_complete": {"const": true}}}}]
+    }
   }
 }
