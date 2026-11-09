@@ -14,18 +14,23 @@ An explicit metadata-only `pt doctor` and bridge distribution skeleton are also
 available; neither observes or executes pytest test sessions. The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.
+WP00's conservative contract/threat-model engineering self-review is complete;
+this does not qualify a runner or close the later work-package/release gates.
 
 ## Start here
 
 - [Implementation specification](docs/pt-implementation-spec.md): contracts,
   architecture, benchmark protocol, and dependency-ordered work packages.
 - [Agent instructions](AGENTS.md): repository-wide working rules.
-- [First task](docs/first-agent-task.md): the initial WP00 assignment.
-- [Execution contracts](docs/contracts.md): the first, unreviewed WP00 draft.
-- [Proposed support matrix](support-matrix.toml), [protocol](docs/protocol-draft.md),
+- [First task](docs/first-agent-task.md): the original, historical WP00 handoff.
+- [Execution contracts](docs/contracts.md): the reviewed conservative definition,
+  not implementation or qualified support.
+- [Selected target matrix](support-matrix.toml), [protocol](docs/protocol-draft.md),
   [threat model](docs/threat-model.md), [benchmark charter](docs/benchmark-charter.md),
-  and [architecture decisions](docs/adr/README.md): unreviewed WP00 drafts.
-- [WP00 review register](docs/wp00-review.md): outstanding decisions and evidence.
+  and [architecture decisions](docs/adr/README.md): WP00 self-reviewed baseline
+  definitions, with implementation/qualification gates still open.
+- [WP00 acceptance register](docs/wp00-review.md): resolved review decisions,
+  bounded evidence, and explicit remaining gates.
 - [Protocol/result contract tests](tests/contracts/README.md): synthetic WP00
   accounting and failure checks; not a bridge, semantic oracle or qualification.
 - [Baseline contract v1](docs/baseline-contract-v1.md): self-reviewed process,
@@ -34,7 +39,7 @@ Most proposed product commands, including `pt run`, are not implemented yet.
   and reproducible prototype checks.
 - [Invariant review map](docs/invariant-review.md): adverse evidence still
   required for C01–C12.
-- [Capability policy](docs/capability-policy.md): proposed transformation
+- [Capability policy](docs/capability-policy.md): reviewed transformation
   permissions and conservative fallbacks, not implementation evidence.
 - [Exploratory harness prototype](bench/harness/README.md) and
   [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
@@ -50,7 +55,7 @@ Most proposed product commands, including `pt run`, are not implemented yet.
 
 ## Development setup
 
-Git is sufficient to read and review the handoff. The support matrix proposes
+Git is sufficient to read and review the handoff. The support matrix selects
 CPython 3.12.12 and pytest 8.4.2 on Linux x86-64, but no profile is qualified.
 The Rust workspace uses `Cargo.lock` and the selected toolchain; setup and test
 commands are in the development guide. CI qualification is not established yet.

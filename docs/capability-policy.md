@@ -1,7 +1,8 @@
-# Capability policy — WP00 draft
+# Capability policy — conservative baseline
 
-Status: proposed, unimplemented, unreviewed. This expands specification section
-6; it does not authorize any transformation or imply that an adapter exists.
+Status: adopted in the 2026-11-09 WP00 engineering self-review. This expands
+specification section 6; it does not implement a policy engine, authorize any
+transformation or imply that an adapter exists. See `wp00-review.md`.
 
 Each decision records a capability name, `allow`, `deny`, or `unknown`, scope,
 issuer and version, evidence digest, bounded input domain, reason, and expiry or
@@ -35,6 +36,32 @@ stop or continue conservatively in the same session as appropriate, retain the
 original attempt, and never transparently replay started work. If the necessary
 safe transition cannot be established, report failure instead of guessing.
 
-Open review items: exact scope encoding, provenance and evidence validation,
-trust configuration, precedence across nested scopes, invalidation semantics,
-and how every denial appears in the protocol and user-facing explanations.
+## Review resolutions
+
+The initial serial encoding is **session scope, deny/unknown only**, bound to the
+request/run/generation/session and resolved environment. Every declared feature
+request must receive a decision/reason; a required unavailable feature is a
+prelaunch configuration/unsupported failure, while preferred retains the serial
+reference. Omitted or malformed evidence is unknown, never an implicit allow.
+The protocol schema is data validation, not provenance authentication.
+
+Coordinator policy decisions must come from coordinator-owned policy, not a
+bridge/project field that claims that role. Project assertions are labelled as
+assertions; neither an issuer string nor a digest makes them trusted. For the
+baseline, no project assertion, user configuration, environment variable, cached
+plan or plugin-supplied record can turn an unavailable transformation on.
+
+Future nested-scope composition is all-applicable-permissions, with deny/conflict
+or unknown at any relevant scope overriding an allow. A narrower assertion does
+not erase a session/global constraint. Identity/plugin/policy/input changes,
+expiry or loss of provenance invalidate evidence; absence of known invalidation
+is not new positive evidence. Before any implementation accepts `allow`, WP07
+must define/version its trusted issuer registry, scope/evidence binding and
+invalidation checks and test conflicting/expired/forged evidence. The enabling
+feature also needs its own oracle and measurement gate. This is a deferred
+enablement prerequisite, not an unresolved permission to optimize the baseline.
+
+The same decision/reason must be available in structured results and user-facing
+explanations (WP07/WP09). A requested explanation or unknown plugin never causes
+an extra project import, dependency install, plugin disablement or replay. Those
+production behaviors and explanation commands remain unimplemented.

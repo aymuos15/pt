@@ -1,102 +1,144 @@
-# Execution contracts — WP00 draft
+# Execution contracts — conservative baseline
 
-Status: **proposed, unreviewed, not implemented or qualified**. The
-[implementation specification](pt-implementation-spec.md) remains authoritative;
-this document begins WP00 and does not close its acceptance criteria.
+Status: **accepted for baseline engineering by WP00 self-review, 2026-11-09**.
+This is a definition, not an implemented runner or qualified support claim. The
+[acceptance record](wp00-review.md) distinguishes this review from all later
+gates. The [implementation specification](pt-implementation-spec.md), C01–C12,
+and its dependency order remain authoritative. This replaces the earlier draft's
+unresolved prose; the original decisions/history are retained in git and
+[baseline contract v1](baseline-contract-v1.md).
 
-The later [baseline contract v1](baseline-contract-v1.md) resolves the initial
-target, process/output boundary, exit precedence, and transport choices for
-conservative WP04 engineering. It is explicitly self-reviewed, not qualification.
-The historical proposals below are retained; where they leave those decisions
-open, the later record takes precedence.
+## Target, reference and exclusions
 
-The later [protocol revision 1](protocol-draft.md) and
-[final-result schema](final-result-v0.schema.json) define the typed completion
-flags, collection/attempt accounting, artifacts, all terminal categories and
-precedence, with synthetic consistency tests. These supersede the historical
-unresolved mapping/transport statements below; they do not implement a backend
-or verify actual work, environment or generation evidence.
+The selected initial target is Linux x86-64, GIL-enabled CPython **3.12.12**,
+pytest **8.4.2**, bridge package **0.0.0**, Rust **1.99.1**, and fresh serial real
+pytest. Neither the tuple nor the bridge skeleton is qualified. Required native
+process/procfs features must be checked; there is no blanket kernel, libc,
+distribution, plugin or neighboring-version support claim.
 
-## Serial reference
+`pytest_console` and `pytest_module` are distinct invocation profiles. Reference
+and candidate match interpreter, entrypoint semantics, exact OS argv, cwd,
+relevant environment, source, configuration, plugin discovery/options and output
+policy. No shell, interpreter/entrypoint substitution, dependency mutation,
+silent plugin suppression, or hidden preflight collection is allowed. The Rust
+coordinator does not import project Python. A metadata-only `doctor` is not
+runtime/environment verification or permission to assert test success.
 
-The initial product delegates execution to real pytest in a fresh Python process
-for each run. Its reference is a fresh invocation of the same pinned interpreter,
-pytest entrypoint, arguments, source, relevant environment, and plugin
-configuration. The exact supported versions remain undecided. Console pytest
-and `python -m pytest` are distinct invocation profiles, not interchangeable
-aliases.
+Pytest collects and executes in the same fresh session, preserving occurrence
+multiplicity, exact node IDs, final selected order, fixtures and phase outcomes.
+No source index can exclude an ordinary full-run candidate. Persisted plans are
+descriptions, never live collectors, fixtures, parameters, callables, heaps or
+pickled sessions. A process that executed tests is destroyed, not reset/reused.
 
-Pytest performs authoritative collection and execution within the same session.
-No hidden preflight collection is allowed. PT must preserve the reference's
-collection multiplicity and order, selection, fixture lifecycle, phase outcomes,
-and exit behavior within the eventual supported profile. A static index is not
-authoritative collection. The coordinator does not import project Python code.
+Parallel execution, affected selection, cache-authoritative reconstruction,
+preload/project snapshots, service reuse, non-Linux profiles and interactive
+stdin are unavailable in this baseline. Reject a required unavailable feature
+before effects; a preferred optimization stays on the conservative route with
+an explanation. There is **no implemented passthrough profile**. `pt exec` is an
+explicit process diagnostic, not pytest passthrough or conformance certification.
+An unsupported condition discovered after effects preserves those effects and
+errors; it does not pretend no launch occurred or replay work under a fallback.
 
-## Scope and transformations
+## Scope and permissions
 
-Full, affected, and parallel runs have distinct contracts. A successful affected
-run describes only its selected scope; it does not certify the full suite.
-Parallel behavior is compared to an explicitly pinned parallel reference, not
-automatically to serial pytest. Selection, reordering, fixture replication, and
-resource reuse each require separate permission. Unknown capabilities deny the
-relevant optimization, not the plugin. Started work is never automatically
-replayed as a fallback.
+`full` is bounded by the declared reference project/configuration and selection
+policy, not a promise to find every possible Python test. Explicit user targets
+or subset selectors are labelled `explicit`; PT-chosen subsets are `affected`.
+Neither can update whole-suite success. Backend-native default deselection must
+remain visible and match the declared reference; a nonzero deselection count
+alone does not prove PT narrowed scope. Unknown effective selection policy
+cannot justify a current full-suite claim. The real coordinator/oracle must
+establish scope from the request and same-session backend, not trust a flag in
+a synthetic fixture. Do not run a second collection just to establish it.
+If a full request's scope cannot be reconciled, report incomplete accounting
+(`infrastructure_error`) rather than grant the full flag; retain the observed
+backend status and effects. Unknown optimization permission alone is not a
+reason to disable a plugin or change its selection behavior.
 
-## Completion and outcomes
+The [capability policy](capability-policy.md) names separate permissions and
+reference contracts for every transformation. This serial revision admits only
+session-scoped `deny`/`unknown`, never `allow`. Unknown, conflicting, stale or
+wrong-scope evidence disables the transformation, not a plugin. No fallback
+replays started work. An explicitly configured backend retry plugin is a
+separately qualified backend contract and must retain every original attempt;
+synthetic retry examples do not qualify such a plugin.
 
-A full-run success requires complete accounting of requested work, a valid
-current generation, successful required reporting and finalization, and reaping
-the owned execution processes. Required coverage artifacts and lease cleanup are
-part of completion when applicable. A late, superseded, uncertain, incomplete,
-or infrastructure-failed result cannot mark the current full run successful.
+## Output and process boundary
 
-Setup, call, teardown, collection, and infrastructure failures remain distinct.
-For a completed pytest session, preserve its exit status. PT-originated usage
-and infrastructure failures map to documented pytest-compatible categories with
-additional typed causes; exact representation and signal behavior remain to be
-specified and tested. Unsupported profiles must report unsupported or use an
-explicitly requested passthrough, never silently claim conformance.
+Preserve caller stdin/stdout/stderr descriptors, non-terminal input, cwd and
+environment; no PT-added output capture buffer, pseudo-terminal or color/TTY
+substitution. Pytest retains its own capture, warning, verbosity and traceback
+policies. Binary bytes and OS argument boundaries are not reinterpreted.
+Terminal stdin is rejected before work until foreground job control is
+implemented and qualified. Output-only TTY inheritance does not imply interactive
+terminal equivalence. Exact cross-stream byte interleaving, PIDs, timestamps and
+resource use are not promised equal.
 
-Default pytest output should remain available, with structured reporting
-additive. Capture, TTY, color, warnings, and output destinations are part of the
-invocation contract; exact supported behavior remains an open WP00 decision.
+Control messages use the private channel, never stdout/stderr. PT diagnostics
+are distinct from backend output. Structured reporting is additive and explicit;
+do not silently redirect pytest's requested report/coverage paths to make
+verification easier. If a required artifact location/plugin cannot satisfy the
+declared verification contract, classify that feature as unavailable before
+work where possible; late failure retains effects and cannot become green.
 
-### Proposed terminal outcome mapping
+One invocation owns one fresh process group and its ordinary, non-detached
+members, including residual members after leader exit. Timeout/cancellation
+terminates that boundary with a separate bounded cleanup deadline. Keep leader
+identity allocated through final signaling, then reap it. Unverifiable cleanup
+is not success. Detached/hostile descendants, external services, uninterruptible
+kernel waits and coordinator SIGKILL are not solved by a process group. Never
+promise teardown after a hard kill. See the [threat model](threat-model.md).
 
-This table is a draft to review and test, not implemented behavior. A pytest exit
-code is preserved only after all PT completion checks relevant to the result
-pass. In particular, a backend zero cannot override incomplete reporting, failed
-cleanup, or uncertain/superseded generation integrity.
+## Completion and typed exits
 
-| Condition | Proposed terminal category | Proposed process exit |
+The [protocol contract](protocol-draft.md) and
+[final-result schema](final-result-v0.schema.json) define the 32 event kinds,
+collection/selection partitions, attempt/phase arithmetic, artifact assertions
+and flags. Their synthetic tests do not authenticate producers, verify real work,
+read artifacts, validate an installed environment or establish an immutable
+generation. A checksum/`verified: true` supplied by a project is not verification.
+
+Current full success requires nonempty full execution, complete authoritative
+work/phase accounting, reporting, independently verified required artifacts and
+environment, required cleanup, and current immutable-snapshot assurance over the
+declared input domain. Collect-only completes collection, not execution; no-tests
+is not a full success; fail-fast and interrupted work remain explicit. Unknown
+external inputs, stale/uncertain generation or live-tree-only observations cannot
+satisfy this baseline's strict full-success assertion. These are product gates,
+not a claim that snapshot/runtime identity verification already exists.
+
+| Outcome | Condition | CLI exit |
 |---|---|---|
-| Completed pytest session with valid accounting and finalization | `backend_completed` with original backend code | Preserve pytest's code: 0 success, 1 tests failed, 2 interrupted, 3 internal error, 4 usage error, 5 no tests collected. |
-| Invalid PT configuration or unsupported required profile before execution | `configuration_error` | 4 (usage error). |
-| PT bridge/protocol failure, missing reports, failed required artifact commit, or failed required cleanup | `infrastructure_error` with typed cause | 3 (internal error), even if pytest returned 0. |
-| Relevant source generation superseded or integrity uncertain | `generation_invalid` with assurance and cause | 3; never current full-run success. |
-| PT-enforced timeout | `timeout` with phase, interrupted work, cleanup and teardown limitations | 3, unless a documented platform signal policy applies. |
-| Explicit cancellation or user interruption | `interrupted` with origin and cleanup status | 2 when represented as an ordinary exit; platform signal termination remains distinct. |
-| Child terminated by signal or an undocumented backend status | `backend_terminated` with raw status and signal when available | Platform-appropriate propagation is unresolved; must not become success. |
+| `backend_completed` | Pytest completed with all applicable accounting, identity and finalization gates | Original 0–5: success, test failure, backend interruption, internal error, usage error, no tests. |
+| `configuration_error` | Invalid PT input, interpreter selection, cwd or required feature before work | 4 |
+| `unsupported_profile` | Required platform/version/backend/feature unavailable before work | 4; no implicit passthrough |
+| `launch_error` | Validated launch failed at the OS boundary | 3; no replay |
+| `backend_terminated` | Raw child signal or undocumented backend exit | Linux `128 + signal`; undocumented code maps to 3; raw status retained |
+| `timeout` | PT execution deadline | 3, even if the child later exits zero |
+| `interrupted` | PT signal/explicit cancellation | 2, even after later zero; signal/origin retained |
+| `infrastructure_error` | Required protocol/accounting/I/O/report/artifact/supervision/cleanup failure | 3; preserve secondary test failures |
+| `generation_invalid` | Required source/input generation assurance not current or verifiable | 3; never current full success |
+| `abandoned` | Recovery finds unfinished coordinator state | 3; no executing-session reattachment |
 
-An affected run that completes successfully may return 0, but its typed result
-must label the scope and cannot update full-suite success. A completed pytest
-no-tests exit stays 5; missing accounting must not be mistaken for no tests.
-Configuration failure and timeout mappings need compatibility review. If a
-completed backend error and a PT infrastructure error both occur, preserve both
-in the structured result; the user-facing exit follows the reviewed precedence
-policy, not a silently discarded cause. Exact signal handling and precedence
-remain open.
+After launch the precedence is independent infrastructure/required-cleanup
+failure, invalid generation, first observed PT timeout/cancellation, raw signal
+or undocumented exit, then completed pytest status. Retain secondary causes and
+the raw trace/status. Known death/stop can explain missing terminal reports
+without inventing an independent error. An unexplained zero/EOF cannot. A Linux
+signal mapping is an ordinary CLI exit, not a claim PT itself was OS-signaled.
 
-## Integrity and safety
+Help/version success and `doctor` metadata success are control-operation results,
+not test results. Diagnostic `process_exited` preserves an arbitrary child code
+only after process cleanup; it is deliberately absent from the full-test-result
+schema. Invalid unnormalizable CLI input need not invent run IDs or a test
+inventory. The implementation must classify its own I/O/publication failures;
+the present prototype is not claimed to cover every such adverse path yet.
 
-Live-tree observation must not claim immutable-snapshot assurance. A hard
-timeout terminates the owned execution boundary and records interrupted work and
-lost teardown guarantees. This is process supervision, not a sandbox for hostile
-tests. No cached pickle is executed and no raw credentials are exported in plans.
+## Review disposition and implementation gates
 
-## Remaining WP00 work
-
-Freeze and review the exact support matrix and invocation profiles; draft the
-protocol, threat model, benchmark charter and ADR001–ADR006; specify every exit
-path and output behavior; and review all C01–C12 invariants and the adverse cases
-in section 14.3. No optimization or conformance claim is approved by this draft.
+[C01–C12 and every section 14.3 adverse group](invariant-review.md) were reviewed
+against these definitions; actual oracle, plugin, coverage, edit-race and fault
+tests remain mandatory. [WP00's acceptance record](wp00-review.md) closes the
+baseline definition review only. WP01–WP03, WP04 completion, WP05's real observer,
+generation assurance, production protocol/security and release review are not
+waived. No optimization, support profile or performance claim is enabled here.

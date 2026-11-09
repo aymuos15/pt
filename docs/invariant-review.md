@@ -1,4 +1,4 @@
-# Correctness invariants: preliminary review
+# Correctness invariants: design review and qualification map
 
 Status: **engineering self-review map, not qualification evidence**. This traceability
 map identifies the evidence needed to review C01–C12 in section 2.2 of the

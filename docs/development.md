@@ -1,8 +1,9 @@
 # Development environment — provisional
 
 These are reproducibility choices for developing the current prototype, not a
-qualified PT support matrix or proof of artifact provenance. WP00 has a bounded
-baseline engineering self-review, not independent qualification. The selected initial target is Linux x86-64,
+qualified PT support matrix or proof of artifact provenance. WP00's conservative
+definition/engineering self-review is complete (`wp00-review.md`), not independent
+qualification. The selected initial target is Linux x86-64,
 GIL-enabled CPython 3.12.12 and pytest 8.4.2.
 
 - `rust-toolchain.toml` selects Rust **1.99.1** with rustfmt and clippy. With

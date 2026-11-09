@@ -183,6 +183,11 @@ incoming byte, queue and decoding limits. Oversize work fails visibly without
 rerunning it. Queue/backpressure stall is bounded by the execution/cleanup
 deadlines; output must not be buffered indefinitely or used as a control channel.
 
+The [threat-model review](threat-model.md) adds production-reader requirements
+(at most two pending wire frames/2 MiB payloads and JSON depth 32), restrictive
+artifact ownership, explicit storage budgets and channel-bound producer roles.
+These are not features of the decoded test checker or a new qualification claim.
+
 ## Evidence and open implementation gates
 
 [Synthetic contract tests](../tests/contracts/README.md) cover valid/failure

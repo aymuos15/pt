@@ -15,5 +15,5 @@ stdin_profiles = ["non-terminal input; interactive job control pending qualifica
 evidence = "Pytest-only feasibility probes; no PT conformance. See docs/baseline-contract-v1.md."
 
 [unsupported]
-default = "Report unsupported or require explicit passthrough; do not claim conformance."
+default = "Reject unsupported profiles before work; no implicit or currently implemented passthrough; do not claim conformance."
 examples = ["Other versions and operating systems pending qualification", "Free-threaded Python", "Alternative Python implementations"]

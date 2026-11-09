@@ -133,7 +133,9 @@ generation-valid full result is authorized without its assurance checks.
 WP00's baseline design choices are resolved for WP04. The later
 [protocol contract](protocol-draft.md) and final-result schema specify the
 catalog, accounting, bounds and failure precedence with synthetic checks, not a
-production implementation. Broader WP00 review and product qualification remain
-open (see `wp00-review.md`). WP01–03
-must still meet their acceptance gates before WP05. This review does not declare
-M0 complete, any support profile qualified, or any optimization permitted.
+production implementation. The later [WP00 acceptance review](wp00-review.md)
+completes the conservative contract/threat-model definition self-review and
+records additional channel-role, artifact/privacy and reader-limit requirements.
+It does not close product qualification. WP01–03 must still meet their acceptance
+gates before WP05. Neither review declares M0 complete, any support profile
+qualified, or any optimization permitted.

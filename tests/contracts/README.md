@@ -20,6 +20,10 @@ verification flags are synthetic placeholders. `validate_trace` always returns
 - `test_final_result.py`: independent schema tests, all ten typed terminal
   outcomes (including a schema-only recovery example), exact documented pytest
   exit mapping, and rejection of false completion claims.
+- `test_wp00_review.py`: documentation/pin traceability guards for the authored
+  acceptance review, all permissions/outcomes/invariants/threats/ADRs, remaining
+  gates and links. These check record consistency, not semantic review quality,
+  implementation, security, qualified support or campaign acceptance.
 - `../../bench/harness/tests/test_protocol_draft.py`: per-message schema/examples,
   all 32 kinds, producer roles and exact target handshake; kept separate from
   the contract ledger suite.
