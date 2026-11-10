@@ -245,3 +245,85 @@ immutable-generation assurance, generic coverage/exception completeness and
 independent release prerequisites stay open. Successful `pt run` is not enabled.
 The subsequent [WP06 tree-identity prerequisite](wp06-status.md) adds bounded
 endpoint byte/mode/link-text observations, not those environment/generation gates.
+
+## Owned request/failure-result integration (base 7e0e735)
+
+[`pt-coordinator`](../crates/pt-coordinator/README.md) now captures an exact
+bounded invocation, requested scope, distinct coordinator producer and owned
+report declarations before a single native session. Only that live owned
+session's readiness claims can be committed through that request's private
+store. No unrelated caller-supplied process/snapshot/hash or saved artifact can
+be substituted. The process, immutable request, store states and failure result
+stay together, including unavailable final records. Pure report-declaration
+validation opens no path and runs no interpreter.
+
+Qualified work remains **unsupported before launch**, not silently downgraded to
+a diagnostic. A separately explicit development observer can exercise the
+integration without certifying support. It does not change argv/environment,
+select/bootstrap Python, suppress plugins, add collection or replay effects.
+It produces only nonzero revision-1 failure records: there is no positive
+environment/current immutable-generation authority or `backend_completed` /
+current-full-success constructor. A requested full-scope label alone also
+cannot establish effective full work. An explicitly supplied matching-root
+endpoint tree remains uncertain/live-tree, not an immutable snapshot.
+
+Request/rejection, report declaration/publication/failure, actual worker return,
+cleanup and optional live-tree records use existing protocol **0 / revision 1**
+shapes. They are a bounded **coordinator-origin diagnostic subset**, not a
+complete environment-resolved merged stream. No fake interpreter/installed hash
+or environment-resolution event fills an unknown gate. No schema is weakened.
+
+A real contract representation limit is explicit: revision 1 requires numeric
+accounting fields and cannot encode a lost reader's unknown counters. In that
+case the final record is **unavailable**, not a fabricated empty execution. Its
+owned native observation remains accessible. Record/summary limits and wrong-
+request generation association likewise preserve the observation rather than
+reconstructing completion. JUnit context errors remain separately available;
+diagnostic partial content never satisfies required completeness. Optional
+publication errors, pending/missing readiness and uncertain publication remain
+distinct native states.
+
+Development failures are preserved. The first compile used a nonexistent
+`Accounting::default`; an explicit known-not-started constructor corrected that
+prelaunch path, not unknown postlaunch accounting. The first executing control
+run was **10 passed / two failed**: synthetic output files inherited a
+group-writable umask and the native artifact guard correctly rejected them.
+A retained negative reproduction at
+`/tmp/opencode/pt-coordinator-report-failure-control-de0out9c` contains actual
+Cargo exit **101** and `artifact_file_type_owner_link_or_bound` publication
+failure. The fixture now explicitly creates **its own new declared files** as
+0600 before its synthetic producer truncates/writes them. No production guard,
+user output, dependency or existing file permission was relaxed/repaired.
+
+The final **locked offline release workspace passed 180 tests**, no skips;
+strict clippy and rustfmt passed. The new **14 coordinator methods plus four
+real-pytest methods / ten requests** cover both entrypoints, fresh shared state /
+fixture/import effects, intentional failure, fail-fast, collect-only/no-tests,
+interruption/SIGKILL, unsupported outer finalization and an actual JUnit file
+without readiness. Raw codes/effects remain; that last report stays pending,
+not adopted through an independent oracle hash. Existing session/JUnit controls
+and the explicitly configured two-private-prefix reproduction passed again.
+
+Evidence at `/tmp/opencode/pt-coordinator-final-verification-rca437le` retains
+**44 coordinator cases**: **34 actual process reports** (**32 launched PIDs /
+two not-launched**), **eight constructor rejections**, one qualified prelaunch
+rejection and one pure validation-only control. One wrong-root finalization
+is retained as **record unavailable**, with its actual zero process status, not
+invented counts. The **34 schema/projection probes** cover 33 available live /
+not-launched records plus the qualified rejection; they are not 34 qualified
+test runs. The independent offline checker imports no PT code, resolves only
+the local schemas and checks raw exit/signal/stop/cleanup projection separately.
+It does not authenticate producers, complete merged trace causality or real-work
+truth. Every checked coordinator CLI code is nonzero, environment verification
+false and current-full-success false.
+
+All **49 prior Cargo package identities/checksums** remain; only local
+**pt-coordinator 0.0.0** is added, with no registry change. Frozen native/test /
+schema sources stayed fixed. Existing bridge, Python dependency, support,
+toolchain, protocol/result schema and candidate files are unchanged. No unchanged
+large Python harness campaign is relabelled as new coordinator qualification.
+Complete launch/environment/generation, positive finalization, rich artifacts,
+abandonment/durable reporting and independent release gates remain open.
+Static precommit read-back checked **81 local links**, seven unchanged pin /
+candidate/schema files, unchanged bridge modules, Python test syntax and all
+still-matching frozen native/test/schema sources.

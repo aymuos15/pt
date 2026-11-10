@@ -305,6 +305,27 @@ pub struct ArtifactDeclaration {
     /// Explicit pinned formatter policy; this alone is not runtime evidence.
     pub junit_policy: Option<JunitPolicy>,
 }
+impl ArtifactDeclaration {
+    /// Pure declaration checks; opens/creates no paths and launches no process.
+    /// Per-store budgets and live source/publication evidence remain separate.
+    pub fn validate(&self) -> Result<()> {
+        require(
+            identifier(&self.artifact_id),
+            "artifact_declaration_id_invalid_or_duplicate",
+        )?;
+        components(&self.source, false)?;
+        if let Some(expected) = &self.expected_content {
+            require(
+                expected.bytes <= MAX_FILE_BYTES && sha256(&expected.sha256),
+                "artifact_expected_content_invalid",
+            )?;
+        }
+        require(
+            self.expected_content.is_none() || self.junit_policy.is_none(),
+            "artifact_completeness_policy_conflict",
+        )
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct ExpectedContent {
@@ -429,21 +450,17 @@ impl ArtifactStore {
         )?;
         let mut states = HashMap::new();
         for value in &declarations {
+            value.validate()?;
             require(
                 identifier(&value.artifact_id) && !states.contains_key(&value.artifact_id),
                 "artifact_declaration_id_invalid_or_duplicate",
             )?;
-            components(&value.source, false)?;
             if let Some(expected) = &value.expected_content {
                 require(
                     expected.bytes <= budget.per_file_bytes && sha256(&expected.sha256),
                     "artifact_expected_content_invalid",
                 )?;
             }
-            require(
-                value.expected_content.is_none() || value.junit_policy.is_none(),
-                "artifact_completeness_policy_conflict",
-            )?;
             if let Some(policy) = &value.junit_policy {
                 require(
                     policy.limits().bytes <= budget.per_file_bytes,

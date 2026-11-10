@@ -179,6 +179,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pt-coordinator"
+version = "0.0.0"
+dependencies = [
+ "pt-identity",
+ "pt-process",
+ "pt-protocol",
+ "pt-report",
+ "pt-session",
+ "serde_json",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
 name = "pt-identity"
 version = "0.0.0"
 dependencies = [

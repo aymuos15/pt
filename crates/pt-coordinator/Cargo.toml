@@ -1,0 +1,22 @@
+[package]
+name = "pt-coordinator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Bounded owned request/failure-result integration; qualified launch remains unavailable"
+
+[dependencies]
+pt-process = { path = "../pt-process" }
+pt-protocol = { path = "../pt-protocol" }
+pt-session = { path = "../pt-session" }
+pt-report = { path = "../pt-report" }
+pt-identity = { path = "../pt-identity" }
+serde_json.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

@@ -16,6 +16,10 @@ operations from `/`; one-time string-prefix/canonicalization checks are not the
 boundary. Symlinked directory components, traversal, aliases such as `a/./b`,
 existing private roots and an unowned/other-writable retention parent fail.
 
+`ArtifactDeclaration::validate` also exposes the pure ID/path/content-policy
+checks before any root creation or process launch. It does not validate live
+bytes, per-store budgets, writers, environment or generation.
+
 The new root is 0700; retained files are exclusively created as 0600. Each source
 must be an owned bounded regular file with one link and no group/world write bit.
 Leaf symlinks, hardlinks, FIFOs, devices, directories and other unsafe inputs are

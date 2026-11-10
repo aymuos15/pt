@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/pt-process", "crates/pt-cli", "crates/pt-protocol", "crates/pt-report", "crates/pt-session", "crates/pt-identity"]
+members = ["crates/pt-process", "crates/pt-cli", "crates/pt-protocol", "crates/pt-report", "crates/pt-session", "crates/pt-identity", "crates/pt-coordinator"]
 resolver = "3"
 
 [workspace.package]

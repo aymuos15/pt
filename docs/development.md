@@ -110,6 +110,14 @@ never repairs or ignores extras. Its optional private-prefix reproduction needs
 explicit archive-manifest/prefix inputs; full environment/startup closure and
 immutable/current generation assurance remain separate blocked gates.
 
+The [owned coordinator diagnostic component](../crates/pt-coordinator/README.md)
+binds one exact request, live session, report store and nonzero failure result.
+`PT_COORDINATOR_CASE_ROOT` retains its new test cases and independent offline
+record/raw-process projection probes. Qualified launch is still rejected before
+work; the explicit development observer is not a fallback or successful runner.
+Unknown reader accounting cannot fit revision 1 and therefore produces an
+unavailable final record, never zero counts or saved-file recovery.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

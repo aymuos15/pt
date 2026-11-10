@@ -24,6 +24,9 @@ adapter; unknown/unsupported report completeness stays blocked. The
 reading, actual process/cleanup and serial accounting, not a full result.
 The [declared-tree identity prerequisite](docs/wp06-status.md) checks expected
 bytes/modes/link text without claiming a complete environment or immutable source.
+An [owned request/failure-result component](crates/pt-coordinator/README.md) now
+joins those observations for explicit development diagnostics; qualified requests
+are rejected before launch while the required gates remain unresolved.
 The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.
