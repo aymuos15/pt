@@ -86,6 +86,12 @@ disposable Python integration environments; `PT_OBSERVER_TEST_PYTHON` selects an
 already prepared native-test interpreter. Exact file/artifact/generation and
 supported-launcher gates still prevent enabling successful `pt run`.
 
+The [native artifact component](wp09-status.md) independently checks owned file
+bytes/bindings and bounded private no-overwrite retention after actual writer
+cleanup. It has an explicit pinned SHA-256 dependency and deliberately cannot
+promote a ready/hash claim into generic required-report completeness. This is
+not a substitute for a format adapter, source snapshot or qualified full result.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

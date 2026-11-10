@@ -112,6 +112,8 @@ runtime/environment or immutable-generation proof.
 - Independently verify required output/coverage/exception artifact locations,
   bytes and no-overwrite commit **after writer reaping and required cleanup**.
   Additive artifact requirements cannot be inferred from a ready claim or JUnit.
+  The subsequent [native retention foundation](wp09-status.md) now checks bytes /
+  publication, but generic required format/accounting completeness is still open.
 - Establish complete interpreter/installed/plugin/host identity and immutable
   generation assurance over the explicit requested input domain. End hashes and
   live-tree observations are not proof against transient edit-and-revert.

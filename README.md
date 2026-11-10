@@ -17,6 +17,9 @@ private-socket handoff and bridge framing primitives are also implemented as
 development components. A [bounded Rust bridge decoder and serial ledger](crates/pt-protocol/README.md)
 now check necessary stream/accounting conditions, not a complete backend or
 artifact/environment/generation certification. The initial
+bounded [artifact-retention component](crates/pt-report/README.md) also verifies
+owned bytes/publication after cleanup; unknown report completeness stays blocked.
+The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.
 WP00's conservative contract/threat-model engineering self-review is complete;
