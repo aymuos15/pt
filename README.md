@@ -45,6 +45,8 @@ this does not qualify a runner or close the later work-package/release gates.
   [initial corpus probes](bench/corpus/README.md): incomplete WP01/WP02 work.
 - [WP02 serial-core corpus progress](docs/wp02-status.md): explicit test-owned
   inputs and two clean locked materializations, not representative/oracle qualification.
+- [WP03 reference oracle progress](docs/wp03-status.md): same-session occurrence /
+  phase traces, independent broken controls and coverage/artifact checks; no PT qualification.
 - [WP01 timing evidence and open prerequisites](docs/wp01-status.md): observed
   stage boundaries, negative controls, and explicit endpoint exclusions.
 - [Publication-inclusive observation endpoint](docs/wp01-lifecycle.md): committed

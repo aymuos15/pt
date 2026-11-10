@@ -76,9 +76,11 @@ unrelated cache was reset; no performance/corpus result is inferred from this.
 - No implicit interpreter substitution, auto-installation, or `pt run` fallback.
   Actual pytest entrypoint/profile enforcement and bridge compatibility must be
   integrated with the same-session backend, not inferred from `doctor` output.
-- WP01/WP02 acceptance remains incomplete; WP03's authoritative phase-level
-  oracle and broken-runner controls do not exist yet. WP05 cannot claim parity
-  from the harness's JUnit or coverage-line comparisons.
+- WP01/WP02 acceptance remains incomplete. [WP03's bounded reference oracle](wp03-status.md)
+  now observes real same-session occurrences/phases and exercises independent
+  broken controls, but its qualified corpus/environment/ecosystem acceptance
+  remains open. WP05 cannot claim parity from JUnit, phase equality alone or
+  limited training coverage comparisons.
 - Required work/artifact/generation accounting, private production bridge IPC,
   and full protocol catalog/fault handling remain unimplemented. Process-only
   results cannot be labelled complete generation-valid test results.

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:pt:test-only:reference-event:1",
+  "title": "Bounded test-only real-pytest reference JSONL event, not production IPC",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session", "seq", "monotonic_ns", "kind", "payload"],
+  "properties": {
+    "schema_version": {"const": 1, "type": "integer"},
+    "session": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "seq": {"type": "integer", "minimum": 1, "maximum": 25000},
+    "monotonic_ns": {"$ref": "#/$defs/count"},
+    "kind": {"enum": ["start", "collection_report", "inventory", "protocol_start", "protocol_finish", "phase", "warning", "backend_error", "interruption", "observer_error", "terminal"]},
+    "payload": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "start"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/start"}}}},
+    {"if": {"properties": {"kind": {"const": "collection_report"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/collection_report"}}}},
+    {"if": {"properties": {"kind": {"const": "inventory"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/inventory"}}}},
+    {"if": {"properties": {"kind": {"enum": ["protocol_start", "protocol_finish"]}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/identity"}}}},
+    {"if": {"properties": {"kind": {"const": "phase"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/phase"}}}},
+    {"if": {"properties": {"kind": {"const": "warning"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/warning"}}}},
+    {"if": {"properties": {"kind": {"enum": ["backend_error", "interruption"]}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/error"}}}},
+    {"if": {"properties": {"kind": {"const": "observer_error"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/observer_error"}}}},
+    {"if": {"properties": {"kind": {"const": "terminal"}}}, "then": {"properties": {"payload": {"$ref": "#/$defs/terminal"}}}}
+  ],
+  "$defs": {
+    "count": {"type": "integer", "minimum": 0},
+    "text_or_null": {"type": ["string", "null"]},
+    "outcome": {"enum": ["passed", "failed", "skipped"]},
+    "ordinals": {"type": "array", "maxItems": 256, "items": {"type": "integer", "minimum": 0, "maximum": 255}, "uniqueItems": true},
+    "start": {
+      "type": "object", "additionalProperties": false,
+      "required": ["python", "pytest", "pid", "implementation", "platform", "machine", "gil_disabled", "collect_only", "maxfail", "continue_on_collection_errors", "argv"],
+      "properties": {
+        "python": {"const": [3, 12, 12]}, "pytest": {"const": "8.4.2"},
+        "implementation": {"const": "cpython"}, "platform": {"const": "linux"}, "machine": {"const": "x86_64"}, "gil_disabled": {"const": false},
+        "pid": {"type": "integer", "minimum": 1}, "collect_only": {"type": "boolean"},
+        "maxfail": {"$ref": "#/$defs/count"}, "continue_on_collection_errors": {"type": "boolean"},
+        "argv": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "identity": {
+      "type": "object", "additionalProperties": false, "required": ["ordinal", "nodeid"],
+      "properties": {"ordinal": {"type": "integer", "minimum": 0, "maximum": 255}, "nodeid": {"type": "string", "minLength": 1}}
+    },
+    "collection_report": {
+      "type": "object", "additionalProperties": false,
+      "required": ["nodeid", "outcome", "result_count", "failure_message", "diagnostic_longrepr"],
+      "properties": {"nodeid": {"type": "string"}, "outcome": {"$ref": "#/$defs/outcome"}, "result_count": {"$ref": "#/$defs/count"},
+                     "failure_message": {"$ref": "#/$defs/text_or_null"}, "diagnostic_longrepr": {"$ref": "#/$defs/text_or_null"}}
+    },
+    "inventory": {
+      "type": "object", "additionalProperties": false, "required": ["collected", "selected", "deselected"],
+      "properties": {"collected": {"type": "array", "maxItems": 256, "items": {"$ref": "#/$defs/identity"}},
+                     "selected": {"$ref": "#/$defs/ordinals"}, "deselected": {"$ref": "#/$defs/ordinals"}}
+    },
+    "phase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ordinal", "nodeid", "when", "outcome", "wasxfail", "failure_message", "diagnostic_longrepr", "sections", "duration"],
+      "properties": {
+        "ordinal": {"type": "integer", "minimum": 0, "maximum": 255}, "nodeid": {"type": "string", "minLength": 1},
+        "when": {"enum": ["setup", "call", "teardown"]}, "outcome": {"$ref": "#/$defs/outcome"},
+        "wasxfail": {"$ref": "#/$defs/text_or_null"}, "failure_message": {"$ref": "#/$defs/text_or_null"},
+        "diagnostic_longrepr": {"$ref": "#/$defs/text_or_null"}, "duration": {"type": "number", "minimum": 0},
+        "sections": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string"}}}
+      }
+    },
+    "warning": {
+      "type": "object", "additionalProperties": false, "required": ["category", "message", "when", "nodeid"],
+      "properties": {"category": {"type": "string"}, "message": {"type": "string"}, "when": {"type": "string"}, "nodeid": {"type": "string"}}
+    },
+    "error": {
+      "type": "object", "additionalProperties": false, "required": ["exception_type", "message"],
+      "properties": {"exception_type": {"type": "string"}, "message": {"type": "string"}}
+    },
+    "observer_error": {
+      "type": "object", "additionalProperties": false, "required": ["reason"], "properties": {"reason": {"type": "string"}}
+    },
+    "terminal": {
+      "type": "object", "additionalProperties": false, "required": ["exit_status", "reports", "executed", "stop_reason", "observer_errors"],
+      "properties": {"exit_status": {"type": ["integer", "null"]}, "reports": {"$ref": "#/$defs/count"}, "executed": {"$ref": "#/$defs/count"},
+                     "stop_reason": {"$ref": "#/$defs/text_or_null"}, "observer_errors": {"type": "array", "items": {"type": "string"}}}
+    }
+  }
+}

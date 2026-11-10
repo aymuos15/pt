@@ -34,6 +34,7 @@ cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo build --locked --release -p pt-cli
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/contracts -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/conformance -v
 uv run --locked --project bench/harness --python 3.12.12 python bench/harness/corpus_inventory.py bench/corpus/manifest.toml
 ```
 
@@ -47,6 +48,12 @@ The separate `tests/contracts` suite checks synthetic decoded protocol/result
 assertions using schemas and a test-only ledger. It does not implement the
 production bridge, artifact/environment/generation verification, or WP03's real
 semantic oracle. See `../tests/contracts/README.md`.
+
+The separate [WP03 reference oracle](wp03-status.md) now observes real pytest's
+same-session occurrences/phases and independently checks adverse controls,
+declared effects, artifacts and coverage sets. It is test-only instrumentation,
+not a production bridge or support qualification. Its README gives an explicit
+source-frozen, raw-evidence-retaining command; no dependency pins are changed.
 
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do

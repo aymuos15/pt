@@ -83,8 +83,9 @@ lock, support matrix, Rust toolchain and Cargo lock match the prior commit exact
   bytecode/cache/service contracts for the actually claimed scope.
 - Freeze training/confirmatory/holdout partitions before optimization tuning;
   this test-owned training set is not untouched confirmation evidence.
-- Implement WP03's actual same-session occurrence/phase observer, narrow comparator
-  and independent broken-runner controls; then use it to qualify corpus outcomes.
+- Extend [WP03's bounded actual-reference oracle](wp03-status.md) and independent
+  broken-runner controls to reviewed qualified corpus/environment profiles; finite
+  training traces and effects alone do not qualify broader corpus outcomes.
 - Complete WP01 acceptance, WP04/backend/protocol integration, real pytest parity,
   ecosystem and release gates under the original dependency roadmap. No runner
   speedup, `pt run` availability, full-corpus score or independent review is claimed.
