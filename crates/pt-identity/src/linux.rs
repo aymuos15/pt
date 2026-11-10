@@ -21,6 +21,8 @@ pub use elf::{
     ELF_INPUT_POLICY_ID, ElfDynamicEntry, ElfLimits, ElfLoadInputs, ElfProgramHeader,
     ElfStringInput, ElfStringKind,
 };
+mod elf_file;
+pub use elf_file::{ELF_FILE_POLICY_ID, ElfFileObservation};
 #[derive(Debug)]
 pub struct IdentityError {
     code: &'static str,

@@ -8,8 +8,8 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::ffi::OsStr;
 use std::fs;
-use std::io::{Read, Write};
-use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
+use std::io::Write;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
@@ -143,47 +143,10 @@ fn both_complete_private_prefixes_match_the_archive_derived_declared_tree() {
         assert_eq!(observed.bytes_hashed(), observed.file_bytes() * 2);
         assert_eq!(closed.links(), 1048);
         assert_eq!(closed.resolution_steps(), 1648);
-        let mut file = fs::OpenOptions::new()
-            .read(true)
-            .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK | nix::libc::O_CLOEXEC)
-            .open(root.join("bin/python3.12"))
-            .unwrap();
-        let before = file.metadata().unwrap();
-        assert!(before.is_file() && before.nlink() == 1 && before.len() <= 128 * 1024 * 1024);
-        let mut image = Vec::new();
-        let mut chunk = [0; 65536];
-        loop {
-            assert!(Instant::now() < deadline);
-            let size = file.read(&mut chunk).unwrap();
-            assert!(Instant::now() < deadline);
-            if size == 0 {
-                break;
-            }
-            assert!(image.len() + size <= 128 * 1024 * 1024);
-            image.extend_from_slice(&chunk[..size]);
-        }
-        let stamp = |value: fs::Metadata| {
-            (
-                value.dev(),
-                value.ino(),
-                value.mode(),
-                value.nlink(),
-                value.len(),
-                value.mtime(),
-                value.mtime_nsec(),
-                value.ctime(),
-                value.ctime_nsec(),
-            )
-        };
-        assert_eq!(stamp(file.metadata().unwrap()), stamp(before));
-        assert_eq!(
-            stamp(fs::symlink_metadata(root.join("bin/python3.12")).unwrap()),
-            stamp(file.metadata().unwrap())
-        );
-        let elf = manifest
-            .inspect_declared_elf(
+        let live = manifest
+            .inspect_live_declared_elf(
+                &root,
                 std::path::Path::new("bin/python3.12"),
-                &image,
                 ElfLimits {
                     program_headers: 128,
                     dynamic_entries: 4096,
@@ -193,6 +156,11 @@ fn both_complete_private_prefixes_match_the_archive_derived_declared_tree() {
                 },
             )
             .unwrap();
+        assert_eq!(live.root_device_inode(), observed.root_device_inode());
+        let leaf = fs::symlink_metadata(root.join("bin/python3.12")).unwrap();
+        assert_eq!(live.file_device_inode(), (leaf.dev(), leaf.ino()));
+        let elf = live.metadata();
+        assert_eq!(live.bytes_hashed(), elf.image_bytes() * 2);
         assert_eq!(
             elf.interpreter(),
             Some(b"/lib64/ld-linux-x86-64.so.2".as_slice())
@@ -307,6 +275,7 @@ fn both_complete_private_prefixes_match_the_archive_derived_declared_tree() {
         assert_eq!(oracle["entry_point"], elf.entry_point());
         assert_eq!(oracle["search"], json!([["RPATH", "$ORIGIN/../lib"]]));
         reports.push(json!({"root":root,"entries":observed.entries(),"files":observed.files(),"symlinks":observed.symlinks(),"directories":observed.directories(),"file_bytes":observed.file_bytes(),"bytes_hashed":observed.bytes_hashed(),"manifest_sha256":observed.manifest_sha256(),"declared_relative_links":{"policy_id":closed.policy_id(),"links":closed.links(),"component_steps":closed.resolution_steps(),"maximum_dereferences":closed.maximum_dereferences(),"resolution_sha256":closed.resolution_sha256()},
+            "declared_elf_file":{"policy_id":live.policy_id(),"root_device_inode":live.root_device_inode(),"file_device_inode":live.file_device_inode(),"bytes_hashed":live.bytes_hashed(),"exhaustive_tree_verified_by_file_inspection":false,"execution_authorized":false},
             "declared_elf_load_inputs":{"policy_id":elf.policy_id(),"path":elf.path(),"image_sha256":elf.image_sha256(),"image_bytes":elf.image_bytes(),"bytes_hashed":elf.bytes_hashed(),"object_type":elf.object_type(),"os_abi":elf.os_abi(),"entry_point":elf.entry_point(),"interpreter":std::str::from_utf8(elf.interpreter().unwrap()).unwrap(),"needed":needed,"string_inputs":strings,"program_headers":headers,"dynamic_entries":dynamic,"used_dynamic_entries":elf.used_dynamic_entries(),"target_executed":false,"dependency_resolution_verified":false,"environment_verified":false},"qualified":false}));
     }
     if let Some(path) = evidence {

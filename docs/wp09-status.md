@@ -642,3 +642,9 @@ The following [non-executing ELF input projection](wp06-status.md) passed its
 readelf/struct comparisons. It preserves the earlier strict-clippy failure and
 not-run stage, keeps image hashing separate from tree-walk costs, and supplies
 no loader-resolution, complete environment, generation or positive-result token.
+
+The following native live-file ELF association passed **225 release tests** and
+the same complete protected-input sequence. It pins root/parent/leaf bindings and
+performs a second file hash after parsing, but explicitly certifies neither
+unrelated manifest entries nor a later executable open. No coordinator success
+or environment/generation gate is enabled by that observation.

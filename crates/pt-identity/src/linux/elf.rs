@@ -22,7 +22,7 @@ pub struct ElfLimits {
     pub projected_string_bytes: usize,
 }
 impl ElfLimits {
-    fn validate(self) -> Result<()> {
+    pub(super) fn validate(self) -> Result<()> {
         require(
             (1..=128).contains(&self.program_headers)
                 && (1..=4096).contains(&self.dynamic_entries)

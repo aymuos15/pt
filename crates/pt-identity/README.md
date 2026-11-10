@@ -173,6 +173,45 @@ not certified. Missing interpreter/dynamic data is metadata absence, not proof
 that no runtime loading occurs. No full-success or environment-verification API
 is added; no saved blob can recover a lost execution return.
 
+## Native live-file association for declared ELF bytes
+
+`inspect_live_declared_elf(absolute_root, relative_path, ElfLimits)` adds native
+file association under **`linux-live-declared-elf-file-v1`**. It pins all root
+ancestors from `/`, then opens each declared relative parent and the regular
+leaf through no-follow operations. Root/parent/leaf modes, file size/mtime,
+single-link identity, open/named bindings and the original deadline must agree.
+It never follows an executable alias or discovers expected bytes from the file.
+
+The first bounded read supplies the existing full-hash ELF projection. After
+parsing, the input buffer is released and a **second independent native byte
+read/hash** must still match the original expected content. Stat agreement alone
+cannot replace this read. Native root/parent/leaf bindings are checked again
+before return. Errors preserve the failing relative path and return no successful
+observation; no changed input is repaired, deleted, reopened for retry or executed.
+
+`ElfFileObservation` exposes read-only root/file device+inode associations and
+the existing metadata projection, **not an execution FD or launch token**.
+Its `bytes_hashed()` counts two complete image hashes; the nested metadata's
+single hash is **included in that total**, not an additional third hash. Neither
+count includes any separately requested exhaustive tree walks. The caller must
+charge all requested work rather than add overlapping counters twice.
+
+This API verifies **one declared file and its parent chain only**. It deliberately
+does not enumerate siblings or certify the rest of the manifest. The metadata's
+tree digest binds expected declarations, not a claim that all of them were just
+verified. Use the separate exhaustive tree check when that domain is required.
+The private-prefix regression explicitly checks both domains and compares their
+root bindings; it does not merge them into a continuous snapshot.
+
+Root substitution, link/type/hardlink changes, parser/readback edits, synthetic
+metadata-guard neutralization, bounded growth/truncation, read faults and original
+deadline expiry have explicit controls. Synthetic controls are not native loader
+or corpus qualification. Endpoint checks still cannot rule out transient edits
+outside relevant reads, changes after return, writable aliases, or substitution
+before a later process opens its executable. Host alias/search/cache/library
+rules, runtime loads, complete environment identity and launch association remain
+separate gates; none is waived by a successful leaf observation.
+
 ## Explicit assurance exclusions
 
 Two serial walks are **endpoint observations, not an atomic snapshot**. A change

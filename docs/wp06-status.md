@@ -244,6 +244,65 @@ prerequisites, alongside the other open environment/startup/release gates.
 Final documentation read-back checked **89 local links** and all frozen source
 hashes again; no source or pin changed after the verified run.
 
+## Native live-file ELF association follow-up (base c8e96db)
+
+The next prerequisite replaces the prefix regression's ad hoc caller-side image
+read with native `inspect_live_declared_elf`. Policy
+**`linux-live-declared-elf-file-v1`** pins the root ancestor chain, declared
+parents and regular leaf using no-follow operations, checks expected modes /
+size/mtime and single-link/open/named bindings, and rehashes the actual file
+**after parsing** under the original manifest deadline. Input bytes are not
+adopted as expected truth, aliases are not followed, and failures never repair,
+delete or retry the source.
+
+Its opaque observation associates metadata with observed root/file device+inode
+bindings, not a reusable execution FD. It certifies neither siblings nor the
+whole live manifest; the separately requested exhaustive tree verification still
+rejects extras. The private-prefix regression compares both observations' root
+bindings explicitly. Two complete image hashes include the metadata projection's
+first hash; that nested counter is not an additional third read/hash. Neither
+is included in the separate tree-walk byte count.
+
+This does **not** solve later path-to-exec association, concurrent edit/revert,
+host alias/search/cache/library resolution, startup safety or complete immutable
+environment/generation authority. The new adversarial file controls and full
+verification are recorded only after their actual returns.
+
+The focused run at `/tmp/opencode/pt-live-elf-native-controls-uljd3yz2` passed
+**48 library / two integration-file methods**, strict workspace clippy and
+rustfmt, with no not-run stages or frozen-source changes. Sixteen added methods
+cover raw names, exact bounds/deadlines, nonregular/link/hardlink rejection,
+metadata/content changes, both-read growth/truncation, post-parse edits, root /
+parent / late-leaf substitution, synthetic read faults and explicit same-stat
+byte-guard isolation. A separate control requires an unrelated extra file to
+remain outside the leaf API's assurance while full-tree verification rejects it.
+
+The exclusive final run at
+`/tmp/opencode/pt-live-elf-protected-final-6efsritd/run` passed **all 12 stages,
+zero not-run**: **225 locked offline release Rust tests**, strict clippy/fmt,
+**74 integration / 63 oracle / 68 contract checks**, CLI/wheel builds, installed
+smoke and the additional post-setup prefix reproduction. The workspace run had
+no skips; the later prefix-only command deliberately filters the evidence-name
+control, which already ran in the complete suite.
+
+Independent read-back rechecked all **194 frozen source/pin/schema files**, the
+archive-derived entries, complete prefixes, all positive link resolutions and
+all four readelf/struct projections. Both native live-file root and leaf bindings
+agree with the independent actual device/inode observations. Each additional
+live-file verification hashes **55,635,280 bytes** (twice the 27,817,640-byte
+interpreter); its nested metadata count is included, not added again. Each
+separate tree observation still hashes **191,199,150 bytes**, with unchanged
+tree/link/image digests. Both protected 4,971-entry prefixes remain exact, parent
+mount flags are unchanged and the previously changed original inputs stay intact.
+
+All **50 Cargo package identities/checksums**, eight dependency/support/toolchain /
+candidate/schema pins and the bridge wheel identity remain unchanged. Python
+grammar and **89 local links** passed independent read-back. This accepts only
+the bounded native file-association prerequisite: no full tree, environment,
+immutable/current generation, executable handoff, corpus or release authority is
+minted by its result. The 22 coordinator pytest requests and 76 observer requests
+remain development controls, not qualified backend executions.
+
 ## Still required
 
 - Complete interpreter/build/ABI, installed distributions/plugins, editable /
