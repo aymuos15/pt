@@ -77,6 +77,8 @@ class Observer:
             from ._artifacts import DeclaredJunit
             self.junit_artifact = DeclaredJunit(settings["junit_artifact"], os.getcwd(), self.deadline)
         self.session = self.config = None
+        self.finalization = None
+        self.unconfigure_completed = False
         self.items, self.deselected, self.selected, self.nodeids = [], [], [], []
         self.ordinals, self.attempts, self.not_run = {}, {}, {}
         self.next_selected = 0
@@ -119,9 +121,17 @@ class Observer:
 
     def configure(self, config):
         self.config = config
-        config.add_cleanup(self.channel.close)
-        if self.junit_artifact is not None:
-            config.add_cleanup(self.close_artifacts)
+        from ._finalization import ConfigCleanupBoundary, FinalizationBoundaryError
+        try:
+            if type(config) is not pytest.Config:
+                raise FinalizationBoundaryError("unsupported Config implementation")
+            self.finalization = ConfigCleanupBoundary(config, self.after_config_cleanup)
+        except FinalizationBoundaryError:
+            try:
+                self.error("config_cleanup_boundary_unsupported", "the pinned finalization boundary is unavailable; callbacks were not suppressed or replayed")
+            finally:
+                self.close_artifacts()
+                self.channel.close()
         if bool(config.option.collectonly) != (self.settings["mode"] == "collect_only"):
             self.error("request_mode_mismatch", "actual pytest collection mode differs from the explicit request")
         if getattr(config.option, "numprocesses", None) not in (None, 0) or hasattr(config, "workerinput"):
@@ -132,6 +142,15 @@ class Observer:
     def close_artifacts(self):
         if self.junit_artifact is not None:
             self.junit_artifact.close()
+
+    def after_config_cleanup(self, *, cleanup_failed, boundary_complete):
+        try:
+            if not boundary_complete:
+                self.error("config_cleanup_boundary_unavailable", "the original Config cleanup stack was replaced or did not drain before observation", abort=False)
+            if cleanup_failed:
+                self.error("config_cleanup_failed", "a Config cleanup exception remains pending; native stderr and the actual process return retain its diagnostic", abort=False, category="infrastructure")
+        finally:
+            self.terminal(hooks_completed=self.unconfigure_completed and boundary_complete and not cleanup_failed)
 
     def session_start(self, session):
         self.session = session

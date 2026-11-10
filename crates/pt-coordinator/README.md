@@ -131,5 +131,13 @@ Properties remain rejected by the pinned native policy, and output removed by a
 finalizer remains pending with the actual read error/pytest return retained.
 This is not environment, startup, immutable generation or full-result authority.
 
+The Config-cleanup controls additionally retain callback/nested-registration
+effects and three fresh direct-pytest references. A report appended/removed by
+`Config.add_cleanup` is observed only after that cleanup. Cleanup exceptions
+remain actual nonzero process failures with partial output; removing the private
+boundary leaves missing-terminal accounting and pending output, never file-based
+recovery. A missing-terminal native observer may stop a still-live process; its
+actual stop/return is retained rather than requiring an invented raw zero.
+
 All production dependencies are existing local/pinned workspace identities; no
 new registry package/version is introduced.

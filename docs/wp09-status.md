@@ -546,3 +546,87 @@ immutable/current declared-input generations, a positive final result, coverage 
 rich exception completeness, native memory peaks, independent release review or
 authenticated release provenance. No accelerator, release or successful `pt run`
 is enabled.
+
+## Config cleanup finalization follow-up (base 683c23d)
+
+The pinned pytest Config runs `add_cleanup` callbacks **after** the unconfigure
+hook. Three retained real-pytest controls at
+`/tmp/opencode/pt-config-cleanup-red-controls-nz04d6w6` exposed premature producer
+readiness/terminal emission: a callback appended report bytes after hashing,
+another removed the report, and another raised an unobserved cleanup exception.
+Cargo returned **101: zero passed / three failed**. The native artifact/process
+checks still prevented qualification; this was a producer-ordering gap, not
+permission to adopt a missing or changed report or a claim of false full success.
+
+The new private CPython **3.12.12 / pytest 8.4.2** Config cleanup adapter places
+only its newly registered non-suppressing observer exit callback below the
+existing ExitStack entries. No pytest/user callback is removed, inspected,
+executed early or reordered relative to another original callback. The same
+queue retains ordinary LIFO behavior and callbacks registered during cleanup.
+Readiness/terminal emission now waits for that queue to drain. Unsuppressed
+exceptions retain their original propagation and become incomplete reporting /
+partial readiness with a generic infrastructure diagnostic; no arbitrary
+exception `str`/`repr` is requested for metadata.
+
+Unknown/replaced/transferred internals cannot inherit completion. A missing
+callback yields no terminal, not a recovered zero or file-based success. The
+adapter remains an explicit **private-internals restriction**, not support for
+arbitrary Config/ExitStack replacements, callback introspection, interpreter
+`atexit`, native-library shutdown, detached workers or external cleanup. The
+native actual return/EOF/required cleanup and independent artifact checks remain
+mandatory, as do all environment/generation/release gates. Protocol **0 /
+revision 1** and bootstrap schemas **1/2** are unchanged.
+
+Eight focused ordering/exception/lost-boundary controls passed. The first native
+follow-up at `/tmp/opencode/pt-config-cleanup-native-controls-6vjlbyfp` passed
+**ten methods**, before adding direct references and missing-stack controls.
+Three separate fresh direct-pytest references now check callback and nested
+registration order, import/fixture/body effects and actual returns. They are
+predeclared correctness controls, **not** automatic fallback/replay or an
+equal-configuration product-timing claim.
+
+The first expanded full attempt at
+`/tmp/opencode/pt-config-cleanup-protected-final-todqh6ul` returned **1**, native
+Cargo **101**: ten coordinator-pytest methods passed and one fault-control
+assertion failed. It incorrectly demanded a raw zero after removing the terminal
+boundary. The retained native report instead shows actual clean EOF with
+`MissingTerminal`, an observer-originated infrastructure stop of the still-live
+leader, raw **SIGKILL 9**, and complete cleanup. The required JUnit stayed pending
+and the result stayed failed. The fixture now permits only the exact native
+ordering alternatives—observed zero return or the missing-terminal stop with
+raw zero/SIGKILL—while retaining strict missing-terminal, incomplete accounting,
+pending output, no-adoption and no-retry assertions. No product failure guard or
+publication assertion was relaxed. Nine later commands were **not run**; both
+protected interpreter prefixes still matched after this failed attempt.
+
+The new exclusive final run at
+`/tmp/opencode/pt-config-cleanup-verified-final-lly6myda/run` passed **all 12
+planned commands, zero not-run**: **190 locked offline release Rust tests**,
+strict clippy/rustfmt, **74 integration checks / 76 observer requests**, **63
+oracle checks**, **68 contract checks**, release CLI/wheel builds and the
+installed-wheel smoke. All suites had no skips. Both exact 4,971-entry interpreter
+inputs still matched in native and independent post-setup/after-outer checks;
+parent mount flags remained unchanged. Earlier failures remain retained.
+
+The final denominator is **56 coordinator cases / 46 actual process reports**
+(**44 launched PIDs / two not-launched**), **22 coordinator pytest requests**,
+**46 independent schema/raw-process projection probes**, **eight XML/hash probes**
+and **three separate direct-pytest reference requests**. Direct/candidate cleanup
+and body/fixture/import effects and raw codes match for append, remove and raise.
+The appended report commits the complete named projection; removal stays pending;
+the cleanup exception retains raw **1** with partial content. Missing/transferred
+boundaries stay pending/incomplete: the retained final run observed raw **zero**
+for replacement and native **SIGKILL 9** for transfer, not invented equal exits.
+All coordinator result codes remain nonzero and every environment/current-full-
+success field remains false.
+
+The new unauthenticated development wheel SHA-256 is
+`4e973ca41e0a9f1614ebd0615f3d302fd4513a19e5a02acd1f68e4450ec286c1`.
+Its module bytes match the frozen source and both schema/entrypoint installed
+checks pass without ordinary-pytest autoload changes. Independent precommit
+read-back checked **188 frozen source/pin/schema files**, **50 unchanged Cargo
+package identities/checksums**, **eight unchanged lock/pin/candidate/schema files**,
+Python 3.12 grammar and **44 local links**. No protocol/dependency/support pin or
+external candidate allocation changed. This closes the bounded Config cleanup
+batch, not the complete runner, environment/startup/current-generation, coverage,
+native resource or independent/authenticated release gates.

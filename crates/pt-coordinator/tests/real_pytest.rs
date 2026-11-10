@@ -695,3 +695,234 @@ fn explicit_junit_read_failure_preserves_actual_pytest_zero_and_finalizer_effect
         "import\nsetup\nfirst\nsecond\nthird\nteardown\n"
     );
 }
+
+fn config_cleanup_case(id: &str, final_action: &str) -> (Case, FinishedRun) {
+    let conftest = format!(
+        r#"from pathlib import Path
+def effect(value):
+    with Path('config-cleanup-effects').open('a') as output: output.write(value+'\n')
+def pytest_configure(config):
+    def first():
+        effect('first')
+        {final_action}
+    def nested():
+        effect('nested')
+    def later():
+        effect('later')
+        config.add_cleanup(nested)
+    config.add_cleanup(first)
+    config.add_cleanup(later)
+def pytest_unconfigure(config):
+    effect('unconfigure')
+    config.add_cleanup(lambda: effect('from-unconfigure'))
+"#
+    );
+    let case = Case::new(id, SOURCE, Some(&conftest));
+    // A separately declared fresh direct-pytest reference, never an automatic
+    // runtime fallback or replay of the candidate's work. Raw return and effects
+    // are compared, not timestamp/duration/path normalization or shipping timing.
+    let plain = case.path.join("plain-reference");
+    private(&plain);
+    fs::write(plain.join("test_actual.py"), SOURCE).unwrap();
+    fs::write(plain.join("conftest.py"), &conftest).unwrap();
+    OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(plain.join("requested.xml"))
+        .unwrap();
+    let plain_request = ProcessRequest {
+        executable: "/usr/bin/env".into(),
+        args: vec![
+            "PYTHONDONTWRITEBYTECODE=1".into(),
+            python().into_os_string(),
+            "-B".into(),
+            "-m".into(),
+            "pytest".into(),
+            "-q".into(),
+            "--junitxml=requested.xml".into(),
+            "test_actual.py".into(),
+        ],
+        cwd: plain.clone(),
+        timeout: Duration::from_secs(30),
+        cleanup_timeout: Duration::from_secs(1),
+    };
+    fs::write(case.path.join("plain-reference-invocation.json"),serde_json::to_vec_pretty(&json!({"argv":plain_request.args.iter().map(|value|value.to_string_lossy().into_owned()).collect::<Vec<_>>(),"cwd":plain,"mode":"correctness_control_only","qualified":false})).unwrap()).unwrap();
+    let reference = supervise(&plain_request, &AtomicI32::new(0)).unwrap();
+    fs::write(
+        case.path.join("plain-reference-process.json"),
+        serde_json::to_vec_pretty(&reference).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(reference.cleanup, Cleanup::Complete);
+    let run = case.invoke(case.request_report(
+        id,
+        &["test_actual.py"],
+        RequestMode::Run,
+        InvocationProfile::PytestModule,
+        RequestedScope::Explicit,
+        Some(true),
+    ));
+    assert_eq!(
+        fs::read_to_string(case.work.join("config-cleanup-effects")).unwrap(),
+        "unconfigure\nfrom-unconfigure\nlater\nnested\nfirst\n"
+    );
+    assert_eq!(
+        fs::read_to_string(case.work.join("effects")).unwrap(),
+        "import\nsetup\nfirst\nsecond\nthird\nteardown\n"
+    );
+    assert_eq!(reference.exit_code(), run.session().process().exit_code());
+    for name in ["effects", "config-cleanup-effects"] {
+        assert_eq!(
+            fs::read(plain.join(name)).unwrap(),
+            fs::read(case.work.join(name)).unwrap()
+        );
+    }
+    (case, run)
+}
+
+#[test]
+fn config_cleanup_report_bytes_are_observed_after_callbacks_and_nested_registration_not_before_them()
+ {
+    let (case, run) = config_cleanup_case(
+        "declared-junit-config-cleanup-write",
+        "with Path('requested.xml').open('ab') as output: output.write(b'\\n')",
+    );
+    assert_eq!(run.session().process().exit_code(), 0);
+    case.check_junit_copy(&run, true);
+    assert!(
+        run.session()
+            .snapshot()
+            .unwrap()
+            .terminal
+            .as_ref()
+            .unwrap()
+            .reporting_complete
+    );
+}
+
+#[test]
+fn config_cleanup_removed_report_stays_pending_without_a_premature_readiness_claim() {
+    let (case, run) = config_cleanup_case(
+        "declared-junit-config-cleanup-remove",
+        "Path('requested.xml').unlink()",
+    );
+    assert_eq!(run.session().process().exit_code(), 0);
+    let snapshot = run.session().snapshot().unwrap();
+    assert!(snapshot.artifact_ready_claims.is_empty());
+    assert!(
+        snapshot
+            .session_errors
+            .iter()
+            .any(|value| value.code == "junit_artifact_observation_failed")
+    );
+    assert!(!snapshot.terminal.as_ref().unwrap().reporting_complete);
+    assert_eq!(
+        run.record().unwrap().as_json()["artifacts"][0]["status"],
+        "pending"
+    );
+    assert!(!case.work.join("requested.xml").exists());
+    assert!(!case.retained.join("private/artifact-junit").exists());
+}
+
+#[test]
+fn config_cleanup_exception_keeps_actual_failure_and_partial_report_without_suppressing_the_callback()
+ {
+    let (case, run) = config_cleanup_case(
+        "declared-junit-config-cleanup-raise",
+        "raise RuntimeError('PT_CONFIG_CLEANUP_FAILURE')",
+    );
+    assert_ne!(run.session().process().exit_code(), 0);
+    let snapshot = run.session().snapshot().unwrap();
+    assert!(
+        snapshot
+            .session_errors
+            .iter()
+            .any(|value| value.code == "config_cleanup_failed")
+    );
+    assert!(!snapshot.terminal.as_ref().unwrap().reporting_complete);
+    assert!(!snapshot.artifact_ready_claims[0].complete);
+    case.check_junit_copy(&run, false);
+    assert!(run.record().unwrap().cli_exit_code() > 0);
+}
+
+#[test]
+fn removed_config_cleanup_boundary_cannot_recover_completion_from_a_zero_or_junit_file() {
+    for (id, action) in [
+        (
+            "declared-junit-config-cleanup-transfer",
+            "config._pt_test_retained_stack=config._cleanup_stack.pop_all()",
+        ),
+        (
+            "declared-junit-config-cleanup-replace",
+            "config._cleanup_stack=ExitStack()",
+        ),
+    ] {
+        let conftest = format!(
+            "from contextlib import ExitStack\nfrom pathlib import Path\ndef pytest_unconfigure(config):\n    {action}\n    with Path('stack-change-once').open('x') as output: output.write('intentional unsupported private-stack change')\n"
+        );
+        let case = Case::new(id, SOURCE, Some(&conftest));
+        let run = case.invoke(case.request_report(
+            id,
+            &["test_actual.py"],
+            RequestMode::Run,
+            InvocationProfile::PytestModule,
+            RequestedScope::Explicit,
+            Some(true),
+        ));
+        // Missing-terminal EOF can race the leader's actual return. The native
+        // reader must stop a still-live leader, not wait for it to manufacture
+        // a zero. Retain only these exact observed orderings, never waive an
+        // unrelated crash, timeout, transport fault or uncertain cleanup.
+        let process = run.session().process();
+        assert!(
+            matches!(
+                (&process.termination, &process.leader_status),
+                (
+                    pt_process::Termination::ProcessExited,
+                    Some(pt_process::LeaderStatus::Exited { code: 0 })
+                ) | (
+                    pt_process::Termination::InfrastructureError { .. },
+                    Some(pt_process::LeaderStatus::Exited { code: 0 })
+                ) | (
+                    pt_process::Termination::InfrastructureError { .. },
+                    Some(pt_process::LeaderStatus::Signaled {
+                        signal: 9,
+                        core_dumped: false
+                    })
+                )
+            ),
+            "{id}: {process:?}"
+        );
+        assert_eq!(
+            run.session().outcome(),
+            &pt_session::SessionOutcome::InfrastructureFailed
+        );
+        assert!(run.session().channel().clean_eof);
+        assert!(matches!(
+            run.session()
+                .channel()
+                .issue
+                .as_ref()
+                .map(|value| &value.kind),
+            Some(pt_session::ChannelIssueKind::MissingTerminal)
+        ));
+        let snapshot = run.session().snapshot().unwrap();
+        assert!(snapshot.terminal.is_none());
+        assert!(snapshot.artifact_ready_claims.is_empty());
+        assert_eq!(
+            run.record().unwrap().as_json()["accounting_verified"],
+            false
+        );
+        assert_eq!(
+            run.record().unwrap().as_json()["artifacts"][0]["status"],
+            "pending"
+        );
+        assert!(fs::read(case.work.join("requested.xml")).unwrap().len() > 100);
+        assert!(!case.retained.join("private/artifact-junit").exists());
+        assert_eq!(
+            fs::read_to_string(case.work.join("stack-change-once")).unwrap(),
+            "intentional unsupported private-stack change"
+        );
+    }
+}

@@ -34,6 +34,7 @@ def check(wheel, binary, parent, base_python="3.12.12"):
         assert "pt_bridge/_wire.py" in names
         assert "pt_bridge/_observer.py" in names and "pt_bridge/pytest_observer.py" in names
         assert "pt_bridge/_artifacts.py" in names
+        assert "pt_bridge/_finalization.py" in names
         assert not any(name == "pytest.py" or name.startswith("pytest/") for name in names)
         assert not any(name.endswith("entry_points.txt") for name in names)
     environment = parent / "environment"
@@ -212,7 +213,7 @@ def check(wheel, binary, parent, base_python="3.12.12"):
     assert not (project / "project-imported").exists() and not (project / "site-imported").exists()
     assert pth.exists(), "guard must not delete an unknown startup input"
     pth.unlink()  # Only this explicitly test-created sentinel is removed.
-    run([str(python), "-I", "-c", "import pt_bridge,pt_bridge._artifacts,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
+    run([str(python), "-I", "-c", "import pt_bridge,pt_bridge._artifacts,pt_bridge._finalization,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
         cwd=project, env=env)
 
     # This explicitly imports only the installed framing component. It is not

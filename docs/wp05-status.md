@@ -148,6 +148,25 @@ matched both exact interpreter prefixes. Evidence:
 changed inputs remain preserved; this closes the bounded readiness/fix batch,
 not the remaining backend/environment/generation/release gates.
 
+The subsequent Config cleanup follow-up defers producer readiness/terminal until
+the pinned Config ExitStack drains, rather than assuming `pytest_unconfigure`
+ends finalization. Original callback order, nested registrations and exception
+propagation remain; unknown/lost boundaries cannot supply completion. Its
+retained red controls, native observer-stop fixture correction and full checks
+are recorded in [WP09](wp09-status.md). This does not extend assurance to arbitrary
+interpreter `atexit`, native shutdown or environment/current immutable generations.
+
+Its final protected-input run at
+`/tmp/opencode/pt-config-cleanup-verified-final-lly6myda` passed **190 release Rust
+tests**, **74 integration / 63 oracle / 68 contract checks**, strict clippy/fmt
+and offline wheel/install smoke. Native and independent post-setup prefixes still
+matched. The **22 coordinator pytest requests plus three separately declared
+plain references** preserve raw failures and callback effects; missing boundaries
+remain incomplete with actual observer stops/returns. The new development wheel
+SHA-256 is `4e973ca41e0a9f1614ebd0615f3d302fd4513a19e5a02acd1f68e4450ec286c1`.
+Previous wheels/evidence remain historical, not overwritten or relabelled release
+authentication. Qualified launch remains unavailable.
+
 ## Required before acceptance or enabling successful `pt run`
 
 - Integrate the coordinator request/entrypoint/process boundary without unsafe

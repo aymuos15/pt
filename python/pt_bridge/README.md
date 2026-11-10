@@ -143,7 +143,8 @@ startup/plugin effects are not pretended absent.
 The declared source is canonical relative to the actual cwd: at most **4,096
 UTF-8 bytes / 24 components**. Root/ancestor directories are pinned through
 no-follow native operations, with non-inheritable descriptors. After underlying
-unconfigure hooks finish, the bridge reads only that exact declared file in
+unconfigure hooks and the pinned Config cleanup stack finish, the bridge reads
+only that exact declared file in
 **64 KiB chunks**, under its original absolute deadline, with a positive byte
 ceiling of **at most 128 MiB**. File type, owner, single link, non-other-writable
 mode, length, open/named bindings and before/after mutation stamps are checked.
@@ -200,6 +201,30 @@ do not verify required artifact commits, complete installed/host environments,
 immutable source generations or current full success. The packaging smoke and
 source-level reference controls are finite development evidence only; **`pt run`
 remains unavailable**. See [WP05 progress and open gates](../../docs/wp05-status.md).
+
+### Config cleanup is part of the observed finalization boundary
+
+Pinned pytest runs `Config.add_cleanup` callbacks **after** `pytest_unconfigure`.
+The observer therefore defers readiness/terminal emission until the original
+Config `ExitStack` drains. The CPython 3.12.12 / pytest 8.4.2 adapter registers one
+new non-suppressing exit callback and moves **only that new observer entry** below
+the original entries. Existing pytest/user callback order, callbacks registered
+during cleanup, and exception/suppression semantics stay owned by the original
+stack. No user callback is inspected, called early, removed, disabled or replayed.
+
+An unsuppressed cleanup exception produces an infrastructure diagnostic and
+incomplete reporting/partial readiness; the original exception still propagates.
+A missing/replaced/transferred or undrained boundary cannot supply completion.
+In particular, a zero/complete-looking JUnit file cannot recover a lost terminal;
+the native observer may stop a still-live process on that channel fault.
+
+This is a pinned **private-internals adapter**, not support for arbitrary Config /
+ExitStack replacements or plugin introspection of PT's callbacks. Unknown types
+are refused. It observes Config cleanup, **not all interpreter `atexit`, native
+library, external-service or detached-process finalization**. Actual process
+return/EOF, required cleanup, independent artifact checks and all environment /
+generation/release gates remain mandatory. Ordinary pytest still does not load
+the bridge; both bootstrap versions use the same deferred boundary.
 
 ### Preserving interpreter inputs during setup reproduction
 

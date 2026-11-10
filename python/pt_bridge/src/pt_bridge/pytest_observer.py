@@ -96,4 +96,6 @@ def pytest_unconfigure(config):
         hooks_completed = True
         return result
     finally:
-        _OBSERVER.terminal(hooks_completed=hooks_completed)
+        # Config.add_cleanup callbacks run after this hook, even on an exception.
+        # The pinned ExitStack adapter observes their actual completion later.
+        _OBSERVER.unconfigure_completed = hooks_completed
