@@ -1,0 +1,18 @@
+[package]
+name = "pt-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Bounded bridge-only decoding and serial accounting foundations; no full-result certification"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+[dev-dependencies]
+pt-process = { path = "../pt-process" }
+tempfile.workspace = true
+
+[lints]
+workspace = true

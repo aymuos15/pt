@@ -1,0 +1,20 @@
+[
+  {"kind":"session_started","payload":{"python_version":"3.12.12","pytest_version":"8.4.2","bridge_version":"0.0.0","invocation_profile":"pytest_module"}},
+  {"kind":"collection_started","payload":{}},
+  {"kind":"collection_report","payload":{"report_id":0,"nodeid":"","outcome":"passed","reason":null}},
+  {"kind":"collection_error","payload":{"report_id":0,"nodeid":"test_λ.py","reason":"PT_COLLECTION_ERROR"}},
+  {"kind":"item_collected","payload":{"ordinal":0,"nodeid":"test_λ.py::test_dup[a/b]"}},
+  {"kind":"items_selected","payload":{"chunk":0,"ordinals":[1,0]}},
+  {"kind":"items_deselected","payload":{"chunk":0,"ordinals":[],"reason":null}},
+  {"kind":"collection_finished","payload":{"status":"complete","inventory_complete":true,"collected_count":2,"selected_count":2,"deselected_count":0}},
+  {"kind":"item_started","payload":{"ordinal":1,"attempt":0}},
+  {"kind":"phase_report","payload":{"ordinal":1,"attempt":0,"phase":"call","outcome":"failed","reason":"[XPASS(strict)] PT_EXPECTED","was_xfail":null,"strict_xpass":true,"duration_ns":null,"artifact_ids":["exception-1"]}},
+  {"kind":"attempt_finished","payload":{"ordinal":1,"attempt":0,"disposition":"completed","reason":null}},
+  {"kind":"item_not_run","payload":{"ordinal":0,"reason":"fail_fast"}},
+  {"kind":"warning","payload":{"ordinal":null,"category":"builtins.UserWarning","message":"quotes: \" \\ \n λ 🐍","filename":null,"line":null,"when":"configure"}},
+  {"kind":"output_reference","payload":{"artifact_id":"stdout-1","stream":"stdout","ordinal":null,"attempt":null}},
+  {"kind":"artifact_ready","payload":{"artifact_id":"stdout-1","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","bytes":0,"complete":false}},
+  {"kind":"session_error","payload":{"category":"internal","code":"pytest_internal_error","message":"PT_INTERNAL_ERROR"}},
+  {"kind":"extension_event","payload":{"extension_id":"subtest","extension_version":1,"artifact_id":"extension-1","ordinal":null,"attempt":null}},
+  {"kind":"session_terminated","payload":{"termination":"interrupted","backend_exit_code":2,"reporting_complete":true,"accounting":{"collected_count":2,"selected_count":2,"deselected_count":0,"executed_count":1,"completed_count":1,"not_run_count":1,"attempts_started":1,"attempts_completed":1},"phase_counts":{"setup":{"passed":1,"failed":0,"skipped":0},"call":{"passed":0,"failed":1,"skipped":0},"teardown":{"passed":1,"failed":0,"skipped":0}},"incomplete_ordinals":[]}}
+]

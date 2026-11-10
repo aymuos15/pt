@@ -143,6 +143,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pt-protocol"
+version = "0.0.0"
+dependencies = [
+ "pt-process",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"

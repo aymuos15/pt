@@ -9,10 +9,11 @@ remain authoritative about execution, safety, and later-package gates.
 
 The subsequent [WP04 private-channel foundation](wp04-status.md) supplies a
 native inherited-socket handoff and separately tested Python framing/envelope
-component. It does not implement this complete payload catalog, handshake/session
-ledger, actual pytest observer, required artifact/environment/generation checks
-or supported-launcher early-startup assurance. Decoded frames cannot become full
-test success merely because their envelope was accepted.
+component. The later [Rust channel/accounting foundation](../crates/pt-protocol/README.md)
+decodes the 18 bridge payloads and checks bounded fresh-serial ledger consistency.
+Neither supplies the actual pytest observer, required artifact/environment/generation
+verification, coordinator-owned final result or supported-launcher early-startup
+assurance. Decoded/consistent streams cannot become full test success.
 
 ## Transport and envelope
 
@@ -26,8 +27,9 @@ A frame is a nonzero 32-bit unsigned big-endian length followed by at most
 keys, non-integer numbers, unknown fields, and unsupported versions/revisions.
 Never unpickle messages or resolve a supplied name into executable code. A
 production reader must enforce the byte bound before allocating the payload.
-These framing/decoder behaviors are requirements, **not implemented tests of
-this decoded-object checker**.
+These requirements are now exercised separately by the Rust reader and Python
+component; they are **not features or native qualification of the decoded test-only
+contract checker**. Rust's wire budget conservatively includes framing headers.
 
 Every envelope has `protocol_version: 0`, `contract_revision: 1`, `request_id`,
 `run_id`, `generation_id`, `session_id`, `producer_id`, `producer_role`,
@@ -71,6 +73,11 @@ producer**, not per globally merged stream. A transport may deduplicate an
 identical redelivery using the full envelope identity and contents; conflicting
 redelivery or a gap fails closed. The test ledger takes an already normalized
 trace and rejects *all* redeliveries. Neither rule implies exactly-once effects.
+
+The development Rust reader also rejects all redeliveries. Its opaque per-reader
+binding ties actual framed messages to clean EOF; matching opaque IDs/counts alone,
+a second identical stream or manually decoded events cannot forge this binding.
+EOF still proves no backend exit, required cleanup or successful work by itself.
 
 - Request receipt precedes environment resolution and bridge handshake. A
   prelaunch rejection prohibits a bridge or worker result. Invalid input that

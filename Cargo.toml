@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/pt-process", "crates/pt-cli"]
+members = ["crates/pt-process", "crates/pt-cli", "crates/pt-protocol"]
 resolver = "3"
 
 [workspace.package]
@@ -11,7 +11,7 @@ publish = false
 [workspace.dependencies]
 serde = { version = "=1.0.228", features = ["derive"] }
 nix = { version = "=0.30.1", features = ["signal", "process"] }
-serde_json = "=1.0.145"
+serde_json = { version = "=1.0.145", features = ["raw_value"] }
 signal-hook = "=0.3.18"
 tempfile = "=3.23.0"
 command-fds = { version = "=0.3.3", default-features = false }

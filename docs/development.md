@@ -72,6 +72,12 @@ The optional `pt doctor --python ... --startup-profile pytest_module` (or
 It is a static prerequisite inspection, **not backend launch approval**; see the
 [development CLI](../crates/pt-cli/README.md) for exact bounds/exclusions.
 
+The [Rust bridge-channel foundation](../crates/pt-protocol/README.md) adds typed
+revision-1 bridge decoding, actual EOF provenance and conservative serial
+accounting. Native/schema interoperability checks use the explicitly selected
+locked harness Python; they do not make synthetic payloads a real-pytest backend
+or certify artifacts, environment or generations.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

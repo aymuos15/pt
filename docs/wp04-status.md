@@ -196,6 +196,58 @@ the unchanged bridge wheel remains
 `69865a9add885523e2916aeeeea51b0df13acc02c7f6f245a6eb4888fa2911b4`.
 These are local artifact identities, not authenticated release builds.
 
+## Rust bridge decoder/accounting follow-up (base 61c2355)
+
+[`pt-protocol`](../crates/pt-protocol/README.md) now supplies typed decoding for
+all **18 bridge-owned revision-1 payloads**, bounded unnamed-socket framing and
+a fresh-serial occurrence/attempt ledger. This is minimal M1 boundary engineering,
+**not completion of WP05/WP09**. No coordinator final-result, artifact/environment /
+generation certification or successful `pt run` is enabled.
+
+The decoder rejects duplicate keys, omitted nullable fields, unknown nested
+fields, unsupported versions/roles/identities, non-integer JSON and size/depth /
+token faults. Framing applies absolute deadlines and explicit budgets; confirmed
+counters exclude uncertain consumption. A private per-reader binding ties every
+actual framed message to an opaque clean-EOF receipt: another **identical** stream
+or manually decoded bytes cannot forge this by matching IDs/counts. EOF still
+proves no process exit or successful work. A failed reader/ledger is never resumed.
+
+The ledger preserves duplicate Unicode node IDs, final selected order, actual
+phases/reasons/xfail/strict-XPASS data and collector arrival order. It checks
+collection/error/partition barriers, applicable phases and terminal arithmetic;
+retries/extensions remain unsupported. Failed, collect-only, no-tests, interrupted
+and not-run outcomes remain distinct. Artifact-ready entries stay **claims**.
+Normal-exit validation requires the actual process return and bound EOF; known
+signals/timeouts instead retain the snapshot and independent process-owned cause.
+
+The retained final locked release workspace run passed **79 tests**, no skips:
+the prior **37** plus **42** protocol methods (eight decoding, nine actual framing,
+21 serial-ledger and four native Python/schema checks). Rustfmt and clippy
+`-D warnings` passed. Sources stayed fixed in
+`/tmp/opencode/pt-protocol-verification-gd_rg6cl`, alongside actual command returns
+and complete raw logs. Native controls exercised all 18 Python `_wire` shapes,
+intentional synthetic failed work, effect-before-exit-17, truncation and actual
+supervisor timeout/cleanup. Synthetic payloads are **not pytest qualification**.
+
+The independent Python/jsonschema control and Rust decoder agreed on **2,372
+schema/wire-shape mutations: 42 accepted / 2,330 rejected**. Separate retained
+read-back is `/tmp/opencode/pt-protocol-schema-controls-s299kn7n`. All **37 prior
+Cargo package identities/checksums** remain unchanged; only local `pt-protocol`
+is added, with the pinned serde_json `raw_value` feature enabled. Four existing
+Python/support/toolchain pin files also remain unchanged. This is dependency
+identity evidence, not a vulnerability audit.
+
+**39 integration checks passed** (`4.040s`) and **68 contract/audit checks passed**
+(`8.783s`). The full independent harness was not needlessly rerun; its unchanged
+last result remains **762 tests: 761 passed / one native-peak skip**. Installed
+bridge behavior was not changed. The first expanded native build used a test
+helper's incorrect `cleanup_grace` field instead of `cleanup_timeout`; compilation
+stopped before the new process checks ran. The corrected helper and final checks
+above do not change process policy or conceal a project-test retry.
+
+The actual observer, supported launch boundary, required artifacts/environment,
+immutable generations, broader backend and independent release gates stay open.
+
 ## Open gates
 
 - Interactive stdin is refused before work; inherited descriptors alone do not
@@ -211,7 +263,7 @@ These are local artifact identities, not authenticated release builds.
   remains open. WP05 cannot claim parity from JUnit, phase equality alone or
   limited training coverage comparisons.
 - Required work/artifact/generation accounting, complete production bridge IPC /
-  session integration and full protocol catalog/fault handling remain unimplemented. Process-only
+  session integration and coordinator-owned catalog/final-result handling remain unimplemented. Process-only
   results cannot be labelled complete generation-valid test results.
   WP00 now specifies the 32-kind revision-1 catalog and final-result/accounting
   schemas with synthetic tests (`protocol-draft.md`, `tests/contracts`); those
