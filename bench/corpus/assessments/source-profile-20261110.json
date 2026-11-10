@@ -1,0 +1,506 @@
+{
+  "candidate_inventory_sha256": "c29062090bf417025f5f6f2fec606dbd9923f2c22211bea8fd388cdf8b1f8619",
+  "confirmatory_eligible": false,
+  "limitations": [
+    "TLS Git source identity observations, not signed artifact or interpreter authentication",
+    "No build, installation, pytest execution or eligibility decision follows from this source-only inspection",
+    "Original twelve-candidate inventory/allocation is unchanged; prior attrs/click/rich assessments remain separate"
+  ],
+  "observed_candidates": [
+    {
+      "build_system": {
+        "build-backend": "setuptools.build_meta",
+        "requires": [
+          "setuptools>=83"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 2336,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "20caecb516eb66319d9da758b4ce054eccd015852ca1c3ad4132c892badd4041"
+        },
+        {
+          "bytes": 2576,
+          "direct_pytest_lines": [],
+          "path": "tox.ini",
+          "sha256": "f0fd5ef8294fc2728f3752aceb8b3f577053e8f33a778479624850c68d1f7706"
+        }
+      ],
+      "id": "django/django",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">= 3.12",
+      "revision": "a1f2b45ce5a327f42437bdb620a817839d0bd067",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {},
+      "tree": "8f4cf463ce5930c507dfe9ee6415f6441be69dc8"
+    },
+    {
+      "build_system": {
+        "build-backend": "hatchling.build",
+        "requires": [
+          "hatchling",
+          "hatch-fancy-pypi-readme"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 3640,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "f20daa9f2eb1f4cfdbb0c5e74fa3bfe99ea260b8bbf5df6ada3f7f25fd7956ec"
+        },
+        {
+          "bytes": 683,
+          "direct_pytest_lines": [
+            {
+              "line": 24,
+              "text": "pytest==8.4.1"
+            }
+          ],
+          "path": "requirements.txt",
+          "sha256": "43d93f514608a51aa7841ba327567a804efe5ddb2435d44f57bcb3532b48ad63"
+        }
+      ],
+      "id": "encode/httpx",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">=3.9",
+      "revision": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {},
+      "tree": "31ba94512339180efacceacc0646b56ee15eba63"
+    },
+    {
+      "build_system": {
+        "build-backend": "pdm.backend",
+        "requires": [
+          "pdm-backend"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 12622,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "e8d254c7ad5279613eba1dc79e502153a716436b31ee7c5125e9594e06f0d1e5"
+        },
+        {
+          "bytes": 876553,
+          "direct_pytest_lines": [],
+          "path": "uv.lock",
+          "sha256": "5958d131f3f2853128009ea8596e27aa25091c99d9183ceb3083e00e61b8bef1"
+        }
+      ],
+      "id": "fastapi/fastapi",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [
+        {
+          "source": {
+            "registry": "https://pypi.org/simple"
+          },
+          "version": "9.1.1"
+        }
+      ],
+      "qualification": null,
+      "requires_python": ">=3.10",
+      "revision": "ba47d6d71b3e806900c8471f2f661781b8c43ec4",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {
+        "tests": [
+          "opentelemetry-instrumentation-fastapi>=0.65b0",
+          "logfire>=5.1.0",
+          "sentry-sdk>=2.70.0",
+          "opentelemetry-sdk>=1.44.0",
+          "opentelemetry-exporter-otlp-proto-http>=1.44.0",
+          {
+            "include-group": "docs-tests"
+          },
+          "anyio[trio] >=3.2.1,<5.0.0",
+          "coverage[toml] >=7.13,<8.0",
+          "dirty-equals >=0.9.0",
+          "flask >=3.0.0,<4.0.0",
+          "inline-snapshot >=0.21.1",
+          "mypy >=1.14.1",
+          "pwdlib[argon2] >=0.2.1",
+          "pyjwt >=2.9.0",
+          "pytest >=9.0.0,<9.2",
+          "pytest-codspeed >=4.3.0",
+          "pyyaml >=5.3.1,<7.0.0",
+          "sqlmodel >=0.0.31",
+          "strawberry-graphql >=0.200.0,<1.0.0",
+          "ty>=0.0.25",
+          "typer >=0.26.1",
+          "a2wsgi >=1.9.0,<=2.0.0",
+          "pytest-xdist[psutil]>=3.0.2",
+          "pytest-cov>=4.0.0",
+          "pytest-sugar>=1.0.0",
+          "pytest-timeout>=2.4.0"
+        ]
+      },
+      "tree": "58cda2a9ca9f3ecbaf25b76eb972572a4145d582"
+    },
+    {
+      "build_system": {
+        "build-backend": "mesonpy",
+        "requires": [
+          "meson-python>=0.21.1",
+          "Cython>=3.1.0"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 14359,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "5e772b4087c51a1f4282e36694f3ace6a4fce56472a00878d2189627fd5b3c6e"
+        }
+      ],
+      "id": "numpy/numpy",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">=3.12",
+      "revision": "80049a0ec1e2be8e0c96725067a7c80d1a8e77f0",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {
+        "test": [
+          {
+            "include-group": "test-extending"
+          },
+          {
+            "include-group": "hypothesis"
+          }
+        ],
+        "test-core": [
+          "pytest==9.1.1",
+          "pytest-xdist",
+          "pytest-timeout",
+          "tzdata"
+        ]
+      },
+      "tree": "52b87efc6ce3afceb951a5b7a4ed45da3d36fb84"
+    },
+    {
+      "build_system": {
+        "build-backend": "flit_core.buildapi",
+        "requires": [
+          "flit_core>=3.11,<4"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 6424,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "4a55dd7e69bca85ecba232489bda7f89bb8620dde35e8f5eb08a92f4087d74cb"
+        },
+        {
+          "bytes": 279196,
+          "direct_pytest_lines": [],
+          "path": "uv.lock",
+          "sha256": "ddc0f6ee37a294606f52a177db183b7949031c231aed810298ed7ab432d9cb09"
+        }
+      ],
+      "id": "pallets/flask",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [
+        {
+          "source": {
+            "registry": "https://pypi.org/simple"
+          },
+          "version": "9.1.1"
+        }
+      ],
+      "qualification": null,
+      "requires_python": ">=3.11",
+      "revision": "49943b5a94413a530761350f04e896f76e8d620e",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {
+        "tests": [
+          "asgiref",
+          "pytest",
+          "python-dotenv"
+        ]
+      },
+      "tree": "6751ab7eae06e6f97a157860470fd588920a734b"
+    },
+    {
+      "build_system": {
+        "build-backend": "setuptools.build_meta",
+        "requires": [
+          "setuptools>=61.0"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 3404,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "345f26b9f691435e39d0eb6f7f4150a390f43175b22f8d61ac95e7f2827f0a77"
+        },
+        {
+          "bytes": 93,
+          "direct_pytest_lines": [
+            {
+              "line": 2,
+              "text": "pytest>=2.8.0,<10"
+            }
+          ],
+          "path": "requirements-dev.txt",
+          "sha256": "aed8622c9a3d9361a9cdbe71a4643831387aff5f622ebdd68de598a8b258c841"
+        },
+        {
+          "bytes": 285,
+          "direct_pytest_lines": [
+            {
+              "line": 10,
+              "text": "    pytest {posargs:tests}"
+            }
+          ],
+          "path": "tox.ini",
+          "sha256": "65aeb46c94fc5723a9764bb029fdb448539658fe47d3a39550a829b2383804fd"
+        }
+      ],
+      "id": "psf/requests",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">=3.10",
+      "revision": "3c7baaa05ab4aa49cc819ce3a819d260de19c157",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {
+        "test": [
+          "requests[socks]",
+          "pytest-httpbin==2.1.0",
+          "httpbin~=0.10.0",
+          "pytest-cov",
+          "pytest-mock",
+          "pytest-xdist",
+          "pytest>=3",
+          "trustme"
+        ]
+      },
+      "tree": "0c8b989695d73c087123936657c0fbfe3034471f"
+    },
+    {
+      "build_system": {
+        "build-backend": "setuptools.build_meta",
+        "requires": [
+          "setuptools>=77",
+          "setuptools-scm[toml]>=10.1"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 23294,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "9f7f69ac0a2a77f329e0689306ab1b904059acc67ddaaecec18ee0582cc7f2e9"
+        },
+        {
+          "bytes": 150073,
+          "direct_pytest_lines": [],
+          "path": "uv.lock",
+          "sha256": "d605fa912dadf33a3eea1d00bf74ddb5e1a9c7935b511c4bd48d5b9d8af5e850"
+        },
+        {
+          "bytes": 7704,
+          "direct_pytest_lines": [
+            {
+              "line": 193,
+              "text": "    pytest --cov=. simple_integration.py"
+            },
+            {
+              "line": 194,
+              "text": "    pytest --ds=django_settings simple_integration.py"
+            },
+            {
+              "line": 195,
+              "text": "    pytest --html=simple.html simple_integration.py"
+            },
+            {
+              "line": 196,
+              "text": "    pytest --reruns 5 simple_integration.py pytest_rerunfailures_integration.py"
+            },
+            {
+              "line": 197,
+              "text": "    pytest pytest_anyio_integration.py"
+            },
+            {
+              "line": 198,
+              "text": "    pytest pytest_asyncio_integration.py"
+            },
+            {
+              "line": 199,
+              "text": "    pytest pytest_mock_integration.py"
+            },
+            {
+              "line": 200,
+              "text": "    pytest pytest_trio_integration.py"
+            },
+            {
+              "line": 201,
+              "text": "    pytest pytest_twisted_integration.py"
+            },
+            {
+              "line": 202,
+              "text": "    pytest simple_integration.py --force-sugar --flakes"
+            }
+          ],
+          "path": "tox.ini",
+          "sha256": "ab08f9444e70fd87f1502d21b9f518a9059fcce6f93b0f1b3ebb1586abe69250"
+        }
+      ],
+      "id": "pytest-dev/pytest",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [
+        {
+          "source": {
+            "editable": "."
+          },
+          "version": null
+        }
+      ],
+      "qualification": null,
+      "requires_python": ">=3.10",
+      "revision": "bc14038c406563b18a03e15453a10b9eee969e42",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {},
+      "tree": "1f261364fec6334461561b2b76e6f883d28a4a32"
+    },
+    {
+      "build_system": {
+        "build-backend": "setuptools.build_meta",
+        "requires": [
+          "setuptools >= 77"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 10997,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "6eb7198275db22a01524e7111d92a66da333c5e5f37cfa6e3a68a73eb34e0c85"
+        },
+        {
+          "bytes": 974,
+          "direct_pytest_lines": [
+            {
+              "line": 2,
+              "text": "pytest >= 8.4         # for pytest.RaisesGroup"
+            }
+          ],
+          "path": "test-requirements.in",
+          "sha256": "d743b994391a414d17ee102db9af18ae69fe154fb1d87cf937a4e6dd115baffc"
+        },
+        {
+          "bytes": 6076,
+          "direct_pytest_lines": [
+            {
+              "line": 151,
+              "text": "pytest==9.2.0"
+            }
+          ],
+          "path": "test-requirements.txt",
+          "sha256": "1e3adbc40c47ac8fa407e1c411a8d49edcb5245f8bc03af914b3cf5d810e0172"
+        },
+        {
+          "bytes": 3549,
+          "direct_pytest_lines": [
+            {
+              "line": 32,
+              "text": "    pytest {env:TOX_RUN_SLOW:} {posargs}"
+            },
+            {
+              "line": 37,
+              "text": "    pytest"
+            },
+            {
+              "line": 39,
+              "text": "    pytest --skip-optional-imports {posargs}"
+            }
+          ],
+          "path": "tox.ini",
+          "sha256": "1c506a7fa8eecdde5f4d34fba1516a48883386c08220e2551e495004d7ec4e59"
+        }
+      ],
+      "id": "python-trio/trio",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">=3.10",
+      "revision": "3cb6acd0d611b3c589e45a4d08a86327bb5b90d5",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {},
+      "tree": "aac12cccda6fb65f153c3c8b52239dc36387bb61"
+    },
+    {
+      "build_system": {
+        "build-backend": "setuptools.build_meta",
+        "requires": [
+          "setuptools>=77.0.3",
+          "cython>=3.3; platform_python_implementation == 'CPython'"
+        ]
+      },
+      "files": [
+        {
+          "bytes": 10329,
+          "direct_pytest_lines": [],
+          "path": "pyproject.toml",
+          "sha256": "13e86a80d389332103615a985e62b23a22b15b1f2b7bcba457ee813099721bbe"
+        },
+        {
+          "bytes": 12524,
+          "direct_pytest_lines": [
+            {
+              "line": 69,
+              "text": "     pytest>=7.0.0,<10"
+            },
+            {
+              "line": 216,
+              "text": "     pytest>=7.0.0rc1,<10"
+            },
+            {
+              "line": 225,
+              "text": "    pytest {env:PYTEST_COLOR} -m mypy {posargs}"
+            },
+            {
+              "line": 238,
+              "text": "    pytest {env:PYTEST_COLOR} -m mypy {env:COVERAGE} {posargs}"
+            }
+          ],
+          "path": "tox.ini",
+          "sha256": "9c828970cf74ad22a92433dc3e312f35b86c45b5929085137215ab968d134462"
+        },
+        {
+          "bytes": 3050,
+          "direct_pytest_lines": [],
+          "path": "setup.cfg",
+          "sha256": "9627800ec55b4536976608e1acfa41a7577a1adff094d92573bfe51db1f005c5"
+        }
+      ],
+      "id": "sqlalchemy/sqlalchemy",
+      "installation_attempted_in_source_inspection": false,
+      "locked_pytest": [],
+      "qualification": null,
+      "requires_python": ">=3.11",
+      "revision": "cfc856e3e6b90fb477177d0bff68dcfb7dc08cd9",
+      "status": "source_metadata_only_unqualified",
+      "test_groups": {
+        "tests": [
+          "pytest>=7.0.0,<10",
+          "pytest-xdist"
+        ]
+      },
+      "tree": "c0348ff5d52c83d5005f6ae05fadc9eaa172e369"
+    }
+  ],
+  "schema_version": 1,
+  "source_fetch_method": "new repository; git fetch --depth=1 --no-tags <original-url> <exact-revision>; git switch --detach FETCH_HEAD; exact HEAD/tree checked",
+  "status": "source_inspection_only_unqualified"
+}

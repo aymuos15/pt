@@ -1,0 +1,2990 @@
+{
+  "builds": [
+    {
+      "build": 1,
+      "bytes": 105530,
+      "sha256": "954a0a0d2a4f6e01776f295cf9c02cc848b93f202cd08bd88d1740ac7d1e6cd6",
+      "wheel_name": "flask-3.2.0.dev0-py3-none-any.whl"
+    },
+    {
+      "build": 2,
+      "bytes": 105530,
+      "sha256": "954a0a0d2a4f6e01776f295cf9c02cc848b93f202cd08bd88d1740ac7d1e6cd6",
+      "wheel_name": "flask-3.2.0.dev0-py3-none-any.whl"
+    }
+  ],
+  "confirmatory_eligible": false,
+  "expected_process_exit_observed_twice": 0,
+  "junit_occurrences": [
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_basic_url_generation"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_generation_requires_server_name"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_generation_without_context_fails"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_context_means_app_context"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_context_provides_current_app"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_tearing_down"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_tearing_down_with_previous_exception"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_tearing_down_with_handled_exception_by_except_block"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_tearing_down_with_handled_exception_by_app_handler"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_tearing_down_with_unhandled_exception"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_ctx_globals_methods"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_app_ctx_globals_class"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_refcounts"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_clean_pop"
+    },
+    {
+      "classname": "tests.test_appctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_robust_teardown"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_route[/]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_route[/home]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_route[/bp/]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_route[/view]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_route[/methodview]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_error_handler[/error]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_error_handler[/bp/error]"
+    },
+    {
+      "classname": "tests.test_async",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_before_after_request"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_options_work"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_options_on_multiple_rules"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[get]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[query]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[post]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[put]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[delete]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route[patch]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_route_no_methods"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_provide_automatic_options_attr_disable"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_provide_automatic_options_attr_enable"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_provide_automatic_options_arg_disable"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_provide_automatic_options_method_disable"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_dispatching"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_disallow_string_for_allowed_methods"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_mapping"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_routing"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_endpoint_decorator"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_accessed"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_path"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_using_application_root"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_using_session_settings"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_using_samesite_attribute"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_missing_session"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_secret_key_fallbacks"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_expiration"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_stored_last"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_special_types"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_cookie_setting"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_vary_cookie"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_refresh_vary"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flashes"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_extended_flashing"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_processing"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_preprocessing_early_return"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_after_request_processing"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_request_handler"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_request_handler_debug_mode"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_request_handler_error"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_before_after_request_order"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handling"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handling_processing"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_baseexception_error_handling"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_before_request_and_routing_errors"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_user_error_handling"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_http_error_subclass_handling"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_errorhandler_precedence"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_trap_bad_request_key_error[False-None-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_trap_bad_request_key_error[True-None-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_trap_bad_request_key_error[False-True-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_trapping_of_all_http_exceptions"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handler_after_processor_error"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_enctype_debug_helper"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_response_types"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_response_type_errors"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_make_response"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_make_response_with_response_instance"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_no_prettyprint[True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_no_prettyprint[False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_mimetype"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_dump_dataclass"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_args_and_kwargs_check"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_generation"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_build_error_handler"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_build_error_handler_reraise"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_passes_special_values_to_build_error_handler"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_files"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_url_path"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_url_path_with_ending_slash"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_url_empty_path"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_url_empty_path_default"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_folder_with_pathlib_path"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_folder_with_ending_slash"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_route_with_host_matching"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_locals"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_server_name_matching[False-False-default-default]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_server_name_matching[True-False-abc-<invalid>]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_server_name_matching[False-True-abc-default]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_server_name_subdomain"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_exception_propagation[TESTING]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_exception_propagation[PROPAGATE_EXCEPTIONS]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_exception_propagation[DEBUG]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_exception_propagation[None]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-True-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-True-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-True-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-True-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-False-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-False-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-False-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[None-False-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-True-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-True-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-True-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-True-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-False-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-False-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-False-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[True-False-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-True-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-True-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-True-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-True-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-False-True-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-False-True-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-False-False-True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_werkzeug_passthrough_errors[False-False-False-False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_processors"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_inject_blueprint_url_defaults"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nonascii_pathinfo"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_no_setup_after_first_request"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_routing_redirect_debugging"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_route_decorator_custom_endpoint"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_method_on_g"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_g_iteration_protocol"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain_basic_support"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain_matching"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain_matching_with_ports"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain_matching_other_name[False]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain_matching_other_name[True]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_multi_route_rules"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_multi_route_class_views"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_defaults"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_server_port"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[None-None-pocoo.org:8080-pocoo.org-8080]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[localhost-None-pocoo.org:8080-localhost-8080]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[None-80-pocoo.org:8080-pocoo.org-80]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[localhost-80-pocoo.org:8080-localhost-80]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[localhost-0-localhost:8080-localhost-0]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[None-None-localhost:8080-localhost-8080]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[None-None-localhost:0-localhost-0]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_from_config[None-None-[::1]:8080-::1-8080]"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_max_cookie_size"
+    },
+    {
+      "classname": "tests.test_basic",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_freed_on_zero_refcount"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_specific_error_handling"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_specific_user_error_handling"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_app_error_handling"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[-/-/]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/--/]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/-/-/]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo--/foo]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo/--/foo/]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[-/bar-/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo/-/bar-/foo/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo/-bar-/foo/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo-/bar-/foo/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo/-//bar-/foo/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_prefix_slash[/foo//-/bar-/foo/bar]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_url_defaults"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_url_processors"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_templates_and_static"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_default_static_max_age"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_templates_list"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dotted_name_not_allowed"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_empty_name_not_allowed"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dotted_names_from_app"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_empty_url_defaults"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_route_decorator_custom_endpoint"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_route_decorator_custom_endpoint_with_dots"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_endpoint_decorator"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_name"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_name"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_after_route_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_name"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_name"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_after_route_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_processing"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_global"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_processing"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_request_processing"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_url_processors"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nested_blueprint"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nested_callback_order"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nesting_url_prefixes[/parent-/child-None-None]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nesting_url_prefixes[/parent-None-None-/child]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nesting_url_prefixes[None-None-/parent-/child]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nesting_url_prefixes[/other-/something-/parent-/child]"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nesting_subdomains"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_child_and_parent_subdomain"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_unique_blueprint_names"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_self_registration"
+    },
+    {
+      "classname": "tests.test_blueprints",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_renaming"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_name"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_find_best_app"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[test-path0-test]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[test.py-path1-test]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[a/test-path2-test]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[test/__init__.py-path3-test]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[test/__init__-path4-test]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[value5-path5-cliapp.inner1]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[value6-path6-cliapp.inner1.inner2]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[test.a.b-path7-test.a.b]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[value8-path8-cliapp.app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prepare_import[value9-path9-cliapp.message.txt]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.app-None-testapp]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.app-testapp-testapp]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory-None-app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory-create_app-app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory-create_app()-app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory-create_app2(\"foo\", \"bar\")-app2_foo_bar]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory-create_app2(\"foo\", \"bar\", )-app2_foo_bar]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app[cliapp.factory- create_app () -app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[notanapp.py-None]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp/app-None]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.app-notanapp]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.factory-create_app2(\"foo\")]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.factory-create_app(]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.factory-no_app]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.importerrorapp-None]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_raises[cliapp.message.txt-None]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_locate_app_suppress_raise"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_version"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_scriptinfo"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_cli_has_app_context"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_with_appcontext"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_appgroup_app_context"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flaskgroup_app_context"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flaskgroup_debug[True]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flaskgroup_debug[False]"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flaskgroup_nested"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_no_command_echo_loading_error"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_help_echo_loading_error"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_help_echo_exception"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_simple"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_sort"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_all_methods"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_no_routes"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain"
+    },
+    {
+      "classname": "tests.test_cli.TestRoutes",
+      "kind": "passed",
+      "message": "",
+      "name": "test_host"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_load_dotenv"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dotenv_path"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dotenv_optional"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_disable_dotenv_from_env"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_cert_path"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_cert_adhoc"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_cert_import"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_cert_no_ssl"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_blueprints"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_empty"
+    },
+    {
+      "classname": "tests.test_cli",
+      "kind": "passed",
+      "message": "",
+      "name": "test_run_exclude_patterns"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_pyfile"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_object"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_file_json"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_file_toml"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_prefixed_env"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_prefixed_env_custom_prefix"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_prefixed_env_nested"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_mapping"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_class"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_envvar"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_from_envvar_missing"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_missing"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_config_missing_file"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_config_class"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_lifetime"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_namespace"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_pyfile_weird_encoding[utf-8]"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_pyfile_weird_encoding[iso-8859-15]"
+    },
+    {
+      "classname": "tests.test_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_from_pyfile_weird_encoding[latin-1]"
+    },
+    {
+      "classname": "tests.test_converters",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_converters"
+    },
+    {
+      "classname": "tests.test_converters",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_available"
+    },
+    {
+      "classname": "tests.test_helpers.TestSendfile",
+      "kind": "passed",
+      "message": "",
+      "name": "test_send_file"
+    },
+    {
+      "classname": "tests.test_helpers.TestSendfile",
+      "kind": "passed",
+      "message": "",
+      "name": "test_static_file"
+    },
+    {
+      "classname": "tests.test_helpers.TestSendfile",
+      "kind": "passed",
+      "message": "",
+      "name": "test_send_from_directory"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_with_anchor"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_with_scheme"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_with_scheme_not_external"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_with_alternating_schemes"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_with_method"
+    },
+    {
+      "classname": "tests.test_helpers.TestUrlFor",
+      "kind": "passed",
+      "message": "",
+      "name": "test_url_for_with_self"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_redirect_no_app"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_redirect_with_app"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_abort_no_app"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_app_aborter_class"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_abort_with_app"
+    },
+    {
+      "classname": "tests.test_helpers.TestNoImports",
+      "kind": "passed",
+      "message": "",
+      "name": "test_name_with_import_error"
+    },
+    {
+      "classname": "tests.test_helpers.TestStreaming",
+      "kind": "passed",
+      "message": "",
+      "name": "test_streaming_with_context"
+    },
+    {
+      "classname": "tests.test_helpers.TestStreaming",
+      "kind": "passed",
+      "message": "",
+      "name": "test_streaming_with_context_as_decorator"
+    },
+    {
+      "classname": "tests.test_helpers.TestStreaming",
+      "kind": "passed",
+      "message": "",
+      "name": "test_streaming_with_context_and_custom_close"
+    },
+    {
+      "classname": "tests.test_helpers.TestStreaming",
+      "kind": "passed",
+      "message": "",
+      "name": "test_stream_keeps_session"
+    },
+    {
+      "classname": "tests.test_helpers.TestStreaming",
+      "kind": "passed",
+      "message": "",
+      "name": "test_async_view"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_debug_flag[-False]"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_debug_flag[0-False]"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_debug_flag[False-False]"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_debug_flag[No-False]"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_get_debug_flag[True-True]"
+    },
+    {
+      "classname": "tests.test_helpers.TestHelpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_make_response"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource[r]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource[rb]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource[rt]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_exceptions[w]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_exceptions[x]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_exceptions[a]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_exceptions[r+]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_with_encoding[utf-8]"
+    },
+    {
+      "classname": "tests.test_helpers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_resource_with_encoding[utf-16-le]"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_explicit_instance_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_uninstalled_module_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_uninstalled_package_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_uninstalled_namespace_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_installed_module_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_installed_package_paths"
+    },
+    {
+      "classname": "tests.test_instance_config",
+      "kind": "passed",
+      "message": "",
+      "name": "test_prefix_package_paths"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_bad_request_debug_message[True]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_bad_request_debug_message[False]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_bad_requests"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_custom_mimetypes"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_as_unicode[True-\"\\\\u2603\"]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_as_unicode[False-\"\\u2603\"]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_dump_to_file"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[0]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[-1]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[1]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[23]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[3.14]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[s]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[longer string]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[True]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[False]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_basic_types[None]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_dicts"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_arrays"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_datetime[value0]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_datetime[value1]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_aware_datetimes[tz0]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_aware_datetimes[tz1]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_aware_datetimes[tz2]"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_jsonify_uuid_types"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_decimal"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_attr"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_tojson_filter"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_customization"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_key_sorting"
+    },
+    {
+      "classname": "tests.test_json",
+      "kind": "passed",
+      "message": "",
+      "name": "test_html_method"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data0]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data1]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data2]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data3]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data4]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data5]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[\\xff]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[<html>]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data8]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_dump_load_unchanged[data9]"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_duplicate_tag"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_tag"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_tag_interface"
+    },
+    {
+      "classname": "tests.test_json_tag",
+      "kind": "passed",
+      "message": "",
+      "name": "test_tag_order"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_logger"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_logger_debug"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_existing_handler"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_wsgi_errors_stream"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_has_level_handler"
+    },
+    {
+      "classname": "tests.test_logging",
+      "kind": "passed",
+      "message": "",
+      "name": "test_log_view_exception"
+    },
+    {
+      "classname": "tests.test_regression",
+      "kind": "passed",
+      "message": "",
+      "name": "test_aborting"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_on_pop"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_with_previous_exception"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_teardown_with_handled_exception"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_proper_test_request_context"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_binding"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_test"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_manual_context_binding"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_copy_context_thread"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_error_pops_context"
+    },
+    {
+      "classname": "tests.test_reqctx",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_dynamic_cookie_name"
+    },
+    {
+      "classname": "tests.test_request",
+      "kind": "passed",
+      "message": "",
+      "name": "test_max_content_length"
+    },
+    {
+      "classname": "tests.test_request",
+      "kind": "passed",
+      "message": "",
+      "name": "test_limit_config"
+    },
+    {
+      "classname": "tests.test_request",
+      "kind": "passed",
+      "message": "",
+      "name": "test_trusted_hosts_config"
+    },
+    {
+      "classname": "tests.test_session_interface",
+      "kind": "passed",
+      "message": "",
+      "name": "test_open_session_with_endpoint"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_rendered"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_before_render_template"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_signals"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_exception_signal"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_appcontext_signals"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_flash_signal"
+    },
+    {
+      "classname": "tests.test_signals",
+      "kind": "passed",
+      "message": "",
+      "name": "test_appcontext_tearing_down_signal"
+    },
+    {
+      "classname": "tests.test_subclassing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_suppressed_exception_logging"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_context_processing"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_original_win"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_simple_stream"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_request_less_rendering"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_standard_context"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_escaping"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_no_escaping"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_escaping_without_template_filename"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_macros"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_name"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_name"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_filter_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_filter_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_name"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_name"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_test_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_test_with_name_and_template"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_add_template_global"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_template_loader"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_iterable_loader"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_templates_auto_reload"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_templates_auto_reload_debug_run"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_template_loader_debugging"
+    },
+    {
+      "classname": "tests.test_templating",
+      "kind": "passed",
+      "message": "",
+      "name": "test_custom_jinja_env"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_environ_defaults_from_config"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_environ_defaults"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_environ_base_default"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_environ_base_modified"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_client_open_environ"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_specify_url_scheme"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_path_is_url"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_environbuilder_json_dumps"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_blueprint_with_subdomain"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_redirect_session"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_transactions"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_transaction_ipv6"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_transactions_no_null_sessions"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_transactions_keep_context"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_session_transaction_needs_cookies"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_test_client_context_binding"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_reuse_client"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_full_url_request"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_json_request_and_response"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_client_json_no_app_context"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_subdomain"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_nosubdomain"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_runner_class"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_invoke"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_cli_custom_obj"
+    },
+    {
+      "classname": "tests.test_testing",
+      "kind": "passed",
+      "message": "",
+      "name": "test_client_pop_all_preserved"
+    },
+    {
+      "classname": "tests.test_user_error_handler",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handler_no_match"
+    },
+    {
+      "classname": "tests.test_user_error_handler",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handler_subclass"
+    },
+    {
+      "classname": "tests.test_user_error_handler",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handler_http_subclass"
+    },
+    {
+      "classname": "tests.test_user_error_handler",
+      "kind": "passed",
+      "message": "",
+      "name": "test_error_handler_blueprint"
+    },
+    {
+      "classname": "tests.test_user_error_handler",
+      "kind": "passed",
+      "message": "",
+      "name": "test_default_error_handler"
+    },
+    {
+      "classname": "tests.test_user_error_handler.TestGenericHandlers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_handle_class_or_code[InternalServerError]"
+    },
+    {
+      "classname": "tests.test_user_error_handler.TestGenericHandlers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_handle_class_or_code[500]"
+    },
+    {
+      "classname": "tests.test_user_error_handler.TestGenericHandlers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_handle_generic_http"
+    },
+    {
+      "classname": "tests.test_user_error_handler.TestGenericHandlers",
+      "kind": "passed",
+      "message": "",
+      "name": "test_handle_generic"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_basic_view"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_method_based_view"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_view_patching"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_view_inheritance"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_view_decorators"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_view_provide_automatic_options_attr_disable"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_view_provide_automatic_options_attr_enable"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_provide_automatic_options_method_disable"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_implicit_head"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_explicit_head"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_endpoint_override"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_methods_var_inheritance"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_multiple_inheritance"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_remove_method_from_parent"
+    },
+    {
+      "classname": "tests.test_views",
+      "kind": "passed",
+      "message": "",
+      "name": "test_init_once"
+    }
+  ],
+  "profile": "adapted-pytest-8.4.2-not-upstream-uv-lock",
+  "revision": "49943b5a94413a530761350f04e896f76e8d620e",
+  "selection_accounting_qualification": null,
+  "semantic_oracle_qualification": null,
+  "status": "pytest_only_feasibility_not_semantic_qualification",
+  "tree": "6751ab7eae06e6f97a157860470fd588920a734b"
+}

@@ -12,6 +12,13 @@ probes or the external shortlist. Its JUnit/sentinel checks are not the phase-le
 oracle, representative corpus or held-out benchmark. See [WP02 progress and open
 gates](../../docs/wp02-status.md).
 
+All nine remaining external revisions now have a [source-profile inspection](assessments/source-profile-20261110.md)
+preserving exact byte identities and direct pin/entrypoint conflicts. The
+separate [Flask feasibility check](assessments/flask-49943b5.md) reproduces 494
+pytest-only outcomes across two clean environments and identical local builds,
+including a fresh fully offline reproduction. Neither changes the shortlist's
+eligibility/allocation or supplies phase-oracle/PT qualification.
+
 `candidates.toml` is a shortlist of twelve external repositories with HEAD
 revisions observed through `git ls-remote` on the recorded date. The dimensions
 are workload hypotheses, not verified properties of those revisions. All

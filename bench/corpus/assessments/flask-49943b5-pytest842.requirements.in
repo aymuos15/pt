@@ -1,0 +1,14 @@
+# Adapted PT-target development environment, not Flask's upstream uv.lock.
+# Flask revision 49943b5a94413a530761350f04e896f76e8d620e:
+# pyproject.toml project.dependencies + dependency-groups.tests, unchanged ranges.
+blinker>=1.9.0
+click>=8.1.3
+itsdangerous>=2.2.0
+jinja2>=3.1.2
+markupsafe>=2.1.1
+werkzeug>=3.1.0
+asgiref
+pytest
+python-dotenv
+# Explicit PT-target constraint, permitted by the upstream unbounded pytest range.
+pytest==8.4.2

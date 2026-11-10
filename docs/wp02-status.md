@@ -31,6 +31,39 @@ the exact explicit environment policy, limits and operational caveats.
 
 ## Development observations so far
 
+### External candidate follow-up
+
+All nine remaining exact shortlisted source revisions now have a read-only
+[configuration/profile assessment](../bench/corpus/assessments/source-profile-20261110.md),
+including 22 original-file hashes. Direct FastAPI/NumPy pytest-9 requirements,
+HTTPX's exact 8.4.1 tooling pin, Django's native entrypoint and pytest's self-hosting
+identity are preserved rather than silently changed. Requests/SQLAlchemy/Trio
+still need their actually declared plugin/service/build/scope qualification.
+
+The subsequent [Flask assessment](../bench/corpus/assessments/flask-49943b5.md)
+keeps original declarations intact and uses an explicit separate hashed 8.4.2
+runtime/build lock, **not** Flask's pytest-9.1.1 upstream lock. Two separate local
+builds produced identical wheel bytes. Both clean runtime environments ran
+**494 passing JUnit occurrences**, with **716 comparable installed files** and
+unchanged before/after site-packages inventories. A new, fully offline complete
+assessment reproduced both builds and both 494-pass sessions. No candidate was
+allocated or promoted to qualified. All eight qualification fields stayed null.
+The explicit reproducible tool has **11 passing synthetic adverse controls**;
+these are not native or semantic qualification. This extends real-repository
+feasibility without substituting XML for the required phase/effect oracle.
+
+The complete locked harness regression for this Flask/source-profile batch
+passed: **735 tests ran, 734 passed and the one existing native-peak capability
+test was skipped** (`Ran 735 tests in 858.730s`, `OK (skipped=1)`). No dependency,
+support-matrix or product-runtime pin was changed. The native-peak skip remains
+an unresolved qualification, not a fabricated memory metric.
+The **68 separate contract/audit tests passed** (`8.033s`). Static read-back
+checked all nine source profiles / 22 original file hashes, 24 local links,
+Python grammar/JSON and five unchanged dependency/support pin files. All twelve
+original eligibility/allocation declarations remain unassessed/unassigned.
+
+### Serial-core baseline
+
 - The initial ten direct fresh pytest invocations matched their declared JUnit
   occurrence order, adverse markers, sentinel sequences and exits **0, 1, 2, 5**.
   Evidence: `/tmp/opencode/pt-serial-core-initial-_pl9p69n`.
