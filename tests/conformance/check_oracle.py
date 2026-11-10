@@ -38,6 +38,8 @@ def _source(root):
     # Freeze the independent outer observer too, not generated venvs/results.
     paths.extend((root / "bench/harness").glob("*.py"))
     paths.extend(root / "bench/harness" / name for name in ("pyproject.toml", "uv.lock"))
+    paths.extend((root / "bench/corpus/assessments").glob("check_flask*.py"))
+    paths.extend((root / "bench/corpus/assessments").glob("flask-49943b5-*requirements.*"))
     for path in sorted(paths):
         if "__pycache__" in path.parts:
             continue
@@ -45,7 +47,7 @@ def _source(root):
             raise ValueError("oracle source cannot contain symbolic links")
         if path.is_dir():
             continue
-        if path.suffix not in (".py", ".json", ".md", ".toml", ".lock", ".ptcase"):
+        if path.suffix not in (".py", ".json", ".md", ".toml", ".lock", ".ptcase", ".in", ".txt"):
             raise ValueError("unexpected oracle/corpus source file")
         name = path.relative_to(root).as_posix()
         result[name] = read_file(root, name)

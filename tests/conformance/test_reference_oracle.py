@@ -369,7 +369,7 @@ class ReferenceOracleTests(unittest.TestCase):
             oracle.read_trace(forged, 0)
 
     def test_canonical_event_schema_accepts_actual_closed_payloads(self):
-        schema = json.loads((HERE / "reference-event-v1.schema.json").read_text())
+        schema = json.loads((HERE / "reference-event-v2.schema.json").read_text())
         Draft202012Validator.check_schema(schema)
         validator = Draft202012Validator(schema)
         results = [self.run_case(), self.run_case("phases"), self.run_case("collection_error"),
@@ -384,6 +384,41 @@ class ReferenceOracleTests(unittest.TestCase):
         event = json.loads(results[0]["path"].read_text().splitlines()[0])
         event["payload"]["extra"] = "not allowed"
         self.assertTrue(list(validator.iter_errors(event)))
+
+    def test_repository_ceiling_is_explicit_and_default_core_never_truncates_to_match(self):
+        code = "import pytest\n@pytest.mark.parametrize('value',range(257))\ndef test_one(value): assert value>=0\n"
+        core = self.run_case(content=code)
+        self.assertNotEqual(core["exit"], 0)
+        with self.assertRaises(oracle.TraceError):
+            self.read(core)
+        wider = self.run_case(content=code, extra=["--pt-reference-profile=serial-repository-v1"])
+        checked = self.read(wider)
+        self.assertEqual(wider["exit"], 0, wider["stdout"] + wider["stderr"])
+        self.assertEqual(checked["normalized"]["reference_profile"], "serial-repository-v1")
+        self.assertEqual(len(checked["normalized"]["completed"]), 257)
+        self.assertEqual(len(checked["normalized"]["phases"]), 771)
+        forged = self.mutate(wider, lambda rows: rows[0]["payload"].update(profile="serial-core-v1"))
+        with self.assertRaises(oracle.TraceError):
+            oracle.read_trace(forged, 0)
+
+    def test_historical_v1_core_traces_remain_readable_but_mixed_versions_do_not(self):
+        result = self.run_case()
+        schema = json.loads((HERE / "reference-event-v1.schema.json").read_text())
+        validator = Draft202012Validator(schema)
+
+        def old(rows):
+            for row in rows:
+                row["schema_version"] = 1
+            rows[0]["payload"].pop("profile")
+
+        legacy = self.mutate(result, old)
+        checked = oracle.read_trace(legacy, 0)
+        for event in checked["events"]:
+            validator.validate(event)
+        self.assertEqual(checked["normalized"], self.read(result)["normalized"])
+        mixed = self.mutate(result, lambda rows: rows[-1].update(schema_version=1))
+        with self.assertRaises(oracle.TraceError):
+            oracle.read_trace(mixed, 0)
 
     def test_bounded_reader_refuses_oversize_traces_events_items_and_nonregular_files(self):
         result = self.run_case()

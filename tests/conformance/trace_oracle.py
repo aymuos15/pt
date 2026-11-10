@@ -15,10 +15,11 @@ import stat
 MAX_TRACE_BYTES = 8 * 1024 * 1024
 MAX_EVENT_BYTES = 128 * 1024
 MAX_EVENTS = 25000
-MAX_ITEMS = 256
+MAX_ITEMS = 1024
+PROFILES = {"serial-core-v1": 256, "serial-repository-v1": 1024}
 KINDS = {
     "start": {"python", "pytest", "pid", "implementation", "platform", "machine", "gil_disabled",
-              "collect_only", "maxfail", "continue_on_collection_errors", "argv"},
+              "profile", "collect_only", "maxfail", "continue_on_collection_errors", "argv"},
     "collection_report": {"nodeid", "outcome", "result_count", "failure_message", "diagnostic_longrepr"},
     "inventory": {"collected", "selected", "deselected"},
     "protocol_start": {"ordinal", "nodeid"}, "protocol_finish": {"ordinal", "nodeid"},
@@ -128,11 +129,11 @@ def read_trace(path, process_exit_code):
         except (ValueError, RecursionError) as exc:
             raise TraceError("invalid strict trace JSON") from exc
         if (type(event) is not dict or set(event) != {"schema_version", "session", "seq", "monotonic_ns", "kind", "payload"}
-                or type(event["schema_version"]) is not int or event["schema_version"] != 1
+                or type(event["schema_version"]) is not int or event["schema_version"] not in (1, 2)
                 or type(event["seq"]) is not int or event["seq"] != seq or type(event["session"]) is not str
                 or re.fullmatch(r"[0-9a-f]{32}", event["session"]) is None or not _integer(event["monotonic_ns"])
                 or type(event["kind"]) is not str or event["kind"] not in KINDS or type(event["payload"]) is not dict
-                or set(event["payload"]) != KINDS[event["kind"]]):
+                or set(event["payload"]) != (KINDS[event["kind"]] - {"profile"} if event["kind"] == "start" and event["schema_version"] == 1 else KINDS[event["kind"]])):
             raise TraceError("trace event type, sequence or closed shape differs")
         if session is None:
             session = event["session"]
@@ -140,9 +141,13 @@ def read_trace(path, process_exit_code):
             raise TraceError("mixed sessions or decreasing trace clock")
         last_clock = event["monotonic_ns"]
         events.append(event)
-    if events[0]["kind"] != "start" or events[-1]["kind"] != "terminal":
+    if (events[0]["kind"] != "start" or events[-1]["kind"] != "terminal"
+            or len({event["schema_version"] for event in events}) != 1):
         raise TraceError("trace is missing its start/terminal boundary")
     header, terminal = events[0]["payload"], events[-1]["payload"]
+    profile = header.get("profile", "serial-core-v1")
+    if type(profile) is not str or profile not in PROFILES:
+        raise TraceError("unsupported explicit reference profile")
     if (type(header["python"]) is not list or any(type(part) is not int for part in header["python"])
             or header["python"] != [3, 12, 12] or header["pytest"] != "8.4.2" or not _integer(header["pid"]) or header["pid"] == 0
             or header["implementation"] != "cpython" or header["platform"] != "linux" or header["machine"] != "x86_64" or header["gil_disabled"] is not False
@@ -157,7 +162,7 @@ def read_trace(path, process_exit_code):
         raise TraceError("trace needs one authoritative same-session inventory")
     inventory = inventories[0]
     items, selected, deselected = (inventory[key] for key in ("collected", "selected", "deselected"))
-    if type(items) is not list or len(items) > MAX_ITEMS or type(selected) is not list or type(deselected) is not list:
+    if type(items) is not list or len(items) > min(MAX_ITEMS, PROFILES[profile]) or type(selected) is not list or type(deselected) is not list:
         raise TraceError("invalid occurrence inventory type or bound")
     for ordinal, item in enumerate(items):
         if (type(item) is not dict or set(item) != {"ordinal", "nodeid"} or type(item["ordinal"]) is not int
@@ -252,7 +257,7 @@ def read_trace(path, process_exit_code):
         raise TraceError("no-tests exit contradicts selected, executed or failed work")
     return {"consistency": "checked_instrumented_reference_only", "trace_sha256": hashlib.sha256(raw).hexdigest(),
             "raw_event_count": len(events), "events": events,
-            "normalized": {"pytest_argv": _request_argv(header["argv"]), "collect_only": header["collect_only"],
+            "normalized": {"reference_profile": profile, "pytest_argv": _request_argv(header["argv"]), "collect_only": header["collect_only"],
                            "maxfail": header["maxfail"], "continue_on_collection_errors": header["continue_on_collection_errors"],
                            "collected": items, "selected": selected, "deselected": deselected,
                            "started": starts, "completed": completed, "incomplete": incomplete, "not_run": not_run,

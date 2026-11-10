@@ -12,16 +12,18 @@ import uuid
 import pytest
 
 
-MAX_ITEMS = 256
+MAX_ITEMS = 1024
+PROFILES = {"serial-core-v1": 256, "serial-repository-v1": 1024}
 MAX_EVENTS = 25000
 MAX_EVENT_BYTES = 128 * 1024
 MAX_TRACE_BYTES = 8 * 1024 * 1024
 
 
 class Writer:
-    def __init__(self, path):
+    def __init__(self, path, profile):
         self.fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         self.session = uuid.uuid4().hex
+        self.profile = profile
         self.seq = self.size = self.reports = self.executed = 0
         self.collected = []
         self.deselected = []
@@ -33,7 +35,7 @@ class Writer:
 
     def emit(self, kind, payload):
         self.seq += 1
-        event = {"schema_version": 1, "session": self.session, "seq": self.seq,
+        event = {"schema_version": 2, "session": self.session, "seq": self.seq,
                  "monotonic_ns": time.monotonic_ns(), "kind": kind, "payload": payload}
         raw = (json.dumps(event, sort_keys=True, allow_nan=False) + "\n").encode()
         self.size += len(raw)
@@ -73,8 +75,10 @@ def _message(report):
 
 
 def pytest_addoption(parser):
-    parser.getgroup("pt-reference-test-observer").addoption("--pt-reference-trace", required=True,
-                                                          help="new private test-only JSONL trace outside source")
+    group = parser.getgroup("pt-reference-test-observer")
+    group.addoption("--pt-reference-trace", required=True, help="new private test-only JSONL trace outside source")
+    group.addoption("--pt-reference-profile", choices=tuple(PROFILES), default="serial-core-v1",
+                    help="explicit finite occurrence ceiling; never inferred from collected work")
 
 
 def pytest_configure(config):
@@ -84,11 +88,12 @@ def pytest_configure(config):
         raise pytest.UsageError("reference observer requires Linux x86-64, GIL-enabled CPython 3.12.12 / pytest 8.4.2")
     if getattr(config.option, "numprocesses", None) not in (None, 0):
         raise pytest.UsageError("reference observer has no parallel/worker contract")
-    writer = Writer(Path(config.getoption("--pt-reference-trace")))
+    writer = Writer(Path(config.getoption("--pt-reference-trace")), config.getoption("--pt-reference-profile"))
     config._pt_reference_writer = writer
     writer.emit("start", {"python": list(sys.version_info[:3]), "pytest": pytest.__version__, "pid": os.getpid(),
                           "implementation": sys.implementation.name, "platform": sys.platform, "machine": platform.machine(),
                           "gil_disabled": bool(sysconfig.get_config_var("Py_GIL_DISABLED")),
+                          "profile": writer.profile,
                           "collect_only": bool(config.option.collectonly), "maxfail": config.option.maxfail,
                           "continue_on_collection_errors": bool(config.option.continue_on_collection_errors),
                           "argv": list(config.invocation_params.args)})
@@ -132,7 +137,7 @@ def pytest_collection_finish(session):
     writer = _writer(session.config)
     if not writer.collected:
         writer.collected = list(session.items)
-    if len(writer.collected) > MAX_ITEMS or len({id(item) for item in writer.collected}) != len(writer.collected):
+    if len(writer.collected) > min(MAX_ITEMS, PROFILES[writer.profile]) or len({id(item) for item in writer.collected}) != len(writer.collected):
         raise RuntimeError("unsupported reference inventory size or repeated live item object")
     writer.ordinals = {id(item): ordinal for ordinal, item in enumerate(writer.collected)}
     writer.emit("inventory", {"collected": [{"ordinal": ordinal, "nodeid": item.nodeid} for ordinal, item in enumerate(writer.collected)],

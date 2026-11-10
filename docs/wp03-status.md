@@ -90,6 +90,53 @@ batch. Static checks validated the canonical schema, Python 3.12 grammar, **90
 local links** and unchanged harness/support/Rust/Cargo/bridge dependency pins.
 Rust and bridge packaging were not rerun for this test-only batch.
 
+## Explicit repository reference profile
+
+The follow-up adds **trace version 2**, with an explicit bounded reference profile.
+The default `serial-core-v1` remains capped at **256 occurrences**; the separately
+requested `serial-repository-v1` permits **1024**, retaining the existing byte /
+event/depth ceilings. A 257-item real fixture fails visibly under the default
+rather than silently truncating, and executes all 257 / 771 phases under the
+explicit repository profile. Versions are never mixed. The committed v1 schema
+is unchanged; comparison against the actual prior retained evidence preserved
+**88 accepted / one rejected** historical trace dispositions and every normalized
+field. This is engineering evidence for these finite ceilings, not broader
+semantic/profile/release qualification.
+
+The [Flask reference tool](../bench/corpus/assessments/check_flask_phases_49943b5.py)
+uses the two already prepared isolated environments and performs no installation.
+Its four predeclared fresh pytest invocations each retain **494 selected and
+completed occurrences / 1482 ordered setup-call-teardown reports**, exit zero.
+Both within-environment repeated-reference comparisons matched exactly, including
+captured sections and warning messages. Every owned work copy is archived by
+rename and the same literal cwd recreated, avoiding path erasure or deletion of
+earlier evidence. No body-effect or PT-backend qualification is inferred.
+The initial development evidence is at
+`/tmp/opencode/pt-flask-phase-reference-yk0x1bkf`; verification of the reusable
+tool and expanded source-frozen controls is recorded with the final checks.
+
+The two new actual-reference controls plus the prior checks passed **50 tests**
+(`28.878s`), and the separate **five synthetic Flask plan controls passed**
+(`0.061s`). They preserve four planned outcomes, same-cwd/no-delete resets,
+pre-execution installed-state mismatch, lost-return uncertainty and unstable
+baseline classification. Synthetic observations stay explicitly labelled and
+cannot resolve the six remaining support/effect/environment/generation/backend/
+release qualifications of the real-repository reference tool.
+
+Final source-frozen verification of this follow-up passed **all 55 tests** with
+no skips (`Ran 55 tests in 29.504s`, `OK`), retaining **88 frozen source/lock
+files** at `/tmp/opencode/pt-oracle-v2-evidence-j3hyfqdn/run`. All seven outer
+qualification fields remain null. The reusable Flask tool separately completed
+its actual four-request, 494-occurrence / 1482-phase-per-request check with both
+reference comparisons matching at `/tmp/opencode/pt-flask-phase-tool-uf8bxbcd/run`;
+all six tool qualifications remain null.
+
+**68 contract/audit tests passed** (`8.188s`). Static checks covered six edited
+Python files, both schema versions, unchanged original v1 schema and **17 local
+links**. The unchanged harness's last full result remains **735 tests, 734 passed
+/ one native-peak skip** (`858.730s`). Rust, bridge packaging and shipping timing
+were not rerun or claimed by this test-only oracle-profile follow-up.
+
 ## Remaining gates
 
 - WP01 acceptance and WP02's representative eligibility, authenticated artifact /

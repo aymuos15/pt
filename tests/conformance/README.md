@@ -31,6 +31,9 @@ units are not promoted to passes. The outer observer retains bounded raw output
 and its process observation. Complete-looking child files cannot recover a lost
 observer return. Original/frozen source bytes must still match after execution.
 Existing outputs are never overwritten and work is never automatically retried.
+The frozen inputs also include the separate Flask assessment/phase-plan tools
+and their requirements, so their synthetic failure controls run from recorded
+source rather than an external mutable checkout.
 
 This is an explicit correctness experiment: it creates only private files and
 subprocesses, installs nothing, disables no pytest plugins and changes no global
@@ -73,14 +76,20 @@ this finite trace reader, not reclassified as an empty passing session.
 
 ## Canonical trace and normalization
 
-[`reference-event-v1.schema.json`](reference-event-v1.schema.json) specifies one
-closed JSON object per UTF-8 line. `trace_oracle.py` independently checks duplicate
+[`reference-event-v2.schema.json`](reference-event-v2.schema.json) specifies one
+closed JSON object per UTF-8 line, with an explicit profile in the start event.
+The original [version-1 schema](reference-event-v1.schema.json) is unchanged and
+its 256-item traces remain readable. Mixed/unknown versions are rejected.
+`trace_oracle.py` independently checks duplicate
 JSON keys, finite numbers, strict integer/boolean types, schema/session/sequence,
 clock monotonicity, identity partitions, serial ordering, applicable phases,
 terminal counts and an externally observed process return. Schema acceptance
 alone does not establish these relationships or producer honesty.
 
-Limits fail closed: **256 occurrences, 25,000 events, 128 KiB per event, 8 MiB per
+Limits fail closed: the default **`serial-core-v1` retains its 256-occurrence
+ceiling**. The separately selected **`--pt-reference-profile=serial-repository-v1`**
+permits at most **1024 occurrences**, not an automatically inferred larger limit
+or truncated subset. Both retain **25,000 events, 128 KiB per event, 8 MiB per
 trace and JSON depth 32**. A trace must end with a newline and terminal event.
 Regular stable files only; linked/FIFO paths, partial writes and bound violations
 are rejected. Larger projects need another reviewed profile, not silent truncation.
@@ -89,7 +98,7 @@ Compared exactly:
 
 | Observable | Comparison |
 |---|---|
-| Request | Exact pytest argv except the single observer trace destination; collect-only, maxfail and continue-on-collection-errors policy |
+| Request | Exact finite reference profile and pytest argv except the single observer trace destination; collect-only, maxfail and continue-on-collection-errors policy |
 | Inventory | All exact node IDs/ordinals, final selection order and deselection membership |
 | Execution | Starts, completed/incomplete/not-run occurrences; separate ordered phase/outcome/wasxfail records and stable failure messages |
 | Diagnostics | Exact warnings, captured sections, backend error/interruption type/message, stop reason and process exit |
@@ -141,6 +150,19 @@ Matching pytest reports and side effects cannot waive the resulting coverage
 mismatch. These are WP03 oracle self-tests, **not WP15 pytest-cov, automatic
 subprocess coverage, core fallback, plugin coexistence or production qualification**.
 Source/generation/resource/finalization gates remain independent.
+
+## Real-repository reference follow-up
+
+The explicit [Flask phase-reference tool](../../bench/corpus/assessments/check_flask_phases_49943b5.py)
+consumes the separately prepared [pinned two-environment Flask assessment](../../bench/corpus/assessments/flask-49943b5.md).
+It performs no installation. Four predeclared fresh pytest sessions use the named
+repository profile, with two repetitions in each environment. Each work copy is
+archived by rename before recreating the **same literal cwd** from the source
+archive, so reference diagnostics and arguments are comparable without stripping
+user paths or erasing outputs. Unknown returns stop later work without retry.
+The two within-environment comparisons retain mismatches as `baseline_uncertain`.
+This is actual reference-phase evidence, not PT parity, external body-effect
+verification, full environment identity, immutable generations or product timing.
 
 See [WP03 evidence and open gates](../../docs/wp03-status.md) and the unchanged
 [strict full-success contract](../../docs/contracts.md).
