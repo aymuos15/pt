@@ -91,6 +91,10 @@ bytes/bindings and bounded private no-overwrite retention after actual writer
 cleanup. It has an explicit pinned SHA-256 dependency and deliberately cannot
 promote a ready/hash claim into generic required-report completeness. This is
 not a substitute for a format adapter, source snapshot or qualified full result.
+Its versioned pytest-8.4.2 xunit2/no-extra-data adapter now checks exact ordered
+occurrences, outcomes/messages and formatter counters against live ledger
+observations before publication. Generic coverage/exception completeness and
+the coordinator/environment/current immutable-generation gates stay open.
 
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do

@@ -14,6 +14,9 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::{Component, Path, PathBuf};
 use std::time::{Duration, Instant};
 
+mod junit;
+pub use junit::{JUNIT_POLICY_ID, JunitExpectation, JunitLimits, JunitPolicy};
+
 const MAX_FILE_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_TOTAL_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_FILES: usize = 1024;
@@ -299,6 +302,8 @@ pub struct ArtifactDeclaration {
     /// Optional coordinator-owned exact content contract, independent of ready
     /// claims. None permits content retention but cannot satisfy required output.
     pub expected_content: Option<ExpectedContent>,
+    /// Explicit pinned formatter policy; this alone is not runtime evidence.
+    pub junit_policy: Option<JunitPolicy>,
 }
 
 #[derive(Clone, Debug)]
@@ -393,6 +398,8 @@ impl WritersStopped {
 enum Step {
     BeforeCopy,
     AfterCopy,
+    BeforeValidation,
+    AfterValidation,
     BeforeRename,
     AfterRename,
 }
@@ -431,6 +438,16 @@ impl ArtifactStore {
                 require(
                     expected.bytes <= budget.per_file_bytes && sha256(&expected.sha256),
                     "artifact_expected_content_invalid",
+                )?;
+            }
+            require(
+                value.expected_content.is_none() || value.junit_policy.is_none(),
+                "artifact_completeness_policy_conflict",
+            )?;
+            if let Some(policy) = &value.junit_policy {
+                require(
+                    policy.limits().bytes <= budget.per_file_bytes,
+                    "artifact_junit_limit_exceeds_retention_contract",
                 )?;
             }
             states.insert(value.artifact_id.clone(), ArtifactState::Pending);
@@ -475,13 +492,13 @@ impl ArtifactStore {
         self.declarations.iter().filter(|value|value.required).all(|value|matches!(self.states.get(&value.artifact_id),Some(ArtifactState::Committed(value)) if value.complete))
     }
 
-    /// This exact-content foundation has no generic report/coverage completeness
-    /// adapter. An unknown required expectation must block a qualified launch.
+    /// A declared exact-content or pinned JUnit policy is necessary before a
+    /// qualified launch. JUnit still needs independently validated live context.
     pub fn required_artifacts_checkable(&self) -> bool {
         self.declarations
             .iter()
             .filter(|value| value.required)
-            .all(|value| value.expected_content.is_some())
+            .all(|value| value.expected_content.is_some() || value.junit_policy.is_some())
     }
 
     pub fn commit(
@@ -492,10 +509,29 @@ impl ArtifactStore {
         self.commit_with(claim, writers, &mut |_| Ok(()))
     }
 
+    pub fn commit_with_junit(
+        &mut self,
+        claim: &ArtifactReady,
+        writers: &WritersStopped,
+        expectation: &JunitExpectation,
+    ) -> Result<VerifiedArtifact> {
+        self.commit_context(claim, writers, Some(expectation), &mut |_| Ok(()))
+    }
+
     fn commit_with(
         &mut self,
         claim: &ArtifactReady,
         _writers: &WritersStopped,
+        step: &mut impl FnMut(Step) -> Result<()>,
+    ) -> Result<VerifiedArtifact> {
+        self.commit_context(claim, _writers, None, step)
+    }
+
+    fn commit_context(
+        &mut self,
+        claim: &ArtifactReady,
+        _writers: &WritersStopped,
+        junit: Option<&JunitExpectation>,
         step: &mut impl FnMut(Step) -> Result<()>,
     ) -> Result<VerifiedArtifact> {
         let declaration = self
@@ -509,7 +545,7 @@ impl ArtifactStore {
             "artifact_already_terminal_no_retry",
         )?;
         let mut published = false;
-        let result = self.commit_inner(&declaration, claim, step, &mut published);
+        let result = self.commit_inner(&declaration, claim, junit, step, &mut published);
         match &result {
             Ok(value) => {
                 self.states.insert(
@@ -534,10 +570,17 @@ impl ArtifactStore {
         &mut self,
         declaration: &ArtifactDeclaration,
         claim: &ArtifactReady,
+        junit: Option<&JunitExpectation>,
         step: &mut impl FnMut(Step) -> Result<()>,
         published: &mut bool,
     ) -> Result<VerifiedArtifact> {
         check_deadline(self.budget.deadline)?;
+        if let Some(expectation) = junit {
+            require(
+                declaration.junit_policy.as_ref() == Some(expectation.policy()),
+                "artifact_junit_policy_or_context_mismatch",
+            )?;
+        }
         require(sha256(&claim.sha256), "artifact_sha256_invalid")?;
         require(
             claim.bytes <= self.budget.per_file_bytes
@@ -653,6 +696,43 @@ impl ArtifactStore {
                 && stamp(&output)? == copied,
             "artifact_copy_readback_mismatch",
         )?;
+        if let Some(expectation) = junit {
+            require(
+                claim.bytes <= expectation.policy().limits().bytes,
+                "junit_byte_bound",
+            )?;
+            output
+                .seek(SeekFrom::Start(0))
+                .map_err(|e| ArtifactError::io("junit_copy_seek", e))?;
+            step(Step::BeforeValidation)?;
+            check_deadline(self.budget.deadline)?;
+            let mut raw = Vec::new();
+            raw.try_reserve_exact(claim.bytes as usize)
+                .map_err(|e| ArtifactError::io("junit_copy_allocation_bound", e))?;
+            loop {
+                check_deadline(self.budget.deadline)?;
+                let maximum =
+                    std::cmp::min(chunk.len() as u64, claim.bytes - raw.len() as u64 + 1) as usize;
+                let size = output
+                    .read(&mut chunk[..maximum])
+                    .map_err(|e| ArtifactError::io("junit_copy_read", e))?;
+                require(
+                    raw.len() as u64 + size as u64 <= claim.bytes,
+                    "junit_copy_length_changed",
+                )?;
+                if size == 0 {
+                    break;
+                }
+                raw.extend_from_slice(&chunk[..size]);
+            }
+            require(raw.len() as u64 == claim.bytes, "junit_copy_length_changed")?;
+            expectation.validate(&raw, self.budget.deadline)?;
+            step(Step::AfterValidation)?;
+            require(
+                stamp(&output)? == copied,
+                "junit_copy_changed_during_validation",
+            )?;
+        }
         step(Step::BeforeRename)?;
         check_deadline(self.budget.deadline)?;
         source.validate()?;
@@ -722,7 +802,7 @@ impl ArtifactStore {
             artifact_id: claim.artifact_id.clone(),
             sha256: claim.sha256.clone(),
             bytes: claim.bytes,
-            complete: claim.complete && declaration.expected_content.is_some(),
+            complete: claim.complete && (declaration.expected_content.is_some() || junit.is_some()),
             ready_complete_claim: claim.complete,
         })
     }

@@ -11,6 +11,7 @@ nix = { workspace = true, features = ["fs", "user"] }
 pt-process = { path = "../pt-process" }
 pt-protocol = { path = "../pt-protocol" }
 sha2.workspace = true
+quick-xml.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

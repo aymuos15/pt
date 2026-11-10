@@ -51,6 +51,7 @@ impl Fixture {
                 bytes: 3,
                 sha256: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".into(),
             }),
+            junit_policy: None,
         }
     }
     fn store(&self, declarations: Vec<ArtifactDeclaration>) -> ArtifactStore {
@@ -748,6 +749,213 @@ fn an_expired_deadline_or_stalled_copy_cannot_reset_the_store_window_or_publish_
                 .unwrap_err()
                 .code(),
             "artifact_already_terminal_no_retry"
+        );
+    }
+}
+
+fn junit_declaration() -> ArtifactDeclaration {
+    ArtifactDeclaration {
+        artifact_id: "junit".into(),
+        source: "junit.xml".into(),
+        required: true,
+        expected_content: None,
+        junit_policy: Some(
+            JunitPolicy::xunit2(
+                "pytest".into(),
+                None,
+                JunitLimits {
+                    bytes: 512 * 1024,
+                    testcases: 256,
+                    events: 10000,
+                },
+            )
+            .unwrap(),
+        ),
+    }
+}
+fn junit_expectation() -> JunitExpectation {
+    JunitExpectation::from_snapshot(
+        junit_declaration().junit_policy.unwrap(),
+        &junit::tests::passing_snapshot(),
+        budget().deadline,
+    )
+    .unwrap()
+}
+
+#[test]
+fn declared_junit_requires_matching_live_projection_before_required_completion() {
+    let f = Fixture::new();
+    let raw = junit::tests::passing_xml();
+    fs::write(f.source.join("junit.xml"), &raw).unwrap();
+    let mut store = f.store(vec![junit_declaration()]);
+    assert!(store.required_artifacts_checkable());
+    let content = store
+        .commit(&Fixture::claim("junit", raw.as_bytes(), true), &f.writers())
+        .unwrap();
+    assert!(content.ready_complete_claim());
+    assert!(!content.complete());
+    assert!(!store.required_artifacts_satisfied());
+    let f = Fixture::new();
+    fs::write(f.source.join("junit.xml"), &raw).unwrap();
+    let mut store = f.store(vec![junit_declaration()]);
+    let content = store
+        .commit_with_junit(
+            &Fixture::claim("junit", raw.as_bytes(), true),
+            &f.writers(),
+            &junit_expectation(),
+        )
+        .unwrap();
+    assert!(content.complete());
+    assert!(store.required_artifacts_satisfied());
+    assert_eq!(fs::read(f.target("junit")).unwrap(), raw.as_bytes());
+}
+
+#[test]
+fn junit_validation_failure_policy_mismatch_and_partial_ready_claim_never_become_complete() {
+    for mode in ["invalid", "wrong_policy", "partial"] {
+        let f = Fixture::new();
+        let mut raw = junit::tests::passing_xml();
+        if mode == "invalid" {
+            raw = raw.replace("test_first", "test_missing");
+        }
+        fs::write(f.source.join("junit.xml"), &raw).unwrap();
+        let mut declaration = junit_declaration();
+        if mode == "wrong_policy" {
+            declaration.junit_policy = Some(
+                JunitPolicy::xunit2(
+                    "other".into(),
+                    None,
+                    JunitLimits {
+                        bytes: 512 * 1024,
+                        testcases: 256,
+                        events: 10000,
+                    },
+                )
+                .unwrap(),
+            );
+        }
+        let mut store = f.store(vec![declaration]);
+        let result = store.commit_with_junit(
+            &Fixture::claim("junit", raw.as_bytes(), mode != "partial"),
+            &f.writers(),
+            &junit_expectation(),
+        );
+        if mode == "partial" {
+            assert!(!result.unwrap().complete());
+            assert!(f.target("junit").exists());
+        } else {
+            assert!(result.is_err());
+            assert!(!f.target("junit").exists());
+            assert!(
+                store
+                    .commit_with_junit(
+                        &Fixture::claim("junit", raw.as_bytes(), true),
+                        &f.writers(),
+                        &junit_expectation()
+                    )
+                    .is_err()
+            );
+        }
+        assert!(!store.required_artifacts_satisfied());
+    }
+}
+
+#[test]
+fn conflicting_or_unbounded_completeness_contracts_fail_before_private_root_creation() {
+    let f = Fixture::new();
+    let mut declaration = junit_declaration();
+    declaration.expected_content = Fixture::declare("a", "a", true).expected_content;
+    assert!(
+        ArtifactStore::create(
+            &f.source,
+            &f.retention,
+            "private",
+            vec![declaration],
+            budget()
+        )
+        .is_err()
+    );
+    let mut declaration = junit_declaration();
+    declaration.junit_policy = Some(
+        JunitPolicy::xunit2(
+            "pytest".into(),
+            None,
+            JunitLimits {
+                bytes: 1024 * 1024,
+                testcases: 256,
+                events: 10000,
+            },
+        )
+        .unwrap(),
+    );
+    assert!(
+        ArtifactStore::create(
+            &f.source,
+            &f.retention,
+            "private",
+            vec![declaration],
+            budget()
+        )
+        .is_err()
+    );
+    assert!(!f.retention.join("private").exists());
+}
+
+#[test]
+fn format_validation_does_not_waive_staging_substitution_no_replace_or_publication_return_loss() {
+    for mode in [
+        "edit_after_validation",
+        "target_race",
+        "late_return_loss",
+        "expired_validation",
+    ] {
+        let f = Fixture::new();
+        let raw = junit::tests::passing_xml();
+        fs::write(f.source.join("junit.xml"), &raw).unwrap();
+        let mut store = f.store(vec![junit_declaration()]);
+        if mode == "expired_validation" {
+            store.budget.deadline = Instant::now() + Duration::from_millis(250);
+        }
+        let result = store.commit_context(
+            &Fixture::claim("junit", raw.as_bytes(), true),
+            &f.writers(),
+            Some(&junit_expectation()),
+            &mut |step| {
+                match (mode, step) {
+                    ("edit_after_validation", Step::AfterValidation) => fs::write(
+                        f.retention.join("private/.pending-junit"),
+                        raw.replace("test_first", "wrong_name"),
+                    )
+                    .unwrap(),
+                    ("target_race", Step::BeforeRename) => {
+                        fs::write(f.target("junit"), b"foreign output must remain").unwrap()
+                    }
+                    ("late_return_loss", Step::AfterRename) => {
+                        return Err(ArtifactError::new(
+                            "synthetic_junit_publication_return_loss",
+                        ));
+                    }
+                    ("expired_validation", Step::BeforeValidation) => {
+                        std::thread::sleep(Duration::from_millis(350))
+                    }
+                    _ => {}
+                }
+                Ok(())
+            },
+        );
+        assert!(result.is_err(), "{mode}");
+        assert!(!store.required_artifacts_satisfied());
+        if mode == "target_race" {
+            assert_eq!(
+                fs::read(f.target("junit")).unwrap(),
+                b"foreign output must remain"
+            );
+        }
+        if mode == "late_return_loss" {
+            assert_eq!(fs::read(f.target("junit")).unwrap(), raw.as_bytes());
+        }
+        assert!(
+            matches!(store.state("junit"),Some(ArtifactState::Failed{publication_may_exist,..}) if *publication_may_exist==(mode=="late_return_loss"))
         );
     }
 }

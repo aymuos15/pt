@@ -48,6 +48,7 @@ fn actual_pytest_junit_is_rehashed_against_independent_python_but_unknown_comple
             source: "requested-junit.xml".into(),
             required: true,
             expected_content: None,
+            junit_policy: None,
         }],
         RetentionBudget {
             files: 1,

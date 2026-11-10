@@ -16,9 +16,10 @@ but no CLI/coordinator pytest backend or full-result certification. The
 private-socket handoff and bridge framing primitives are also implemented as
 development components. A [bounded Rust bridge decoder and serial ledger](crates/pt-protocol/README.md)
 now check necessary stream/accounting conditions, not a complete backend or
-artifact/environment/generation certification. The initial
+artifact/environment/generation certification. The
 bounded [artifact-retention component](crates/pt-report/README.md) also verifies
-owned bytes/publication after cleanup; unknown report completeness stays blocked.
+owned bytes/publication after cleanup, with a pinned pytest-JUnit projection
+adapter; unknown/unsupported report completeness stays blocked.
 The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.

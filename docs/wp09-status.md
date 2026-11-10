@@ -26,8 +26,8 @@ lifetime deadline fail visibly. No source repair, arbitrary overwrite/delete,
 started-work replay or stale-root recovery exists.
 
 Crucially, readiness/hash agreement alone cannot establish required completeness.
-An independent coordinator exact-byte contract is the only completeness policy
-implemented here; unknown variable reports can be retained as content but stay
+At that foundation revision, an independent coordinator exact-byte contract was
+the only completeness policy; unknown variable reports could be retained but stayed
 **ineligible for required-complete status**. Generic JUnit/coverage/exception
 format and semantic adapters, actual coordinator request/process association,
 complete environments and immutable generations remain open. This component
@@ -76,6 +76,83 @@ coordinator integration, environments/generations and release gates below remain
 open; no successful `pt run` is enabled by the component.
 Static read-back checked **74 local links**, five unchanged Python/support /
 toolchain/candidate pin files and all unchanged bridge source modules.
+
+## Pinned JUnit completeness adapter (base fdf6241)
+
+The new `pytest-8.4.2-xunit2-no-extra-data-v1` policy derives ordered XML
+occurrences, outcome/message/skip kinds and the formatter's exact suite counters
+from the **already validated live serial ledger**, not from report bytes.
+`ArtifactStore::commit_with_junit` checks the owned pending copy before native
+no-replace publication, preserving all earlier byte/hash/readback/cleanup/deadline
+requirements. Unknown completeness, missing context and partial ready claims
+still cannot become required-complete. These are component prerequisites, not
+coordinator execution, full work, environment, immutable generation or release
+qualification.
+
+The adapter covers default xunit2/no-extra-data reports, exact requested suite /
+prefix options, collector skips/errors, duplicate custom occurrences, doctest /
+unittest, strict XPASS, applicable phase outcomes, fail-fast, collect-only and
+empty suites. Counter arithmetic is intentionally **not occurrence/XML-row
+counting**: pass-plus-teardown-error counts two suite tests in one XML row;
+call-plus-teardown-failure emits two XML rows but subtracts its double-failure
+count. Interrupted unnamed testcases and incomplete attempts stay unknown and
+cannot supply an expectation. Unsupported properties, capture/legacy nodes and
+format changes are rejected, never removed or suppressed in pytest.
+
+The claim is the named structural/identity/outcome/message/counter projection
+only. Nonempty required diagnostic bodies are checked, but complete traceback
+byte equivalence, coverage and rich exception/capture semantics require separate
+adapters. The trusted coordinator must bind snapshots, actual process returns,
+writers and requests correctly; public snapshots/content cannot authenticate that
+association or recover a missing return. The [component limits/API](../crates/pt-report/README.md)
+make those exclusions explicit. `pt run` remains unavailable.
+
+Initial focused controls passed **35 artifact/parser methods plus six native
+JUnit methods / 23 fresh real pytest requests**, and the existing real JUnit
+retention method. All ten declared core fixtures, both explicit entrypoints,
+report modes/counters, collection skip/continue-errors, Unicode/entity data,
+actual unknown interrupted JUnit and four unsupported reporting extensions were
+exercised. Each native request used real framing/EOF/ledger/cleanup, a source
+copy and an independent isolated stdlib XML/hash probe. Every intended pytest
+failure exit stayed nonzero; an unsupported extension was a reporting failure,
+not an excuse to change the user's passing pytest behavior.
+
+Development failures/corrections are retained rather than promoted to passes:
+the original unverified draft used quick-xml's old byte API against its pinned
+0.42 string API, so its first `cargo check` stopped at compilation. A new test
+source also had an incorrectly quoted Rust/Python literal, caught by rustfmt
+before executing those new arms. Independent stdlib XML mutations then found a
+real parser strictness gap: the pull reader accepted adjacent quoted attributes
+without XML's required separator, e.g. `name="pytest"errors="0"`. Typed closed
+attributes alone did not reject it. A bounded lexical separator guard now rejects
+that malformed input; its independent adversary remains in the suite. An explicit
+test-helper argument-count clippy diagnostic was corrected without changing any
+runtime behavior. Final locked release and retained-mutation evidence follows
+its actual return, not the earlier partial checks.
+
+The final **locked, offline release workspace passed 128 tests**, no skips;
+rustfmt and clippy `-D warnings` passed. This includes **36 artifact/parser
+methods**, six real JUnit methods / **23 fresh pytest requests**, and the existing
+real JUnit content-only check. All **23 independent stdlib XML/hash probes**
+returned successfully; raw streams, actual process reports, original/published
+report bytes and frozen source hashes are retained at
+`/tmp/opencode/pt-junit-final-verification-xalhnzal`. Sources stayed unchanged.
+The independent literal XML corpus and Rust adapter agreed on **2,153 controls:
+54 accepted / 2,099 rejected**. These are synthetic parser controls, not 2,153
+executed pytest sessions or independent ecosystem observations.
+
+All **46 prior Cargo package identities/checksums** remain unchanged. The only
+new registry identity is **quick-xml 0.42.0**, default features disabled, using
+the existing memchr identity. Its independently rehashed cached archive matched
+lock SHA-256 `41b1177fdf999d2321d3fb46ff47159d9c1fb9ad66a4879f8c50a0b504615e9b`.
+The selected parser requires Rust 1.86, below the already selected 1.99.1 target;
+this does not widen the tested platform/toolchain matrix. No Python dependency,
+bridge source, support profile or candidate allocation changed. The unchanged
+762-test harness and prior Python observer/oracle/contract evidence are not
+unnecessarily rerun or relabelled as new JUnit/resource qualification.
+Static read-back checked **72 local links**, five unchanged pin/candidate files,
+all unchanged bridge modules, Python test-source syntax and the still-matching
+frozen native source hashes before committing this batch.
 
 ## Required before acceptance
 
