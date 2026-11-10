@@ -1,11 +1,18 @@
 # Bridge protocol v0 — serial contract revision 1
 
-Status: **specified and synthetically tested for WP00; no production bridge,
-transport, validator, or conformance claim**. This is a breaking completion of an
+Status: **specified and synthetically tested for WP00; no complete production
+bridge/session transport, validator, or conformance claim**. This is a breaking completion of an
 unreleased five-event draft, not a stable public wire format. Engineering
 self-review is not independent qualification. The
 [baseline decision](baseline-contract-v1.md) and implementation specification
 remain authoritative about execution, safety, and later-package gates.
+
+The subsequent [WP04 private-channel foundation](wp04-status.md) supplies a
+native inherited-socket handoff and separately tested Python framing/envelope
+component. It does not implement this complete payload catalog, handshake/session
+ledger, actual pytest observer, required artifact/environment/generation checks
+or supported-launcher early-startup assurance. Decoded frames cannot become full
+test success merely because their envelope was accepted.
 
 ## Transport and envelope
 

@@ -5,7 +5,10 @@ use serde::Serialize;
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "linux")]
-pub use linux::{ProcessRequest, RequestError, supervise};
+pub use linux::{
+    CONTROL_FD, ChildControl, ProcessRequest, RequestError, control_channel_pair, supervise,
+    supervise_with_control,
+};
 
 /// The first terminal cause observed by the supervisor, never changed by a
 /// later zero exit. A cleanup failure takes precedence in the CLI exit mapping.

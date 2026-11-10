@@ -19,6 +19,11 @@ GIL-enabled CPython 3.12.12 and pytest 8.4.2.
   dependencies are locked in `bench/harness/uv.lock`. The local `uv` used for
   these instructions was **0.12.3**; installer provenance and interpreter
   artifact hashes still require independent verification for a campaign.
+- The private native socket handoff explicitly adds **command-fds 0.3.3** as a
+  Cargo-locked build dependency. The workspace still forbids unsafe Rust blocks;
+  the external crate implements child-only pre-exec mapping without changing
+  parent descriptor flags. This is not an authenticated-build/security claim or
+  a change to the Python/pytest target or application dependency environments.
 
 From the repository root, with rustup and uv already installed:
 
@@ -35,6 +40,7 @@ cargo build --locked --release -p pt-cli
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/contracts -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/conformance -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s tests/integration -v
 uv run --locked --project bench/harness --python 3.12.12 python bench/harness/corpus_inventory.py bench/corpus/manifest.toml
 ```
 

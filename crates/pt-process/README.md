@@ -23,12 +23,44 @@ cancellation, and cleanup failure cannot be reversed by a later zero exit.
 No record certifies source identity, authoritative collection, complete test
 work, required artifacts, or a generation-valid full result.
 
+## Explicit private control capability
+
+`control_channel_pair()` creates connected close-on-exec Unix stream endpoints,
+without a named listener. The parent endpoint is caller-owned; the single-use
+`ChildControl` can be consumed by `supervise_with_control()` to map only that
+capability to child **fd 3**. Neither argv/environment nor standard streams are
+rewritten. `supervise()` / the existing `pt exec` path still inject no descriptor.
+Closed standard-stream descriptors are outside this new handoff profile.
+
+The child-only mapping uses explicitly pinned **command-fds 0.3.3** rather than
+changing parent-wide inheritable flags or adding an unsafe Rust block. Its
+pre-exec implementation and transitive dependencies remain external native code,
+not a claim that all dependencies are unsafe-free or security-qualified. The
+`Command` is dropped immediately after spawn so its owned parent-side duplicate
+cannot hide the child's EOF. Failed/invalid/cancelled launches close that unused
+capability, and timeout/cleanup still own the original execution process group.
+
+The caller must drain/validate control data concurrently with explicit bounds
+and deadlines. **A process-only report does not validate the stream, a terminal
+pytest event, artifacts or current generations.** The bridge component's framing
+checks are documented in [`python/pt_bridge`](../../python/pt_bridge/README.md);
+there is no production session adapter or `pt run` integration yet.
+
+The worker must mark the descriptor non-inheritable before project imports.
+The native fixture checks that after the explicit framing component adopts it,
+and ordinary exec descendants cannot inherit it. This is **not** proof about
+earlier interpreter startup: `.pth`, sitecustomize, PYTHONPATH and native startup
+hooks still require an actual supported-launcher identity/startup qualification
+before a backend claim. Do not silently disable site/plugin loading or substitute
+an entrypoint to conceal that gate. Raw fork, detached descendants and hostile
+same-user code remain outside close-on-exec guarantees.
+
 ## Checks
 
 From the repository root (Python's standard library is enough for these tests):
 
 ```sh
-PT_TEST_PYTHON="$PWD/bench/harness/.venv/bin/python" cargo test --locked --workspace
+PT_TEST_PYTHON="$PWD/bench/harness/.venv/bin/python" cargo test --locked --workspace </dev/null
 cargo fmt --all --check
 cargo clippy --locked --workspace --all-targets -- -D warnings
 ```

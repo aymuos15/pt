@@ -5,6 +5,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -16,8 +18,8 @@ if not __debug__:
     raise RuntimeError("packaging assertions require Python without -O")
 
 
-def run(argv, *, cwd, env, expected=0):
-    result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=120)
+def run(argv, *, cwd, env, expected=0, pass_fds=()):
+    result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=120, pass_fds=pass_fds)
     if result.returncode != expected:
         raise AssertionError(f"command exit {result.returncode}, expected {expected}: "
                              f"{result.stdout}\n{result.stderr}")
@@ -28,6 +30,7 @@ def check(wheel, binary, parent):
     with zipfile.ZipFile(wheel) as archive:
         names = archive.namelist()
         assert "pt_bridge/__init__.py" in names
+        assert "pt_bridge/_wire.py" in names
         assert not any(name == "pytest.py" or name.startswith("pytest/") for name in names)
         assert not any(name.endswith("entry_points.txt") for name in names)
     environment = parent / "environment"
@@ -83,6 +86,42 @@ def check(wheel, binary, parent):
     run([str(python), "-I", "-c", "import pt_bridge,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
         cwd=project, env=env)
 
+    # This explicitly imports only the installed framing component. It is not
+    # a pytest session, handshake/catalog ledger or full-result qualification.
+    parent, child = socket.socketpair()
+    with parent, child:
+        parent.settimeout(2)
+        fd = child.fileno()
+        framed = run([str(python), "-I", "-c", """
+import os,sys,time
+from pt_bridge._wire import ControlStream
+identity={'request_id':'packaging-request','run_id':'packaging-run','generation_id':'packaging-generation','session_id':'packaging-session','producer_id':'packaging-bridge'}
+with ControlStream.take_fd(int(sys.argv[1]),identity,byte_budget=4096,event_budget=1) as stream:
+    assert not os.get_inheritable(int(sys.argv[1]))
+    assert 'pytest' not in sys.modules
+    stream.send('warning',{'ordinal':None,'category':'builtins.UserWarning','message':'PT_PACKAGING_CONTROL','filename':'packaging-probe','line':1,'when':'configure'},deadline=time.monotonic()+2)
+""", str(fd)], cwd=project, env=env, pass_fds=(fd,))
+        child.close()
+
+        def exact(size):
+            result = bytearray()
+            while len(result) < size:
+                data = parent.recv(size - len(result))
+                assert data, "installed component returned a truncated control frame"
+                result.extend(data)
+            return bytes(result)
+
+        size = struct.unpack("!I", exact(4))[0]
+        assert 1 <= size <= 4096
+        message = json.loads(exact(size))
+        assert message["protocol_version"] == 0 and message["contract_revision"] == 1
+        assert message["producer_role"] == "bridge" and message["sequence"] == 0
+        assert message["request_id"] == "packaging-request"
+        assert message["kind"] == "warning" and message["payload"]["message"] == "PT_PACKAGING_CONTROL"
+        assert parent.recv(1) == b""
+        assert framed.stdout == "", "control messages must not be carried on stdout"
+        assert not (project / "project-imported").exists()
+
     # Mismatched installed metadata must fail closed, not inherit qualification.
     metadata = environment / "lib/python3.12/site-packages/pt_bridge-0.0.0.dist-info/METADATA"
     entry_points = metadata.with_name("entry_points.txt")
@@ -104,6 +143,8 @@ def check(wheel, binary, parent):
     return {"status": "local_packaging_smoke_only", "ordinary_pytest_passed_before_and_after": True,
             "pytest11_entries_unchanged": True, "doctor_rejects_missing_and_wrong_bridge": True,
             "doctor_rejects_bridge_autoload": True,
+            "installed_private_framing_component_passed": True,
+            "framing_component_imports_no_pytest": True,
             "doctor_does_not_import_project_modules": True, "qualified": False,
             "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest()}
 

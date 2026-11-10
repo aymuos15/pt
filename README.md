@@ -11,7 +11,9 @@ diagnostic `pt exec` command now exist. There is **no PT pytest backend, qualifi
 support profile, complete benchmark harness, or measured performance claim yet**. The
 specification is a design proposal, not evidence of implementation or support.
 An explicit metadata-only `pt doctor` and bridge distribution skeleton are also
-available; neither observes or executes pytest test sessions. The initial
+available; neither observes or executes pytest test sessions. The
+private-socket handoff and bridge framing primitives are also implemented as
+development components, not a complete backend/session protocol. The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.
 WP00's conservative contract/threat-model engineering self-review is complete;

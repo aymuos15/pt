@@ -1,6 +1,7 @@
 //! Linux process groups; no application imports, shell, output buffer, or replay.
 
 use crate::{Cleanup, LeaderStatus, ProcessReport, ProcessScope, Termination};
+use command_fds::{CommandFdExt, FdMapping};
 use nix::errno::Errno;
 use nix::sys::signal::{Signal, killpg};
 use nix::sys::wait::{Id, WaitPidFlag, WaitStatus, waitid};
@@ -10,7 +11,9 @@ use std::ffi::OsString;
 use std::fmt;
 use std::fs;
 use std::io::{self, IsTerminal, Read};
+use std::os::fd::AsRawFd;
 use std::os::unix::ffi::OsStrExt;
+use std::os::unix::net::UnixStream;
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
@@ -19,6 +22,29 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 const TICK: Duration = Duration::from_millis(10);
+
+/// Reserved child-only descriptor, never an output/control multiplex on stdio.
+pub const CONTROL_FD: i32 = 3;
+
+/// Single-launch capability. Construction creates no named/listening endpoint;
+/// consuming it prevents accidental reuse across fresh execution sessions.
+#[derive(Debug)]
+pub struct ChildControl {
+    socket: UnixStream,
+}
+
+/// Create connected, close-on-exec endpoints without changing parent FD flags.
+/// The caller owns reading, bounds, validation and the terminal protocol gate.
+/// A process-only report cannot certify that the stream is valid or complete.
+pub fn control_channel_pair() -> io::Result<(UnixStream, ChildControl)> {
+    let (parent, child) = UnixStream::pair()?;
+    if parent.as_raw_fd() < 3 || child.as_raw_fd() < 3 {
+        return Err(io::Error::other(
+            "private control handoff requires existing standard-stream descriptors",
+        ));
+    }
+    Ok((parent, ChildControl { socket: child }))
+}
 
 #[derive(Debug, Clone)]
 pub struct ProcessRequest {
@@ -225,6 +251,28 @@ pub fn supervise(
     request: &ProcessRequest,
     cancelled: &AtomicI32,
 ) -> Result<ProcessReport, RequestError> {
+    supervise_inner(request, cancelled, None)
+}
+
+/// Launch with exactly one explicitly supplied connected control capability at
+/// CONTROL_FD. The child must mark it non-inheritable before project imports and
+/// close it after final control output. No environment or argv injection occurs.
+///
+/// The caller must drain/validate the stream concurrently under its own bounds;
+/// this function supervises the same process boundary, not a pytest protocol.
+pub fn supervise_with_control(
+    request: &ProcessRequest,
+    cancelled: &AtomicI32,
+    control: ChildControl,
+) -> Result<ProcessReport, RequestError> {
+    supervise_inner(request, cancelled, Some(control))
+}
+
+fn supervise_inner(
+    request: &ProcessRequest,
+    cancelled: &AtomicI32,
+    control: Option<ChildControl>,
+) -> Result<ProcessReport, RequestError> {
     request.validate()?;
     let start = Instant::now();
     let deadline = start + request.timeout;
@@ -244,14 +292,31 @@ pub fn supervise(
         finish(&mut report, start);
         return Ok(report);
     }
-    let child = Command::new(&request.executable)
+    let mut command = Command::new(&request.executable);
+    command
         .args(&request.args)
         .current_dir(&request.cwd)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
-        .process_group(0)
-        .spawn();
+        .process_group(0);
+    if let Some(control) = control
+        && let Err(error) = command.fd_mappings(vec![FdMapping {
+            parent_fd: control.socket.into(),
+            child_fd: CONTROL_FD,
+        }])
+    {
+        report.termination = Termination::InfrastructureError {
+            detail: format!("private control descriptor mapping: {error}"),
+        };
+        finish(&mut report, start);
+        return Ok(report);
+    }
+    let child = command.spawn();
+    // command-fds owns the parent's copy until Command is dropped. Close it
+    // immediately after spawn (also on failure), not after the supervise loop,
+    // so the receiving endpoint can observe the child's real EOF.
+    drop(command);
     let child = match child {
         Ok(child) => child,
         Err(error) => {

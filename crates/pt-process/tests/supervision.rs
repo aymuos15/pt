@@ -1,9 +1,15 @@
 #![cfg(target_os = "linux")]
 
-use pt_process::{Cleanup, LeaderStatus, ProcessRequest, Termination, supervise};
+use pt_process::{
+    CONTROL_FD, Cleanup, LeaderStatus, ProcessRequest, Termination, control_channel_pair,
+    supervise, supervise_with_control,
+};
 use std::ffi::OsString;
 use std::fs;
+use std::io::{self, Read};
+use std::os::fd::AsRawFd;
 use std::os::unix::ffi::OsStringExt;
+use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI32, AtomicU64, Ordering};
@@ -322,4 +328,281 @@ time.sleep(30)
     assert_eq!(result.cleanup, Cleanup::Complete);
     assert!(result.cleanup_signals.ends_with(&[15, 9]));
     assert_eq!(result.exit_code(), 2);
+}
+
+fn read_private_channel(stream: UnixStream) -> thread::JoinHandle<io::Result<Vec<u8>>> {
+    stream
+        .set_read_timeout(Some(Duration::from_secs(5)))
+        .unwrap();
+    thread::spawn(move || {
+        let mut raw = Vec::new();
+        stream.take(1024 * 1024 + 1).read_to_end(&mut raw)?;
+        if raw.len() > 1024 * 1024 {
+            return Err(io::Error::other(
+                "native test control stream exceeded its bound",
+            ));
+        }
+        Ok(raw)
+    })
+}
+
+#[test]
+fn explicit_control_handoff_preserves_binary_bytes_on_a_connected_private_socket() {
+    let root = TestDir::new();
+    assert_eq!(CONTROL_FD, 3);
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let invocation = request(
+        &root.0,
+        r#"
+import os
+assert os.get_inheritable(3)
+os.set_inheritable(3,False)
+import socket
+stream=socket.socket(fileno=3)
+assert stream.family == socket.AF_UNIX
+assert stream.type == socket.SOCK_STREAM
+assert not os.get_inheritable(3)
+stream.sendall(b'private control\x00\xff\n')
+stream.close()
+"#,
+    );
+    let result = supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap();
+    let raw = reader.join().unwrap().unwrap();
+    assert_eq!(result.exit_code(), 0, "{result:?}");
+    assert_eq!(result.cleanup, Cleanup::Complete);
+    assert_eq!(raw, b"private control\x00\xff\n");
+}
+
+#[test]
+fn parent_copy_is_closed_after_spawn_so_control_eof_can_precede_leader_exit() {
+    let root = TestDir::new();
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let invocation = request(
+        &root.0,
+        r#"
+import os
+os.set_inheritable(3,False)
+import socket,time
+from pathlib import Path
+stream=socket.socket(fileno=3)
+stream.sendall(b'finished control before process exit')
+stream.close()
+Path('control-closed').touch()
+while not Path('allow-exit').exists():
+    time.sleep(.005)
+"#,
+    );
+    let worker = thread::spawn(move || {
+        supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap()
+    });
+    let read_result = reader.join();
+    let already_exited = worker.is_finished();
+    // Release the child even when a broken handoff caused a read error. Assert
+    // only after joining the supervised execution and its bounded cleanup.
+    fs::write(root.0.join("allow-exit"), b"").unwrap();
+    let result = worker.join().unwrap();
+    assert_eq!(result.exit_code(), 0, "{result:?}");
+    assert!(
+        !already_exited,
+        "control EOF was delayed until process completion"
+    );
+    assert_eq!(
+        read_result.unwrap().unwrap(),
+        b"finished control before process exit"
+    );
+    assert!(root.0.join("control-closed").exists());
+}
+
+#[test]
+fn child_noninheritability_prevents_the_control_capability_reaching_a_normal_exec_descendant() {
+    let root = TestDir::new();
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let invocation = request(
+        &root.0,
+        r#"
+import os
+os.set_inheritable(3,False)
+import errno,socket,subprocess,sys
+stream=socket.socket(fileno=3)
+code='import errno,os\ntry: os.fstat(3)\nexcept OSError as error: assert error.errno == errno.EBADF\nelse: raise RuntimeError("control leaked across exec")'
+subprocess.run([sys.executable,'-c',code],close_fds=False,check=True,timeout=3)
+stream.sendall(b'normal exec child did not inherit control')
+stream.close()
+"#,
+    );
+    let result = supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap();
+    let raw = reader.join().unwrap().unwrap();
+    assert_eq!(result.exit_code(), 0, "{result:?}");
+    assert_eq!(raw, b"normal exec child did not inherit control");
+}
+
+#[test]
+fn parent_socket_flags_do_not_leak_private_channels_into_an_unrelated_concurrent_launch() {
+    let root = TestDir::new();
+    let (parent, control) = control_channel_pair().unwrap();
+    let parent_target = fs::read_link(format!("/proc/self/fd/{}", parent.as_raw_fd())).unwrap();
+    let flags_before =
+        fs::read_to_string(format!("/proc/self/fdinfo/{}", parent.as_raw_fd())).unwrap();
+    let reader = read_private_channel(parent);
+    let invocation = request(
+        &root.0,
+        r#"
+import os
+os.set_inheritable(3,False)
+import socket,time
+from pathlib import Path
+stream=socket.socket(fileno=3)
+Path('control-target').write_text(os.readlink('/proc/self/fd/3'))
+Path('ready').touch()
+while not Path('allow-exit').exists(): time.sleep(.005)
+stream.sendall(b'private')
+stream.close()
+"#,
+    );
+    let worker = thread::spawn(move || {
+        supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap()
+    });
+    wait_for_file(&root.0.join("ready"));
+    let ordinary = run(&request(
+        &root.0,
+        r#"
+import os
+from pathlib import Path
+targets=[]
+for name in os.listdir('/proc/self/fd'):
+    try: targets.append(os.readlink('/proc/self/fd/'+name))
+    except FileNotFoundError: pass
+Path('ordinary-targets').write_text('\n'.join(targets))
+"#,
+    ));
+    fs::write(root.0.join("allow-exit"), b"").unwrap();
+    let first = worker.join().unwrap();
+    let raw = reader.join().unwrap().unwrap();
+    assert_eq!(ordinary.exit_code(), 0, "{ordinary:?}");
+    assert_eq!(first.exit_code(), 0, "{first:?}");
+    assert_eq!(raw, b"private");
+    let targets = fs::read_to_string(root.0.join("ordinary-targets")).unwrap();
+    let child_target = fs::read_to_string(root.0.join("control-target")).unwrap();
+    assert!(!targets.lines().any(|target| target == child_target));
+    assert!(
+        !targets
+            .lines()
+            .any(|target| Path::new(target) == parent_target)
+    );
+    let flags = flags_before
+        .lines()
+        .find_map(|line| line.strip_prefix("flags:\t"))
+        .unwrap();
+    assert_ne!(u32::from_str_radix(flags, 8).unwrap() & 0o2000000, 0);
+}
+
+#[test]
+fn invalid_cancelled_and_failed_launches_close_the_unused_control_capability() {
+    let root = TestDir::new();
+    for mode in ["invalid", "cancelled", "missing"] {
+        let (parent, control) = control_channel_pair().unwrap();
+        let reader = read_private_channel(parent);
+        let mut invocation = request(&root.0, "open('must-not-run','w').close()");
+        let cancel = AtomicI32::new(if mode == "cancelled" { 2 } else { 0 });
+        if mode == "invalid" {
+            invocation.timeout = Duration::ZERO;
+        } else if mode == "missing" {
+            invocation.executable = root.0.join("does-not-exist").into_os_string();
+        }
+        let result = supervise_with_control(&invocation, &cancel, control);
+        let raw = reader.join().unwrap().unwrap();
+        assert!(raw.is_empty());
+        if mode == "invalid" {
+            assert!(result.is_err());
+        } else {
+            let report = result.unwrap();
+            assert_eq!(report.pid, None);
+            assert_eq!(report.cleanup, Cleanup::NotLaunched);
+            assert_ne!(report.exit_code(), 0);
+        }
+        assert!(!root.0.join("must-not-run").exists());
+    }
+}
+
+#[test]
+fn timeout_with_an_open_control_socket_retains_partial_bytes_and_reaps_the_execution() {
+    let root = TestDir::new();
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let mut invocation = request(
+        &root.0,
+        r#"
+import os
+os.set_inheritable(3,False)
+import socket,time
+stream=socket.socket(fileno=3)
+stream.sendall(b'partial control before timeout')
+time.sleep(30)
+"#,
+    );
+    invocation.timeout = Duration::from_millis(750);
+    let report = supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap();
+    let raw = reader.join().unwrap().unwrap();
+    assert_eq!(report.termination, Termination::Timeout);
+    assert_eq!(report.exit_code(), 3);
+    assert_eq!(report.cleanup, Cleanup::Complete);
+    assert_eq!(raw, b"partial control before timeout");
+    assert!(!Path::new(&format!("/proc/{}", report.pid.unwrap())).exists());
+}
+
+#[test]
+fn source_bridge_framing_component_uses_the_actual_supervised_private_capability() {
+    let root = TestDir::new();
+    fs::write(
+        root.0.join("test_owned_sentinel.py"),
+        "import os\nfrom pathlib import Path\nassert not os.get_inheritable(3)\nPath('project-import-observed-closed-inheritance').touch()\n",
+    )
+    .unwrap();
+    let bridge_source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../python/pt_bridge/src")
+        .canonicalize()
+        .unwrap();
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let mut invocation = request(
+        &root.0,
+        r#"
+import sys,time
+sys.path.insert(0,sys.argv[1])
+from pt_bridge._wire import ControlStream
+identity={'request_id':'request-1','run_id':'run-1','generation_id':'generation-1','session_id':'session-1','producer_id':'bridge-1'}
+with ControlStream.take_fd(3,identity,byte_budget=4096,event_budget=1) as stream:
+    import test_owned_sentinel
+    assert 'pytest' not in sys.modules
+    stream.send('warning',{'ordinal':None,'category':'builtins.UserWarning','message':'PT_NATIVE_CONTROL_WARNING','filename':'test_owned_sentinel.py','line':1,'when':'configure'},deadline=time.monotonic()+2)
+"#,
+    );
+    invocation.args.push(bridge_source.into_os_string());
+    let report = supervise_with_control(&invocation, &AtomicI32::new(0), control).unwrap();
+    let raw = reader.join().unwrap().unwrap();
+    assert_eq!(report.exit_code(), 0, "{report:?}");
+    assert_eq!(report.cleanup, Cleanup::Complete);
+    assert!(matches!(
+        report.scope,
+        pt_process::ProcessScope::ProcessOnly
+    ));
+    assert!(raw.len() > 4);
+    let size = u32::from_be_bytes(raw[..4].try_into().unwrap()) as usize;
+    assert_eq!(size + 4, raw.len());
+    let event: serde_json::Value = serde_json::from_slice(&raw[4..]).unwrap();
+    assert_eq!(event["protocol_version"], 0);
+    assert_eq!(event["contract_revision"], 1);
+    assert_eq!(event["producer_role"], "bridge");
+    assert_eq!(event["sequence"], 0);
+    assert_eq!(event["kind"], "warning");
+    assert_eq!(event["request_id"], "request-1");
+    assert_eq!(event["payload"]["message"], "PT_NATIVE_CONTROL_WARNING");
+    assert!(
+        root.0
+            .join("project-import-observed-closed-inheritance")
+            .exists()
+    );
 }

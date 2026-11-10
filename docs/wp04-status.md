@@ -1,6 +1,6 @@
 # WP04 progress and evidence
 
-2026-11-09: **partial, development-only**. The Rust process boundary now exists;
+2026-11-10: **partial, development-only**. The Rust process boundary now exists;
 WP04 and M1 are not declared complete. No PT pytest backend or qualified support
 profile exists. The baseline choices are in `baseline-contract-v1.md`.
 
@@ -19,7 +19,38 @@ profile exists. The baseline choices are in `baseline-contract-v1.md`.
   site initialization, `.pth` code, or ordinary pytest runtime are imported by
   this check. It is **not** runtime import-graph/environment qualification.
 - `python/pt_bridge`: installable local package skeleton, without a `pytest11`
-  entry point or a replacement package named pytest. No observer/hooks yet.
+  entry point or a replacement package named pytest. No observer/hooks yet; the
+  separate `_wire` module now provides private framing/envelope primitives only.
+
+## Private-channel foundation follow-up
+
+The native library can now create a connected Unix socket pair and consume a
+single-launch child capability at fd 3. It uses explicitly pinned **command-fds
+0.3.3** and keeps the workspace's unsafe-code prohibition. Mapping occurs only
+in the child, not by toggling parent-wide inheritance flags. Dropping `Command`
+immediately after spawn releases the parent's duplicate, permitting genuine EOF
+before the leader exits. Existing `supervise` / `pt exec` remain descriptor-free.
+No argv, environment, stdio, plugin policy, dependency environment or retry
+behavior is silently rewritten.
+
+The independent Python framing component enforces length/UTF-8/JSON/depth/node /
+aggregate bounds, explicit budgets, bridge-only closed envelopes, bound IDs,
+sequence and absolute I/O deadlines. Uncertain partial I/O cannot be retried or
+inferred complete. It does **not** validate all payload shapes/session arithmetic
+or turn EOF into a verdict. Final checks are recorded below; neither the native
+nor Python component tests qualify a complete protocol or backend.
+
+The actual supervisor-to-source-component fixture checks wire bytes and the
+descriptor's non-inheritability before a test-owned project import. Packaging
+additionally checks the installed component without importing pytest. **Earlier
+interpreter startup remains an explicit gate**: `.pth`, sitecustomize, PYTHONPATH
+or native startup can precede an explicitly loaded plugin. Nothing here proves
+their safety, suppresses them or changes entrypoint semantics to hide the issue.
+The supported launcher must qualify that startup path before a backend claim.
+Raw-fork inheritance and hostile/detached code remain outside close-on-exec.
+
+This advances WP04's process/packaging boundary; it is not WP05 or complete WP09.
+`pt run` remains unavailable, and the original strict full-success gates remain.
 
 Rust tests cover fresh PIDs/Python state, cwd, empty/unicode/non-UTF-8 arguments,
 binary I/O, large output, inherited environment, nonzero/signal exits, ordinary
@@ -67,6 +98,45 @@ wheel was restored, and its bytes checked against the original wheel archive.
 Repeated clean disposable installations were then rerun. No user environment or
 unrelated cache was reset; no performance/corpus result is inferred from this.
 
+## Final private-channel verification (base a44feab)
+
+- **35 Rust tests passed**, including the locked release workspace run:
+  `PT_TEST_PYTHON="$PWD/bench/harness/.venv/bin/python" cargo test --locked --release --workspace </dev/null`.
+  This includes seven new native channel/component controls, not seven new pytest
+  conformance cases. Rustfmt, clippy with `-D warnings` and the locked CLI release
+  build passed.
+- **21 Python framing component checks passed** (`0.277s`), including malformed /
+  truncated frames, duplicate keys, identity/role spoofing, lost sequences, bounds,
+  absolute deadlines, closed peers, real backpressure and permanent no-retry faults.
+- **Two disposable installed-wheel smoke checks passed**, both with `qualified:
+  false`. Ordinary pytest behavior and pytest11 entries remained unchanged; the
+  installed framing component was explicitly exercised without importing pytest.
+- **735 harness tests ran: 734 passed / one existing native-peak capability skip**
+  (`850.899s`). **55 conformance checks passed** (`29.127s`) and **68 contract/audit
+  checks passed** (`8.305s`). These completed suites are retained development
+  regressions, not qualified native peak accounting or release measurements.
+- Static checks covered Python 3.12 grammar and **67 local links**. All **32
+  pre-existing locked Cargo package identities remain unchanged**. Additions are
+  exactly `command-fds 0.3.3`, `nix 0.31.3`, `syn 3.0.10`, `thiserror 2.0.21` and
+  `thiserror-impl 2.0.21`; the prior `nix 0.30.1` is retained. The command-fds
+  registry checksum matches
+  `1b60b5124979fccd9addd89d8b97a1d6eebb4950694520c75ddd722535ea443f`.
+  Harness/bridge Python dependencies, support matrix and Rust toolchain pins are
+  unchanged. This dependency-identity check is not a vulnerability/security audit.
+
+Observed local artifacts, **not authenticated release builds**:
+
+- `target/release/pt` SHA-256:
+  `9ac70ed65a5273b148d796e21e57b9ad56e8a85d0975200e925f3dadbe23db4a`.
+- Offline-built `pt_bridge-0.0.0-py3-none-any.whl` SHA-256:
+  `69865a9add885523e2916aeeeea51b0df13acc02c7f6f245a6eb4888fa2911b4`.
+  The local wheel is retained at `/tmp/opencode/pt-wire-build-k8q_6eyg`.
+
+Production framing remains **protocol 0 / contract revision 1**, distinct from
+the independent test oracle's **reference trace version 2**. Framing acceptance
+does not resolve startup, complete payload/session validation, artifact/environment
+identity, immutable generations or any backend/release gate below.
+
 ## Open gates
 
 - Interactive stdin is refused before work; inherited descriptors alone do not
@@ -81,8 +151,8 @@ unrelated cache was reset; no performance/corpus result is inferred from this.
   broken controls, but its qualified corpus/environment/ecosystem acceptance
   remains open. WP05 cannot claim parity from JUnit, phase equality alone or
   limited training coverage comparisons.
-- Required work/artifact/generation accounting, private production bridge IPC,
-  and full protocol catalog/fault handling remain unimplemented. Process-only
+- Required work/artifact/generation accounting, complete production bridge IPC /
+  session integration and full protocol catalog/fault handling remain unimplemented. Process-only
   results cannot be labelled complete generation-valid test results.
   WP00 now specifies the 32-kind revision-1 catalog and final-result/accounting
   schemas with synthetic tests (`protocol-draft.md`, `tests/contracts`); those
