@@ -16,6 +16,11 @@ use std::time::{Duration, Instant};
 pub const TREE_POLICY_ID: &str = "linux-declared-tree-content-v1";
 mod links;
 pub use links::{ClosedLinkObservation, LinkLimits, RELATIVE_LINK_POLICY_ID};
+mod elf;
+pub use elf::{
+    ELF_INPUT_POLICY_ID, ElfDynamicEntry, ElfLimits, ElfLoadInputs, ElfProgramHeader,
+    ElfStringInput, ElfStringKind,
+};
 #[derive(Debug)]
 pub struct IdentityError {
     code: &'static str,

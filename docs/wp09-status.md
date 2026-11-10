@@ -636,3 +636,9 @@ opt-in closed **declared** target graph plus the unchanged endpoint byte walks.
 Its **196-test** protected-input regression and independent 1,048-link checks
 remain separate from complete host/runtime environment and immutable-generation
 assurance; no positive coordinator authority is added.
+
+The following [non-executing ELF input projection](wp06-status.md) passed its
+**209-test / 12-stage** protected-input development run and four independent
+readelf/struct comparisons. It preserves the earlier strict-clippy failure and
+not-run stage, keeps image hashing separate from tree-walk costs, and supplies
+no loader-resolution, complete environment, generation or positive-result token.

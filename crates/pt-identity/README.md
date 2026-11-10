@@ -118,6 +118,61 @@ filesystem/mount behavior and complete immutable/runtime input domains retain
 their separate gates. This does not certify installed distributions or a full
 environment, follow unknown host targets, authorize launch or enable an optimizer.
 
+## Non-executing declared ELF load-input projection
+
+`inspect_declared_elf(relative_path, image_bytes, ElfLimits)` inspects **supplied
+bytes only**. The path must name a declared regular file; the complete byte
+length and SHA-256 must match its independently selected expected tree entry
+before metadata is accepted. All image bytes are hashed once in 64 KiB chunks,
+under the manifest's original deadline. It does not read a path, execute/import
+the target, call `ldd`, run an interpreter, search for libraries or install data.
+The caller still needs live file/tree/path/process association; a parsed blob is
+not a current file or environment certificate.
+
+Projection policy **`elf64le-x86_64-declared-load-inputs-v1`** is deliberately
+bounded: ELF64 little-endian x86-64 EXEC/DYN, version 1, SysV/GNU OSABI 0/3 with
+ABI version/padding/flags zero, 64-byte ELF and 56-byte program headers. Unknown
+class/endianness/machine/layout, extended/oversized header counts, invalid file /
+virtual ranges, unsupported LOAD layout and duplicate INTERP/DYNAMIC segments
+fail. There is no byte-order/ABI conversion, target execution or automatic
+alternative reader. This is **not a general ELF validity checker or loader**.
+
+The returned read-only `ElfLoadInputs` binds the relative path, unchanged tree
+digest and complete image digest. It retains raw ordered program-header fields,
+raw dynamic tag/value bits (including unknown/signed encodings), interpreter,
+and ordered byte-string inputs for NEEDED, SONAME, RPATH, RUNPATH, CONFIG,
+DEPAUDIT, AUDIT, AUXILIARY and FILTER. Repeated NEEDED names remain repeated;
+other projected string tags and string-table pointer/size are singleton in this
+strict profile. Empty search strings remain distinct from absence, non-UTF-8
+bytes remain bytes, and `$ORIGIN`, relative components and colon lists are **not
+expanded, normalized, stripped or treated as resolved paths**.
+
+The interpreter must be one bounded exact NUL-terminated absolute byte string.
+The dynamic array requires a zero-valued first NULL terminator; trailing declared
+slots must be zero and remain present in the raw metadata array. Nonzero trailing
+data is rejected, not ignored. STRTAB/STRSZ must be paired and bounded. Address
+mapping requires file-backed LOAD ranges: tables/strings may cross adjacent
+segments, as the pinned Python image actually does. Every mapping boundary is
+rechecked; holes/BSS and ambiguous overlapping file offsets fail rather than
+guessing one segment. DYNAMIC's file and mapped bytes must agree.
+
+All `ElfLimits` fields are explicit and positive, with ceilings of **128 program
+headers**, **4,096 declared dynamic slots**, **256 NEEDED entries**, **1 MiB string
+table** and **64 KiB aggregate projected string bytes**, including interpreter
+text. Each individual string is at most 4,096 raw bytes. Input file length still
+has the original tree's **128 MiB** per-file maximum. Progress cannot reset the
+original deadline. These hashes, table copies and parses are charged work; image
+`bytes_hashed()` is separate from the tree observation's two file walks.
+
+This is a necessary **static input projection**, not direct/transitive/runtime
+dependency resolution, native initialization safety, artifact authentication,
+complete environment identity or generation/launch authority. Loader cache /
+preload/hwcaps/search rules, symbol versions/relocations, unknown tag meanings,
+constructors, future `dlopen`, native extension behavior and external inputs are
+not certified. Missing interpreter/dynamic data is metadata absence, not proof
+that no runtime loading occurs. No full-success or environment-verification API
+is added; no saved blob can recover a lost execution return.
+
 ## Explicit assurance exclusions
 
 Two serial walks are **endpoint observations, not an atomic snapshot**. A change
@@ -156,6 +211,18 @@ manifest; it never adopts the observed prefix as its own expected truth. Select
 it with `cargo test --locked --offline --release -p pt-identity --test private_prefix
 -- --ignored`. `PT_IDENTITY_PROOF_OUTPUT` optionally writes a **new exclusive**
 test evidence file; existing evidence is never overwritten or upgraded.
+
+That explicit prefix method also inspects the **declared regular** interpreter
+`bin/python3.12` without executing it and compares raw header/dynamic arrays and
+loader/library/search projections with the test-only
+[`elf_reference.py`](tests/elf_reference.py) GNU readelf/stdlib control. The helper
+pins Linux CPython 3.12.12, sets readelf's locale to `C` and retains its actual
+return/output/tool hash. Readelf is an explicit test prerequisite, not a runtime
+fallback or loader-resolution certificate. With an output proof selected, both
+reference bundles use exclusive output names alongside it; raw non-UTF-8 proof
+stems are preserved. Native tree hashing and the additional image hash remain
+separate byte counts. Use the explicit [protected-input setup driver](../../tests/packaging/verify_declared_junit.py)
+for a full fresh-subject reproduction rather than silently changing input caches.
 
 Production dependencies are the already pinned **nix 0.30.1** (`fs`/`dir`) and
 **sha2 0.11.1**; no registry version is added. Pinned nix consumes its directory

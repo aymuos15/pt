@@ -153,6 +153,97 @@ requirements `libpthread.so.0`, `libdl.so.2`, `libutil.so.1`, `librt.so.1`,
 resolves/authenticates those host inputs. It identifies the next native startup
 input boundary; prefix graph closure does not close it by implication.
 
+## Non-executing ELF input projection follow-up (base a2bad37)
+
+The next native prerequisite inspects only bytes matching a declared regular
+file's independent expected length/SHA-256, under the original tree deadline.
+Policy **`elf64le-x86_64-declared-load-inputs-v1`** projects bounded ELF64LE x86-64
+EXEC/DYN metadata; it is **not an ELF loader, general validity or dependency /
+environment verifier**. No target is executed/imported, no `ldd` or library search
+runs, and no dependency/host input is installed, repaired or adopted as truth.
+
+Raw program headers and dynamic tag/value order remain, including unknown tags
+and explicitly zero trailing slots. Interpreter and NEEDED/SONAME/RPATH/RUNPATH /
+CONFIG/DEPAUDIT/AUDIT/AUXILIARY/FILTER bytes are visible. Repeated needed names,
+empty search strings, non-UTF-8 data and unexpanded `$ORIGIN` stay distinct;
+ambiguous singleton duplicates and nonzero trailing data fail. File-backed
+address mapping handles the actual pinned image's string table crossing LOAD
+boundaries, without guessing through gaps/BSS or conflicting mappings.
+
+The original tree/link digests and production protocol/result schema are
+unchanged. Explicit positive caps govern headers, dynamic slots, needed names,
+string table and aggregate string bytes. Hash/parse progress cannot reset the
+manifest deadline. Returned metadata binds the expected image/path/tree, but
+supplies no live file association, runtime resolution, environment/current-full-
+success flag or launch permission.
+
+The first focused release identity library passed **32 methods**: the previous
+20 plus twelve ELF controls, including cross-segment mapping, literal/context /
+ordering, whole-image hash rejection, unsupported format/range/terminator cases,
+raw unknown/audit/filter inputs, exact limits/deadline and **108 explicitly
+synthetic short/offset no-panic controls**. Those 108 are not native images,
+Python work or corpus qualification. Actual pinned-prefix metadata and independent
+GNU readelf/stdlib comparisons follow their real returned evidence.
+
+The retained first package-level reproduction at
+`/tmp/opencode/pt-declared-elf-native-controls-3wkthau1` passed all **32 library
+methods and the explicit two-prefix integration method**, including independent
+GNU readelf/struct comparisons. Strict workspace clippy then returned **101**
+for two constant-size `chunks_exact` loops and a manual multiple-of check; the
+planned rustfmt check was **not run**. That failed attempt remains retained.
+The loops now use `as_chunks` and the native `is_multiple_of` check, without lint
+suppression. Test evidence names now append to exact `OsString` prefixes instead
+of lossy Unicode conversion, with a non-UTF-8/replacement-collision regression.
+
+The corrected focused run at
+`/tmp/opencode/pt-declared-elf-corrected-controls-cvd_xnuo` returned zero for all
+three planned commands: **32 library / two integration-file methods**, strict
+workspace clippy and rustfmt, with unchanged frozen sources and zero not-run
+stages. ELF metadata includes raw projected string bytes in the retained native
+proof, not just success assertions. Full acceptance still depends on the new
+exclusive protected-input run and independent post-setup checks.
+
+The exclusive final run at
+`/tmp/opencode/pt-declared-elf-protected-final-790zfef_/run` returned zero for
+**all 12 stages, zero not-run**. The locked offline release workspace passed
+**209 tests**, with no ignored/skipped tests in that complete workspace run:
+32 identity library methods plus the prefix reproduction and evidence-name
+control. Strict clippy/rustfmt, **74 integration checks / 76 observer requests**,
+**63 oracle checks**, **68 contract checks**, CLI/wheel builds and installed-wheel
+smoke all passed. The separate post-setup prefix command deliberately selects
+the ignored reproduction only; the evidence-name control is filtered there,
+not omitted from the complete workspace run.
+
+Independent post-return read-back verified **192 frozen source/pin/schema files**,
+**50 unchanged Cargo package identities/checksums**, **eight unchanged pin /
+candidate/schema files**, Python 3.12 grammar and **88 local links**. It re-derived
+the archive entries/canonical tree digest and independently resolved all **1,048
+positive links in each prefix**; both tree/link digests remain unchanged and both
+4,971-entry inventories still match exactly. Parent mount flags remain unchanged.
+
+All four retained GNU readelf/struct reference processes (two prefixes before
+and after setup) returned zero with complete cleanup. Independent decoding of
+the actual pinned bytes agrees on **13 program headers**, **35 declared dynamic
+slots / 30 through the first NULL**, the **43,370-byte string table spanning two
+file-backed LOAD segments**, ordered needed names, interpreter and RPATH. The
+extra **27,817,640-byte complete image hash** is reported separately from each
+native tree check's **191,199,150 bytes hashed**; neither is hidden or called
+execution/timing evidence. The unchanged development bridge wheel remains
+`4e973ca41e0a9f1614ebd0615f3d302fd4513a19e5a02acd1f68e4450ec286c1`.
+
+A separate read-only host-path assessment at
+`/tmp/opencode/pt-host-loader-metadata-assessment-k688wnss` observes host alias
+links (`/lib`, `/lib64` and the loader's absolute link), seven candidate regular
+loader/library files and `/etc/ld.so.cache`; `/etc/ld.so.preload` was absent at
+that endpoint. Its package query returned zero. **These are observed host bytes,
+not independently authenticated expected inputs or loader-search proof**. They
+are not adopted into a trusted manifest, the relative-only link policy is not
+weakened to follow them, and no target loader/library was executed. Native
+file/path association and supported external loader/library binding remain next
+prerequisites, alongside the other open environment/startup/release gates.
+Final documentation read-back checked **89 local links** and all frozen source
+hashes again; no source or pin changed after the verified run.
+
 ## Still required
 
 - Complete interpreter/build/ABI, installed distributions/plugins, editable /
