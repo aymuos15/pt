@@ -139,6 +139,54 @@ were not rerun or claimed by this test-only oracle-profile follow-up.
 
 ## Remaining gates
 
+### Async, property and database mechanism follow-up (base d8c5680)
+
+The [separate locked ecosystem corpus](../bench/corpus/serial_ecosystem/README.md)
+adds pytest-asyncio **1.4.1.post1**, Hypothesis **6.170.15** and local SQLite effects
+under the unchanged CPython **3.12.12** / pytest **8.4.2** target. Three cases
+declare seven occurrences and 20 applicable phases per complete group; the async
+case retains both an awaited assertion failure and an async setup error, exit 1.
+The property case actually executes six generated finite-domain bodies as **two
+pytest occurrences**, with explicit deterministic/database/reset settings.
+SQLite verifies one import-time database write and connection/lease cleanup.
+
+The first native run completed all **24 planned requests**, preserving six known
+nonzero async outcomes, six matching repeated-reference comparisons and three
+omission mismatches. Passing awaited/generated bodies and database finalization
+were deliberately omitted while **three phase reports and zero exit still
+matched**. External effects detected each omission; the artifact oracle also
+rejected the leftover database lease. Source/work histories and all requests
+remain retained at `/tmp/opencode/pt-serial-ecosystem-1toa_w_e/run`.
+
+Eight synthetic plan controls passed (`0.235s`), preserving all 24 units, lost
+returns, declared nonzero outcomes, explicit-only wheel downloads, no plugin
+suppression, baseline uncertainty and unlisted installed-file changes. They are
+not native plugin qualification. The source-frozen oracle driver now also captures
+the interpreter/ecosystem tools and locks so these controls run from recorded
+inputs, without installing their subject plugins into the independent harness.
+Final native offline and expanded oracle checks are recorded after completion.
+
+The new **fully offline** complete invocation also matched all 24 requests at
+`/tmp/opencode/pt-serial-ecosystem-offline-3sesehzm/run`, with **638 comparable
+installed files** and both entire base prefixes unchanged. Independent read-back
+found **18 instrumented traces, 34 completed occurrence observations and 98 phase
+reports**, six matching reference pairs and three detected body/finalization
+omissions. These include repeated observations and are not independent benchmark
+samples. All six intentional async nonzero exits remain in the ledger; all eight
+qualification fields remain null.
+
+The expanded **source-frozen oracle suite passed all 63 tests** with no skips
+(`28.876s`), retaining **102 source/lock files** at
+`/tmp/opencode/pt-oracle-ecosystem-frozen-cnbdi85u/run`; all seven outer
+qualification fields remain null. **68 contract/audit tests passed** (`8.358s`).
+Static checks covered six Python sources, **23 local links** and **seven
+unchanged Cargo/Python/support/toolchain/candidate files**. The unchanged harness
+retains its last full **762-test result: 761 passed / one native-peak skip**.
+Rust and bridge packaging were not rerun for this subject-corpus-only batch;
+their separate startup-component verification remains recorded in WP04.
+
+### Still required
+
 - WP01 acceptance and WP02's representative eligibility, authenticated artifact /
   interpreter/environment identity, broader reset and untouched partitions remain
   open. The serial-core set is test-owned training, not a representative score.

@@ -164,5 +164,13 @@ The two within-environment comparisons retain mismatches as `baseline_uncertain`
 This is actual reference-phase evidence, not PT parity, external body-effect
 verification, full environment identity, immutable generations or product timing.
 
+The separate [async/property/SQLite mechanism check](../../bench/corpus/serial_ecosystem/README.md)
+uses its own exact subject-plugin lock and two verified private interpreter bases.
+It retains 24 real-pytest requests, normal/reference comparisons and equal-phase
+body/finalization omission controls. Its eight synthetic plan tests are included
+in this oracle suite; the independent harness does **not** gain those subject
+plugins or a production integration claim. Complete body-effect, environment,
+generation and release qualifications remain separate.
+
 See [WP03 evidence and open gates](../../docs/wp03-status.md) and the unchanged
 [strict full-success contract](../../docs/contracts.md).

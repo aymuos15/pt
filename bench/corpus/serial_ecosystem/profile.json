@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "profile": "linux-cpython31212-pytest842-serial-ecosystem-v1",
+  "status": "development_training_mechanisms_unqualified",
+  "allocation": "training_only_before_optimization",
+  "cases": [
+    {
+      "id": "async_cases", "exit": 1, "occurrences": 3, "phases": 8,
+      "junit": [
+        {"name": "test_awaited_body", "kind": "passed", "marker": ""},
+        {"name": "test_failure_after_await", "kind": "failure", "marker": "PT_ECOSYSTEM_ASYNC_FAILURE"},
+        {"name": "test_setup_error_has_no_body", "kind": "error", "marker": "PT_ECOSYSTEM_ASYNC_SETUP"}
+      ],
+      "expected_events": ["async import", "async setup", "async awaited body", "async release", "async setup", "async failing body", "async release", "async broken setup"]
+    },
+    {"id": "property_cases", "exit": 0, "occurrences": 2, "phases": 6, "expected_events": null,
+      "junit": [{"name": "test_boolean_domain", "kind": "passed", "marker": ""}, {"name": "test_pair_domain", "kind": "passed", "marker": ""}]},
+    {
+      "id": "database_cases", "exit": 0, "occurrences": 2, "phases": 6,
+      "junit": [{"name": "test_write", "kind": "passed", "marker": ""}, {"name": "test_isolated_after_previous_fixture", "kind": "passed", "marker": ""}],
+      "expected_events": ["database import", "database setup", "database write", "database release", "database setup", "database isolated", "database release"]
+    }
+  ],
+  "controls": [
+    {"case": "async_cases", "target": "test_async.py::test_awaited_body", "fault": "skip_call"},
+    {"case": "property_cases", "target": "test_properties.py::test_boolean_domain", "fault": "skip_call"},
+    {"case": "database_cases", "target": "test_database.py::test_write", "fault": "skip_teardown"}
+  ]
+}

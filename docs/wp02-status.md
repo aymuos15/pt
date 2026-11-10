@@ -175,6 +175,17 @@ as this expanded 762-test batch.
 
 ### Still required
 
+The separate [serial ecosystem mechanisms](../bench/corpus/serial_ecosystem/README.md)
+now add actual pinned async/Hypothesis plugin execution and import-time SQLite
+effects/reset controls without changing the older core or product environment.
+The first native preparation completed all **24 planned requests** across two
+archive-pinned bases, including the six intentional async nonzero returns and
+three deliberately incorrect zero-exit controls. **638 comparable installed
+files** matched. Evidence: `/tmp/opencode/pt-serial-ecosystem-1toa_w_e/run`.
+This is finite training/reference evidence, not external-repository eligibility
+or a production ecosystem adapter. Final offline/source-frozen verification is
+recorded in WP03 after completion; no field is inferred from this first run.
+
 - Preserve every external candidate's installability/profile conflict, exclusions,
   skips and deselections. The attrs pytest-version conflict and Click's 31,000
   default-deselected stress tests remain disclosed; no candidate is silently

@@ -33,7 +33,7 @@ def _save(path, value):
 def _source(root):
     result = {}
     paths = []
-    for base in (root / "tests/conformance", root / "bench/corpus/serial_core"):
+    for base in (root / "tests/conformance", root / "bench/corpus/serial_core", root / "bench/corpus/interpreter", root / "bench/corpus/serial_ecosystem"):
         paths.extend(base.rglob("*"))
     # Freeze the independent outer observer too, not generated venvs/results.
     paths.extend((root / "bench/harness").glob("*.py"))

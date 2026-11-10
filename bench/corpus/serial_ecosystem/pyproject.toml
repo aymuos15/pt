@@ -1,0 +1,13 @@
+[project]
+name = "pt-serial-ecosystem-mechanisms"
+version = "0.0.0"
+requires-python = "==3.12.12"
+dependencies = ["pytest==8.4.2", "pytest-asyncio==1.4.1.post1", "hypothesis==6.170.15"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
