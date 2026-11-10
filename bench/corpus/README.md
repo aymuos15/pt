@@ -5,6 +5,13 @@ compatibility. They are initial material for WP02 and WP03. They have no frozen
 training, confirmatory, or holdout assignments; no environment locks or reset
 contracts have been established.
 
+The subsequent [serial-core development corpus](serial_core/README.md) adds ten
+test-owned training cases with a separate pinned environment, frozen file inputs
+and two clean offline materializations. It does not change or qualify these older
+probes or the external shortlist. Its JUnit/sentinel checks are not the phase-level
+oracle, representative corpus or held-out benchmark. See [WP02 progress and open
+gates](../../docs/wp02-status.md).
+
 `candidates.toml` is a shortlist of twelve external repositories with HEAD
 revisions observed through `git ls-remote` on the recorded date. The dimensions
 are workload hypotheses, not verified properties of those revisions. All

@@ -1,0 +1,1 @@
+raise RuntimeError("PT_CORE_COLLECTION_FAILURE")

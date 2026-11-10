@@ -185,6 +185,15 @@ stays blocked even when declarations match. This is not a latency/resource card,
 semantic oracle or default-enabled execution mode. See [field relations, exits,
 reproduction and adverse evidence](../../docs/wp01-scenario-manifest.md).
 
+The separate [serial-core corpus materializer](../corpus/serial_core/README.md)
+now executes ten test-owned cases across two clean, offline, locked environments.
+It freezes all declared fixture inputs, preserves intentional nonzero/no-tests
+outcomes, audits every site-packages file before/after execution and stops on
+mismatch or uncertainty without retry. Its exact pytest 8.4.2 lock is separate
+from the unchanged harness lock. This is a concrete training mechanism baseline,
+not representative corpus, occurrence/phase oracle, PT backend or release evidence.
+See [WP02 progress and remaining gates](../../docs/wp02-status.md).
+
 The existing `result_card.py <retained-campaign> --output <new-card.json>` and
 `inspect_result_card.py <card.json> --run <retained-campaign>` now route paired
 whole-session resource evidence to
@@ -601,6 +610,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_scenarios.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_manifest.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_serial_core_materialization.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`
