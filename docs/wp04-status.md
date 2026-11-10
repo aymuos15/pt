@@ -137,6 +137,65 @@ the independent test oracle's **reference trace version 2**. Framing acceptance
 does not resolve startup, complete payload/session validation, artifact/environment
 identity, immutable generations or any backend/release gate below.
 
+## Early-startup rejection follow-up (base c93de25)
+
+The optional `doctor --startup-profile pytest_module|pytest_console` performs
+bounded static **necessary-condition** checks without executing inspected hooks
+or project code. Existing doctor remains metadata-only and `exec` remains
+descriptor-free. This does not enable a runner; five startup assurances stay null.
+
+Rust rejects explicit native loader overrides/unknown system preload input before
+invoking selected Python. Its isolated probe rejects unreviewed startup/path /
+warning inputs, site domains, hooks, alternative/cached shim origins and
+profile-specific import shadowing. The observed uv shim is identified by source
+hash, not assumed safe by name. No cache/hook is deleted or silently disabled.
+Console wrapper bytes and interpreter must match; there is no module substitution.
+See the [CLI bounds and trust boundary](../crates/pt-cli/README.md).
+
+Actual startup fixtures run both installed pytest entrypoints with a test-only
+framing plugin. `.pth` and PYTHONPATH sitecustomize run **before adoption** and
+can leak the capability to a real exec descendant before a later valid frame.
+Early abort stays nonzero with no bridge/body execution or retry. A project
+`pytest.py` exits 42 in the module profile while separately requested console
+execution succeeds; those are separate observations, not fallback. These controls
+expose the unsafe window, not proof that detecting it qualifies arbitrary startup.
+
+The first expanded packaging check incorrectly expected the harness environment
+to pass. The guard correctly rejected coverage's `a1_coverage.pth` and existing
+shim bytecode. The corrected fixture retains that rejection and uses a **separate
+declared minimal environment** for positive static checks; no hook/cache was
+deleted, disabled or normalized to force success. The smoke-only bytecode policy
+is explicit and symmetric, not a production flag. Original ordinary-pytest and
+installed-component checks remain enforced.
+
+Initial final checks: **37 locked release Rust tests passed**, rustfmt/clippy
+`-D warnings` passed, and **39 integration checks passed** (`4.097s`): six actual
+startup methods, twelve static-guard controls and 21 framing checks. **55
+conformance checks passed** (`28.510s`) and **68 contract/audit checks passed**
+(`8.195s`). The unchanged harness's last full result is **762 tests, 761 passed /
+one native-peak skip** (`858.817s`), not another startup qualification. Final
+retained startup and installed-smoke results are recorded below.
+
+The retained startup check then passed **all six actual methods** (`7.358s`) on
+an explicitly selected, archive-pinned private base, preserving **ten real pytest
+requests**: eight zero exits, the intended module-shadow exit **42**, and the
+early-startup abort exit **1**. Evidence:
+`/tmp/opencode/pt-startup-retained-s0ukqibm`. Source hashes stayed unchanged;
+`qualified` and confirmatory eligibility remained false. These expected adverse
+outcomes were retained, not removed from the denominator.
+
+**Two corrected disposable packaging checks passed**, preserving the harness
+startup rejection, separate minimal-profile static checks, unknown-hook refusal
+without imports/suppression, unchanged ordinary pytest/pytest11 entries and the
+installed framing check. The final locked release workspace rerun again passed
+**37 Rust tests**. Static checks covered **five Python sources**, **21 local
+links** and **six unchanged Cargo/Python/support/toolchain pin files**.
+The local release binary SHA-256 is
+`ab199ba90796191cb49f8c4dae218b962ff9cb4368bf9a7220704ed74a5ca51a`;
+the unchanged bridge wheel remains
+`69865a9add885523e2916aeeeea51b0df13acc02c7f6f245a6eb4888fa2911b4`.
+These are local artifact identities, not authenticated release builds.
+
 ## Open gates
 
 - Interactive stdin is refused before work; inherited descriptors alone do not

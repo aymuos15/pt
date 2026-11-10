@@ -47,3 +47,45 @@ an invalid interpreter that merely returns zero fails instead of passing.
 The
 bridge is currently a skeleton with **no observer/backend**. See
 `../../python/pt_bridge/README.md` for the disposable installation smoke check.
+
+## Optional static startup rejection checks
+
+```sh
+./target/release/pt doctor --python /absolute/path/to/venv/bin/python --startup-profile pytest_module </dev/null
+./target/release/pt doctor --python /absolute/path/to/venv/bin/python --startup-profile pytest_console </dev/null
+```
+
+These requested checks reject known unreviewed early-startup inputs without
+executing inspected hooks or project code. They do **not** execute pytest,
+establish immutable inputs or authorize a private-channel launch. All five startup
+assurance fields stay null and `qualified` stays false. Original `doctor` without
+this option remains metadata-only; `exec` remains a raw process diagnostic.
+
+The Rust front end refuses explicit `LD_PRELOAD`, `LD_AUDIT`, `LD_LIBRARY_PATH`
+and unknown `/etc/ld.so.preload` input before invoking selected Python; `-I/-S`
+alone cannot stop native-loader effects. This cannot undo the native CLI's own
+loading or identify every host-loader input. Environment values are not exported.
+The isolated Python probe reads the venv config, `.pth` files, customization and
+shadowing names instead of importing them. Unreviewed Python startup/path/warning
+inputs, system/user-site domains, hooks, special files and bound overflows fail.
+
+Only the exact development uv `_virtualenv.pth` / `_virtualenv.py` source-hash
+pair is recognized by engineering inspection, **not a security audit**.
+Alternative package/native/sourceless origins and existing shim pycs are
+unreviewed, never purged or equated to source by timestamp. Coverage's
+`a1_coverage.pth` also remains unreviewed. The guard does not remove those files,
+disable plugins or rewrite the runtime environment to force a passing result.
+
+The module profile checks cwd startup/backend import shadowing; the console
+profile checks its installed script directory and exact recognized wrapper /
+shebang. Neither entrypoint substitutes for the other. Limits: 1 MiB/file, 64
+entries/directory, 16 retained files/findings and a bounded reply. Excess inputs
+fail rather than being omitted from a passing inspection.
+
+Actual controls demonstrate why this is necessary: `.pth` and PYTHONPATH
+sitecustomize can import code or leak a socket across exec **before** a later
+explicit bridge marks it non-inheritable. Project `pytest.py` can replace module
+execution while the installed console still runs real pytest. Late complete
+frames cannot certify that earlier window. Complete environment identity,
+immutable inputs, native initialization and supported-launcher integration remain
+independent gates; `pt run` is still unavailable.

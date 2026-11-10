@@ -283,3 +283,47 @@ fn doctor_rejects_missing_or_non_interpreters_instead_of_trusting_zero_exit() {
     assert_eq!(result.status.code(), Some(3));
     assert!(String::from_utf8_lossy(&result.stderr).contains("LaunchError"));
 }
+
+#[test]
+fn static_startup_loader_input_is_rejected_before_the_selected_interpreter_is_invoked() {
+    let root = TestDir::new();
+    let interpreter = root.0.join("must-not-be-invoked");
+    fs::write(
+        &interpreter,
+        b"#!/bin/sh\ntouch selected-interpreter-was-invoked\nexit 0\n",
+    )
+    .unwrap();
+    fs::set_permissions(&interpreter, fs::Permissions::from_mode(0o755)).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_pt"))
+        .current_dir(&root.0)
+        .args(["doctor", "--python"])
+        .arg(&interpreter)
+        .args(["--startup-profile", "pytest_module"])
+        .env("LD_LIBRARY_PATH", &root.0)
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(4));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("startup_environment_input_unreviewed:LD_LIBRARY_PATH")
+    );
+    assert!(!root.0.join("selected-interpreter-was-invoked").exists());
+    assert!(output.stdout.is_empty());
+}
+
+#[test]
+fn static_startup_profile_options_are_explicit_and_do_not_enable_a_runner() {
+    for tail in [
+        vec!["--startup-profile"],
+        vec!["--startup-profile", "pytest"],
+        vec!["--startup-profile", "pytest_module", "extra"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_pt"))
+            .args(["doctor", "--python", "/bin/true"])
+            .args(tail)
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(4));
+        assert!(String::from_utf8_lossy(&output.stderr).contains("configuration_error"));
+    }
+}

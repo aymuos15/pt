@@ -67,6 +67,11 @@ explicitly selected bases. It is offline, operator-requested setup, not a runtim
 installer or permission to repair a managed Python. Whole-prefix equality still
 does not establish host-library identity, startup handoff or immutable generations.
 
+The optional `pt doctor --python ... --startup-profile pytest_module` (or
+`pytest_console`) rejects known unreviewed startup inputs without importing them.
+It is a static prerequisite inspection, **not backend launch approval**; see the
+[development CLI](../crates/pt-cli/README.md) for exact bounds/exclusions.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

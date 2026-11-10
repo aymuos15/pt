@@ -47,6 +47,9 @@ def inspect():
             if name == "pt-bridge" and any(ep.group == "pytest11" for ep in matching[0].entry_points):
                 result["errors"].append("bridge_must_not_autoload")
         result["pth_files_present"] = any(site.glob("*.pth"))
+        if len(sys.argv) == 3:
+            result["startup"] = inspect_startup(root, site, sys.argv[2], Path.cwd())
+            result["errors"].extend(result["startup"]["errors"])
     result["status"] = ("installed_profile_present_unqualified" if not result["errors"]
                         else "unavailable_or_unsupported")
     return result
@@ -54,7 +57,7 @@ def inspect():
 
 try:
     report = inspect()
-except (OSError, ValueError, TypeError, KeyError):
+except (OSError, ValueError, TypeError, KeyError, RuntimeError):
     report = {"mode": "isolated_installation_metadata_only", "qualified": False,
               "status": "invalid_installation_metadata", "errors": ["cannot_inspect_metadata"]}
 with os.fdopen(os.open(sys.argv[1], os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8") as output:

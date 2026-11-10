@@ -38,6 +38,9 @@ def check(wheel, binary, parent):
     project.mkdir()
     env = os.environ.copy()
     env["UV_LINK_MODE"] = "copy"
+    # Explicit symmetric smoke-only bytecode policy, not a production flag or
+    # permission to delete/ignore pre-existing startup caches.
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     for key in ("PYTHONPATH", "PYTHONHOME", "PYTEST_ADDOPTS", "PYTEST_PLUGINS",
                 "PYTEST_DISABLE_PLUGIN_AUTOLOAD", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
         env.pop(key, None)
@@ -66,6 +69,30 @@ def check(wheel, binary, parent):
     after_entries = run([str(python), "-I", "-c", entries], cwd=project, env=env).stdout
     assert before_entries == after_entries, "installation changed pytest auto-plugin entries"
     run(ordinary, cwd=project, env=env)
+    # The harness profile includes coverage's startup .pth and can have pycs
+    # from its isolated metadata commands. Do not remove/disable them to make
+    # this guard pass: they are explicitly unreviewed startup inputs.
+    for profile in ("pytest_module", "pytest_console"):
+        checked = run([str(binary), "doctor", "--python", str(python), "--startup-profile", profile], cwd=project, env=env, expected=4)
+        startup = json.loads(checked.stdout)["startup"]
+        assert "startup_pth_unreviewed:a1_coverage.pth" in startup["errors"]
+        assert startup["qualified"] is False
+        assert all(value is None for value in startup["assurance"].values())
+
+    # Positive static checks use a separately declared minimal environment, not
+    # a repaired or silently reduced version of the harness profile above.
+    startup_environment = parent / "startup-environment"
+    startup_env = {**env, "VIRTUAL_ENV": str(startup_environment)}
+    run(["uv", "venv", "--offline", "--python", str(python), str(startup_environment)], cwd=parent, env=startup_env)
+    run(["uv", "sync", "--offline", "--locked", "--active", "--project", str(ROOT / "bench/corpus/serial_core")], cwd=parent, env=startup_env)
+    startup_python = startup_environment / "bin/python"
+    run(["uv", "pip", "install", "--offline", "--no-index", "--no-deps", "--python", str(startup_python), str(wheel)], cwd=parent, env=startup_env)
+    for profile in ("pytest_module", "pytest_console"):
+        checked = run([str(binary), "doctor", "--python", str(startup_python), "--startup-profile", profile], cwd=project, env=startup_env)
+        startup = json.loads(checked.stdout)["startup"]
+        assert startup["status"] == "static_startup_inputs_checked_unqualified"
+        assert startup["qualified"] is False
+        assert all(value is None for value in startup["assurance"].values())
 
     # Doctor is explicit, isolated metadata inspection: hostile-looking module
     # names in cwd/PYTHONPATH must not be imported by the probe.
@@ -83,6 +110,17 @@ def check(wheel, binary, parent):
     assert after_report["status"] == "installed_profile_present_unqualified"
     assert after_report["qualified"] is False
     assert after_report["packages"] == {"pt-bridge": "0.0.0", "pytest": "8.4.2"}
+    # The optional static guard rejects rather than imports or disables the
+    # project path and unknown .pth. Metadata-only doctor remains distinct.
+    pth.write_text(f"import pathlib; pathlib.Path({str(project / 'site-imported')!r}).touch()\n")
+    rejected = run([str(binary), "doctor", "--python", str(python), "--startup-profile", "pytest_module"],
+                   cwd=project, env=env, expected=4)
+    startup = json.loads(rejected.stdout)["startup"]
+    assert "startup_environment_input_unreviewed:PYTHONPATH" in startup["errors"]
+    assert "startup_pth_unreviewed:pt_doctor_sentinel.pth" in startup["errors"]
+    assert not (project / "project-imported").exists() and not (project / "site-imported").exists()
+    assert pth.exists(), "guard must not delete an unknown startup input"
+    pth.unlink()  # Only this explicitly test-created sentinel is removed.
     run([str(python), "-I", "-c", "import pt_bridge,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
         cwd=project, env=env)
 
@@ -145,6 +183,9 @@ with ControlStream.take_fd(int(sys.argv[1]),identity,byte_budget=4096,event_budg
             "doctor_rejects_bridge_autoload": True,
             "installed_private_framing_component_passed": True,
             "framing_component_imports_no_pytest": True,
+            "static_startup_inputs_checked_unqualified": True,
+            "unreviewed_harness_startup_inputs_rejected_not_removed": True,
+            "static_startup_rejects_unknown_hooks_without_import_or_suppression": True,
             "doctor_does_not_import_project_modules": True, "qualified": False,
             "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest()}
 

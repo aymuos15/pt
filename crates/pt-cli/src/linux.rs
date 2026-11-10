@@ -18,6 +18,7 @@ Usage: pt exec [--cwd PATH] [--timeout-seconds N] [--cleanup-seconds N]
                [--report NEW_JSON_FILE] -- PROGRAM [ARG ...]
        pt --version
        pt doctor --python /absolute/path/to/venv/bin/python
+                 [--startup-profile pytest_module|pytest_console]
 
 exec launches a fresh process group without a shell. Environment and standard
 streams are inherited; trailing arguments are forwarded exactly. Default execution
@@ -32,9 +33,41 @@ preloading, dependency installation, automatic retry, or pytest plugin injection
 pt run is not implemented yet. See docs/baseline-contract-v1.md.";
 
 fn doctor(args: &[OsString]) -> u8 {
-    if args.len() != 3 || args[1] != "--python" || !Path::new(&args[2]).is_absolute() {
-        eprintln!("pt: configuration_error: use doctor --python /absolute/path/to/venv/bin/python");
+    if !matches!(args.len(), 3 | 5)
+        || args[1] != "--python"
+        || !Path::new(&args[2]).is_absolute()
+        || (args.len() == 5
+            && (args[3] != "--startup-profile"
+                || !matches!(args[4].to_str(), Some("pytest_module" | "pytest_console"))))
+    {
+        eprintln!(
+            "pt: configuration_error: use doctor --python /absolute/path/to/venv/bin/python [--startup-profile pytest_module|pytest_console]"
+        );
         return 4;
+    }
+    let startup_profile = args.get(4);
+    if startup_profile.is_some() {
+        // Refuse explicit loader overrides before invoking the selected Python.
+        // -I/-S cannot stop its native loader from honoring these inputs. Values
+        // may contain secrets; report names only and never rewrite the caller's
+        // environment to force a passing inspection.
+        for name in ["LD_PRELOAD", "LD_AUDIT", "LD_LIBRARY_PATH"] {
+            if std::env::var_os(name).is_some_and(|value| !value.is_empty()) {
+                eprintln!("pt: unsupported_profile: startup_environment_input_unreviewed:{name}");
+                return 4;
+            }
+        }
+        match fs::symlink_metadata("/etc/ld.so.preload") {
+            Ok(info) if !info.is_file() || info.len() != 0 => {
+                eprintln!("pt: unsupported_profile: system_loader_preload_unreviewed");
+                return 4;
+            }
+            Err(error) if error.kind() != io::ErrorKind::NotFound => {
+                eprintln!("pt: unsupported_profile: system_loader_preload_unreadable");
+                return 4;
+            }
+            _ => {}
+        }
     }
     let cwd = match std::env::current_dir() {
         Ok(cwd) => cwd,
@@ -59,16 +92,25 @@ fn doctor(args: &[OsString]) -> u8 {
         }
     };
     let reply = reply_directory.path().join("reply.json");
+    let mut probe_args = vec![
+        "-I".into(),
+        "-S".into(),
+        "-B".into(),
+        "-c".into(),
+        format!(
+            "{}\n{}",
+            include_str!("startup_check.py"),
+            include_str!("profile_check.py")
+        )
+        .into(),
+        reply.clone().into_os_string(),
+    ];
+    if let Some(profile) = startup_profile {
+        probe_args.push(profile.clone());
+    }
     let request = ProcessRequest {
         executable: args[2].clone(),
-        args: vec![
-            "-I".into(),
-            "-S".into(),
-            "-B".into(),
-            "-c".into(),
-            include_str!("profile_check.py").into(),
-            reply.clone().into_os_string(),
-        ],
+        args: probe_args,
         cwd,
         timeout: Duration::from_secs(10),
         cleanup_timeout: Duration::from_secs(1),
@@ -136,7 +178,16 @@ fn doctor(args: &[OsString]) -> u8 {
                         && metadata["python"] == serde_json::json!([3, 12, 12])
                         && metadata["packages"]
                             == serde_json::json!({"pytest": "8.4.2", "pt-bridge": "0.0.0"})));
-            if !shape_valid || result.exit_code() != expected_code {
+            let startup_valid = startup_profile.is_none()
+                || expected_code != 0
+                || (metadata["startup"]["mode"] == "bounded_static_startup_inputs_only"
+                    && metadata["startup"]["profile"].as_str()
+                        == startup_profile.and_then(|value| value.to_str())
+                    && metadata["startup"]["status"]
+                        == "static_startup_inputs_checked_unqualified"
+                    && metadata["startup"]["qualified"] == false
+                    && metadata["startup"]["errors"] == serde_json::json!([]));
+            if !shape_valid || !startup_valid || result.exit_code() != expected_code {
                 eprintln!("pt: infrastructure_error: doctor reply and process status disagree");
                 return 3;
             }
