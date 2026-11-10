@@ -1,7 +1,8 @@
-# Bridge distribution skeleton (WP04)
+# Explicit development bridge (WP04/WP05)
 
-Local development package `pt-bridge==0.0.0`, module `pt_bridge`. There are **no
-pytest hooks, execution backend, or complete session protocol yet**. It has no
+Local development package `pt-bridge==0.0.0`, module `pt_bridge`. Explicit
+observational pytest hooks now exist, but there is **no integrated coordinator
+backend or full-result certification**. It has no
 `pytest11` entry point and does not replace/shadow a package called `pytest`.
 Installing it is an explicit operator action, never something `pt exec` or
 `pt doctor` does. The selected development target is exactly CPython 3.12.12
@@ -71,3 +72,74 @@ runs without any PT auto-plugin. Native supervisor tests separately hand the
 actual inherited socket to the source component and check its wire bytes and
 non-inheritability before a test-owned project sentinel. Neither is a complete
 production backend/transport qualification or overhead measurement.
+
+## Explicit same-session observer
+
+Only `-p pt_bridge.pytest_observer` loads the hook module. Importing `pt_bridge`
+or installing the wheel does not load pytest or register a plugin. The observer
+wraps pytest's existing collection/run/finalization hooks; it does not call a
+second collection, replace the run loop, schedule, select, reorder or retry work.
+Ordinary pytest/plugin configuration and argument boundaries remain authoritative.
+
+The caller must already own a private socket and supply **explicit**
+`PT_BRIDGE_CONTROL` JSON, not stdout control lines or a named listener. This is
+a development component configuration, not a supported standalone launcher:
+
+```json
+{
+  "schema_version": 1,
+  "fd": 3,
+  "identity": {"request_id":"r1","run_id":"r1","generation_id":"g1","session_id":"s1","producer_id":"b1"},
+  "invocation_profile":"pytest_module",
+  "mode":"run",
+  "max_items":256,
+  "max_collection_reports":1024,
+  "max_nodeid_bytes":1048576,
+  "byte_budget":8388608,
+  "event_budget":25000,
+  "timeout_seconds":30
+}
+```
+
+Every key is required; unknown/duplicate keys and coerced boolean/floating counts
+fail. Configuration is capped at 8 KiB. The exact revision-1 target tuple is checked
+and an owned non-stdio socket is adopted at explicit module import, before normal
+conftest/test imports in the exercised launch paths. One local absolute deadline
+is fixed for the observer's whole lifetime; it is not reset for each event.
+`pytest_console` and `pytest_module`, and `run` and `collect_only`, stay distinct.
+The bootstrap's profile is a coordinator-owned request fact, **not independent
+proof of invocation or environment identity**. Missing configuration does not
+create a socket, silently install anything or choose an alternative invocation.
+
+Observed collector reports, duplicate-preserving Item objects, final selected /
+deselected order and phase reports are emitted on the dedicated bounded channel.
+Ordinary custom collectors and dynamically loaded plugins are not disabled.
+Repeated live Item objects, newly injected unobserved Items, parallel/retry report
+adapters, extra/missing/reordered phases and metadata requiring unknown custom
+representations are explicit unsupported cases. Node IDs remain exact strings;
+arbitrary parameter `repr` is not requested for metadata. Limits fail visibly,
+never trim work or trigger an automatic replay.
+
+Failure reasons use supported already-rendered pytest strings/crash fields.
+Warnings with an ordinary one-string exception representation are observed
+without invoking project-defined `str`/`repr`. Pytest's deferred runtest warning
+delivery is labelled `when: finalize`: **delivery at protocol finalization, not
+an invented originating setup/call/teardown phase**. Original warning filters and
+warnings-as-errors behavior remain in pytest. Rich capture/exception artifact
+references and arbitrary custom warning/report representations need separate
+adapters; raw pytest diagnostics still go to ordinary stdout/stderr.
+
+The terminal records observed attempts/phases, explicit collect-only/fail-fast /
+collection-failed/interrupted not-run reasons and backend exit claims. Missing
+session returns (including early help/usage paths) are not fabricated. The Rust
+reader independently reconciles actual frames, EOF and the actual process return.
+An outer `pytest_unconfigure` wrapper is visibly unsupported for a
+reporting-complete assertion; it still runs rather than being suppressed. A
+valid terminal cannot waive later actual process/required cleanup verification.
+
+Neither these hooks nor the static startup inspection qualify arbitrary `.pth`,
+sitecustomize, native-loader initialization or earlier private-FD exposure. They
+do not verify required artifact commits, complete installed/host environments,
+immutable source generations or current full success. The packaging smoke and
+source-level reference controls are finite development evidence only; **`pt run`
+remains unavailable**. See [WP05 progress and open gates](../../docs/wp05-status.md).

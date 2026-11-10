@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "pt-bridge"
 version = "0.0.0"
-description = "PT development bridge skeleton; no pytest observer is implemented yet"
+description = "PT explicit observational pytest bridge; no auto-plugin or full-result certification"
 requires-python = "==3.12.12"
 dependencies = ["pytest==8.4.2"]
 

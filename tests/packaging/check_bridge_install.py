@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import zipfile
 
 
@@ -31,6 +32,7 @@ def check(wheel, binary, parent):
         names = archive.namelist()
         assert "pt_bridge/__init__.py" in names
         assert "pt_bridge/_wire.py" in names
+        assert "pt_bridge/_observer.py" in names and "pt_bridge/pytest_observer.py" in names
         assert not any(name == "pytest.py" or name.startswith("pytest/") for name in names)
         assert not any(name.endswith("entry_points.txt") for name in names)
     environment = parent / "environment"
@@ -79,8 +81,8 @@ def check(wheel, binary, parent):
         assert startup["qualified"] is False
         assert all(value is None for value in startup["assurance"].values())
 
-    # Positive static checks use a separately declared minimal environment, not
-    # a repaired or silently reduced version of the harness profile above.
+    # Positive static/observer checks use a separate declared minimal environment,
+    # not a repaired or silently reduced version of the harness profile above.
     startup_environment = parent / "startup-environment"
     startup_env = {**env, "VIRTUAL_ENV": str(startup_environment)}
     run(["uv", "venv", "--offline", "--python", str(python), str(startup_environment)], cwd=parent, env=startup_env)
@@ -93,6 +95,77 @@ def check(wheel, binary, parent):
         assert startup["status"] == "static_startup_inputs_checked_unqualified"
         assert startup["qualified"] is False
         assert all(value is None for value in startup["assurance"].values())
+
+    (project / "test_installed_observer.py").write_text(
+        "import json,os\nfrom pathlib import Path\nimport pytest\n"
+        "profile=os.environ['PT_PACKAGING_PROFILE']\n"
+        "with Path('import-'+profile).open('x') as output: output.write('one import')\n"
+        "@pytest.fixture\ndef observed_fixture():\n"
+        "    yield\n"
+        "    Path('cleanup-'+profile).write_text('actually finalized')\n"
+        "def test_installed_component(observed_fixture):\n"
+        "    assert not os.get_inheritable(json.loads(os.environ['PT_BRIDGE_CONTROL'])['fd'])\n"
+        "    print('CONTROL-LOOKING STDOUT IS NOT IPC')\n")
+    for profile in ("pytest_module", "pytest_console"):
+        receiving, sending = socket.socketpair()
+        frames, faults = [], []
+
+        def read_observer():
+            try:
+                receiving.settimeout(35)
+
+                def exact(length):
+                    raw = bytearray()
+                    while len(raw) < length:
+                        chunk = receiving.recv(length-len(raw))
+                        if not chunk:
+                            if not raw:
+                                return None
+                            raise ValueError("truncated installed-observer frame")
+                        raw.extend(chunk)
+                    return bytes(raw)
+
+                total = 0
+                while (prefix := exact(4)) is not None:
+                    size = struct.unpack("!I", prefix)[0]
+                    total += 4 + size
+                    if not 1 <= size <= 1024*1024 or total > 1024*1024 or len(frames) >= 256:
+                        raise ValueError("installed observer exceeded explicit smoke bounds")
+                    raw = exact(size)
+                    if raw is None:
+                        raise ValueError("missing installed-observer payload")
+                    frames.append(json.loads(raw))
+            except BaseException as exc:
+                faults.append(type(exc).__name__ + ": " + str(exc))
+
+        reader = threading.Thread(target=read_observer)
+        reader.start()
+        settings = {"schema_version": 1, "fd": sending.fileno(),
+                    "identity": {"request_id": "installed-request", "run_id": "installed-run", "generation_id": "installed-generation",
+                                 "session_id": "installed-session", "producer_id": "installed-bridge"},
+                    "invocation_profile": profile, "mode": "run", "max_items": 256, "max_collection_reports": 1024,
+                    "max_nodeid_bytes": 1024*1024, "byte_budget": 1024*1024, "event_budget": 256, "timeout_seconds": 30}
+        argv = ([str(startup_python), "-m", "pytest"] if profile == "pytest_module" else [str(startup_environment / "bin/pytest")])
+        argv += ["-q", "-p", "pt_bridge.pytest_observer", "test_installed_observer.py"]
+        try:
+            run(argv, cwd=project, env={**startup_env, "PT_PACKAGING_PROFILE": profile, "PT_BRIDGE_CONTROL": json.dumps(settings)}, pass_fds=(sending.fileno(),))
+        finally:
+            sending.close()
+            reader.join(40)
+            if reader.is_alive():
+                receiving.shutdown(socket.SHUT_RDWR)
+                reader.join()
+            receiving.close()
+        assert not faults, faults
+        assert frames[0]["kind"] == "session_started" and frames[-1]["kind"] == "session_terminated"
+        assert all(frame["sequence"] == sequence for sequence, frame in enumerate(frames))
+        terminal = frames[-1]["payload"]
+        assert terminal["backend_exit_code"] == 0 and terminal["reporting_complete"] is True
+        assert terminal["accounting"]["completed_count"] == 1 and terminal["accounting"]["not_run_count"] == 0
+        assert sum(frame["kind"] == "phase_report" for frame in frames) == 3
+        assert not any(frame["kind"] == "session_error" for frame in frames)
+        assert (project / ("cleanup-"+profile)).read_text() == "actually finalized"
+    run(ordinary, cwd=project, env=env)  # No autoload or process-state leak after explicit sessions.
 
     # Doctor is explicit, isolated metadata inspection: hostile-looking module
     # names in cwd/PYTHONPATH must not be imported by the probe.
@@ -182,6 +255,7 @@ with ControlStream.take_fd(int(sys.argv[1]),identity,byte_budget=4096,event_budg
             "pytest11_entries_unchanged": True, "doctor_rejects_missing_and_wrong_bridge": True,
             "doctor_rejects_bridge_autoload": True,
             "installed_private_framing_component_passed": True,
+            "installed_explicit_observer_both_profiles_passed": True,
             "framing_component_imports_no_pytest": True,
             "static_startup_inputs_checked_unqualified": True,
             "unreviewed_harness_startup_inputs_rejected_not_removed": True,

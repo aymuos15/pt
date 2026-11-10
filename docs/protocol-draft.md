@@ -45,6 +45,13 @@ profile. Unknown tuples/revisions fail; there is no downgrade, entrypoint
 substitution, dependency installation, hidden collection, or replay. This tuple
 is a development target, not an implemented or qualified bridge version pair.
 
+The explicit observer's warning `when` is an **observed delivery boundary**, not
+proof of the warning's originating test phase. Pytest's deferred runtest warnings
+are delivered during protocol finalization (`finalize`); assigning them a setup /
+call/teardown origin would invent precision. Original filters and actual
+warnings-as-errors remain authoritative. The independent reference keeps pytest's
+raw hook `when` separately; this mapping does not erase its original observations.
+
 ## Catalog: 32 typed kinds
 
 [Event schema](protocol-v0.schema.json) (`urn:pt:protocol:v0`):

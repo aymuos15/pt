@@ -78,6 +78,14 @@ accounting. Native/schema interoperability checks use the explicitly selected
 locked harness Python; they do not make synthetic payloads a real-pytest backend
 or certify artifacts, environment or generations.
 
+The [explicit pytest observer](wp05-status.md) is now exercised by the integration
+suite and native Rust/Python checks. Subject environments are new, explicitly
+prepared offline from the core/ecosystem locks; they are not installed into a
+user's environment by PT. `PT_OBSERVER_BASE_PYTHON` selects the base for those
+disposable Python integration environments; `PT_OBSERVER_TEST_PYTHON` selects an
+already prepared native-test interpreter. Exact file/artifact/generation and
+supported-launcher gates still prevent enabling successful `pt run`.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

@@ -1,8 +1,8 @@
 """Development package identity only; no automatic pytest plugin or test runner.
 
-The observational backend/session protocol are not implemented by this skeleton.
-Private framing primitives are separately available in ``pt_bridge._wire``;
-they are not imported automatically and do not validate complete pytest work.
+The explicit observational hook module and private framing primitives are
+separately available in ``pt_bridge.pytest_observer`` and ``pt_bridge._wire``;
+they are not imported automatically and cannot certify a full run result.
 Importing this module neither imports pytest nor collects or executes a project.
 """
 

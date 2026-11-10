@@ -93,6 +93,13 @@ not production validation. Native process tests exercise actual `_wire` bytes,
 all 18 shapes, failed synthetic work and effect-before-death/truncation/timeout.
 Those synthetic payloads are not real-pytest or ecosystem qualification.
 
+The separate `tests/real_pytest.rs` now also feeds the explicitly loaded
+[development observer](../../python/pt_bridge/README.md) through actual native
+supervision/frames/ledger checks. Its small same-session, mode, failure and death
+fixtures remain finite component controls, not an integrated supported launcher.
+Optionally set `PT_OBSERVER_TEST_PYTHON` to an already prepared matching minimal
+environment; the native test itself does not install packages or disable plugins.
+
 No external dependency version is changed. `serde_json`'s pinned `raw_value`
 feature is enabled to avoid erasing duplicate fields before typed decoding. The
 new crate uses existing pinned serde/serde_json; dev-only supervisor/tempfile

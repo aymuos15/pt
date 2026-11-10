@@ -10,8 +10,9 @@ The project is in early development. A Linux-only Rust process supervisor and
 diagnostic `pt exec` command now exist. There is **no PT pytest backend, qualified
 support profile, complete benchmark harness, or measured performance claim yet**. The
 specification is a design proposal, not evidence of implementation or support.
-An explicit metadata-only `pt doctor` and bridge distribution skeleton are also
-available; neither observes or executes pytest test sessions. The
+An explicit metadata-only `pt doctor` and bridge distribution are also available.
+The bridge now has [explicit same-session observation hooks](docs/wp05-status.md),
+but no CLI/coordinator pytest backend or full-result certification. The
 private-socket handoff and bridge framing primitives are also implemented as
 development components. A [bounded Rust bridge decoder and serial ledger](crates/pt-protocol/README.md)
 now check necessary stream/accounting conditions, not a complete backend or

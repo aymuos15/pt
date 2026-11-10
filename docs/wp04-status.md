@@ -245,8 +245,11 @@ helper's incorrect `cleanup_grace` field instead of `cleanup_timeout`; compilati
 stopped before the new process checks ran. The corrected helper and final checks
 above do not change process policy or conceal a project-test retry.
 
-The actual observer, supported launch boundary, required artifacts/environment,
+At this foundation revision the actual observer, supported launch boundary, required artifacts/environment,
 immutable generations, broader backend and independent release gates stay open.
+The subsequent [WP05 observer progress](wp05-status.md) records actual explicit
+pytest hooks and separate finite native/reference evidence; it does not close
+the remaining coordinator, artifact/environment or generation gates.
 
 ## Open gates
 
