@@ -107,6 +107,74 @@ lock, support matrix, Rust toolchain and Cargo lock match the prior commit exact
 
 ## Remaining acceptance work
 
+### Pinned private interpreter follow-up (base fe744e3)
+
+The [offline interpreter preparation tool](../bench/corpus/interpreter/README.md)
+now pins original python-build-standalone release 20260211 / GitHub asset
+354545704: CPython 3.12.12, Linux x86-64 GNU, GIL-enabled stripped install archive,
+**33,887,801 bytes**, SHA-256
+`1dbaa624a09e15afe7efbdac08d42993135a68db8d34f986ef6977a6d77bdc3c`.
+The executable's independent byte pin matches the observed managed binary, but
+the managed prefix has four byte mismatches plus 215 extra files/links and 25
+extra directories. Those differences are retained, not repaired or normalized.
+The original audit and corrected implicit-directory model remain separate;
+neither is atomic or signed-build authentication.
+
+The new tool creates two new private prefixes from an independently validated
+copy of the complete archive, using bounded namespace/member/inflated-stream
+checks and no tar extraction API. It verifies **4,971 entries** per prefix:
+**3,722 regular files, 1,048 exact symlinks and 201 implicit directories**.
+Exact file bytes/modes/mtimes and link targets are unchanged before/after the two
+ordinary-startup diagnostics. Site loading is preserved; `-B` and private minimal
+setup environment are explicit, not a production policy. First native evidence:
+`/tmp/opencode/pt-private-interpreter-uia07m2p/run`.
+
+The corpus driver then independently checked both archive-derived prefixes and
+explicitly selected one for each new offline venv. All **20 planned requests**
+matched their declared JUnit/effect/exit expectations, and both **4,971-entry**
+base prefixes still matched afterward. Evidence:
+`/tmp/opencode/pt-private-base-core-q6z__33i/run`.
+This is actual baseline execution on clean private bases, not backend/semantic
+qualification. The original materializer still defaults to its previous observed
+base; two explicit selections are now available without automatic substitution.
+
+**25 targeted archive/prefix/ledger controls passed** (`0.292s`), including
+traversal/linked paths, duplicate/special members, implicit directories, inflated
+metadata limits, truncated gzip trailers, same-stat byte edits, unlisted entries,
+lost returns, failed corpus returns and no overwrite/repair. Synthetic execution
+controls are explicitly labelled. The **18 core materialization controls passed**
+(`11.386s`), including a real two-environment installation/execution regression and
+two new explicit-interpreter/no-fallback guards.
+
+Retained development corrections: the first mode test tried to serialize file
+type bits through tar's permissions field; tar's writer removed them, so the
+test had not actually supplied its claimed adverse mode. It now supplies an
+actual sticky-bit member alongside setuid/setgid/world-write controls. Separately,
+the first corpus follow-up refused the full prefix manifest under the default
+1 MiB JSON limit **before any venv/project execution**. It now explicitly uses
+the existing bounded 4 MiB retained-record reader; no archive/file bound or
+inventory was trimmed. A new output invocation established the result above.
+
+All **seven** interpreter-preparation/corpus-driver qualifications remain null.
+Signed/independent build trust, host loader/system-library identity, complete
+runtime environment and early-startup handoff, phase/effect oracle support,
+immutable generation and release prerequisites are not waived. No optimization,
+support-matrix promotion or performance claim follows from prefix equality.
+
+Final bounded-stream native preparation also reproduced both exact prefixes at
+`/tmp/opencode/pt-private-interpreter-bounded-dmjw5w0t/run`. The **complete harness
+regression ran 762 tests: 761 passed and the one existing native-peak capability
+test skipped** (`858.817s`). No missing memory peak was inferred. The separate
+**68 contract/audit checks passed** (`8.566s`). Dependency/support/toolchain pins
+are unchanged by this interpreter-preparation batch; no new runner or release
+claim is enabled.
+Static read-back checked six Python sources, the artifact declaration, **40 local
+links** and **seven unchanged Cargo/Python/support/toolchain/candidate files**.
+The earlier 735-test IPC regression is preserved in WP04 rather than relabelled
+as this expanded 762-test batch.
+
+### Still required
+
 - Preserve every external candidate's installability/profile conflict, exclusions,
   skips and deselections. The attrs pytest-version conflict and Click's 31,000
   default-deselected stress tests remain disclosed; no candidate is silently

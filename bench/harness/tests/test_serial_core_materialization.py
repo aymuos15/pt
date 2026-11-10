@@ -285,6 +285,32 @@ class SerialCoreMaterializationTests(unittest.TestCase):
         self.assertEqual((self.output / "user-work").read_text(), "keep")
         self.assertEqual(self.calls, [])
 
+    def test_explicit_base_interpreters_are_forwarded_exactly_one_per_environment(self):
+        bases = [self.root / name for name in ("first-python", "second-python")]
+        for path in bases:
+            path.write_bytes(b"explicit synthetic interpreter, never executed")
+            path.chmod(0o755)
+        actual = []
+
+        def capture(*args):
+            if args[1].startswith("venv-"):
+                argv = args[2]
+                actual.append(argv[argv.index("--python") + 1])
+            return self._fake_command(*args)
+
+        with self.synthetic(capture):
+            report = materializer.materialize(self.output, execute=True, profile_root=self.profile, interpreters=bases)
+        self.assertEqual(report["status"], "reproduced_declared_mechanism_profile")
+        self.assertEqual(actual, [str(path) for path in bases])
+        self.assertEqual(report["base_interpreters"], actual)
+
+    def test_bad_or_missing_explicit_base_interpreters_fail_without_fallback_or_install(self):
+        for bases in ([Path("relative"), Path("relative")], [Path(sys.executable)], [Path(sys.executable), self.root / "missing"], True):
+            with self.subTest(bases=bases), self.synthetic(), self.assertRaises(ValueError):
+                materializer.materialize(self.output, execute=True, profile_root=self.profile, interpreters=bases)
+        self.assertEqual(self.calls, [])
+        self.assertFalse(self.output.exists())
+
     def test_output_publication_failure_does_not_return_a_successful_materialization(self):
         original = materializer._save
 

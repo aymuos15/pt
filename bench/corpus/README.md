@@ -19,6 +19,13 @@ pytest-only outcomes across two clean environments and identical local builds,
 including a fresh fully offline reproduction. Neither changes the shortlist's
 eligibility/allocation or supplies phase-oracle/PT qualification.
 
+The [private interpreter preparation tools](interpreter/README.md) now pin an
+original CPython artifact and verify two new complete prefixes, including implicit
+directories and exact symlink targets. They can run the locked core corpus on
+those explicit private bases without repairing the managed Python installation.
+These remain setup/identity evidence, not a supported launcher or full environment
+and generation qualification.
+
 `candidates.toml` is a shortlist of twelve external repositories with HEAD
 revisions observed through `git ls-remote` on the recorded date. The dimensions
 are workload hypotheses, not verified properties of those revisions. All

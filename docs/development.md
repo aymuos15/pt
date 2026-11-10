@@ -61,6 +61,12 @@ declared effects, artifacts and coverage sets. It is test-only instrumentation,
 not a production bridge or support qualification. Its README gives an explicit
 source-frozen, raw-evidence-retaining command; no dependency pins are changed.
 
+The [WP02 private interpreter preparation](../bench/corpus/interpreter/README.md)
+can create two new archive-pinned prefixes and run the locked core corpus on
+explicitly selected bases. It is offline, operator-requested setup, not a runtime
+installer or permission to repair a managed Python. Whole-prefix equality still
+does not establish host-library identity, startup handoff or immutable generations.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

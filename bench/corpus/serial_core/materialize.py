@@ -187,7 +187,7 @@ def _runtime(python, root, name, environment):
     return value
 
 
-def materialize(output, *, execute=False, profile_root=HERE):
+def materialize(output, *, execute=False, profile_root=HERE, interpreters=None):
     if execute is not True:
         raise ValueError("explicit --execute is required for isolated installs and corpus invocations")
     if (sys.platform != "linux" or platform.machine() != "x86_64" or sys.implementation.name != "cpython"
@@ -198,6 +198,14 @@ def materialize(output, *, execute=False, profile_root=HERE):
         raise ValueError("serial-core output and source roots must be separate and nonnested")
     data, captured = load_profile(profile_root)
     source_identity = tree(profile_root / "fixtures")
+    if interpreters is None:
+        interpreters = [Path(sys.executable).resolve()] * 2
+    elif (type(interpreters) not in (list, tuple) or len(interpreters) != 2
+            or any(not isinstance(path, (str, Path)) or not Path(path).is_absolute() for path in interpreters)):
+        raise ValueError("serial-core requires exactly two explicit absolute base-interpreter paths")
+    interpreters = [Path(path) for path in interpreters]
+    if any(not path.is_file() or not os.access(path, os.X_OK) for path in interpreters):
+        raise ValueError("serial-core selected base interpreter is not an executable file")
     uv = shutil.which("uv")
     if uv is None:
         raise ValueError("serial-core materialization requires an explicitly installed uv")
@@ -215,7 +223,7 @@ def materialize(output, *, execute=False, profile_root=HERE):
             for index in (1, 2) for case in data["cases"]]
     report = {"kind": "serial_core_clean_materialization", "status": "aborted", "planned_environments": 2,
               "profile": data, "environments": [], "cases": rows, "errors": [], "confirmatory_eligible": False,
-              "qualification": {key: None for key in QUALIFICATION},
+              "qualification": {key: None for key in QUALIFICATION}, "base_interpreters": [str(path) for path in interpreters],
               "limitations": ["test-owned training mechanisms, not a representative or holdout corpus",
                               "JUnit and sentinels are not authoritative phase traces or a semantic oracle",
                               "RECORD files are retained but excluded only from cross-environment byte comparison because entrypoint hashes vary",
@@ -224,7 +232,7 @@ def materialize(output, *, execute=False, profile_root=HERE):
     try:
         for index in (1, 2):
             venv = output / f"environment-{index}"
-            for name, argv in ((f"venv-{index}", [uv, "--no-config", "venv", "--offline", "--python", str(Path(sys.executable).resolve()), str(venv)]),
+            for name, argv in ((f"venv-{index}", [uv, "--no-config", "venv", "--offline", "--python", str(interpreters[index - 1]), str(venv)]),
                                (f"install-{index}", [uv, "--no-config", "sync", "--offline", "--locked", "--active", "--project", str(output / "frozen")])):
                 env = {**environment, **({"VIRTUAL_ENV": str(venv)} if name.startswith("install") else {})}
                 result, _ = _command(output, name, argv, output, env)
@@ -287,9 +295,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--base-python", type=Path, nargs=2, metavar=("FIRST", "SECOND"), help="explicit base interpreters, one per new venv; no automatic substitution")
     args = parser.parse_args()
     try:
-        report = materialize(args.output, execute=args.execute)
+        report = materialize(args.output, execute=args.execute, interpreters=args.base_python)
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         parser.exit(2, f"serial-core-materialize: {exc}\n")
     print(json.dumps({"status": report["status"], "planned_environments": 2, "planned_cases": len(report["cases"]),

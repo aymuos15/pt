@@ -52,6 +52,14 @@ creates each venv from the same observed pinned interpreter, uses `uv sync
 The two installs use the same locked artifacts/cache, **not independent builds**.
 The cache location is queried explicitly; user configuration is disabled.
 
+The optional `--base-python FIRST SECOND` selects an explicit absolute executable
+for each venv and records both paths; invalid/missing selections fail before setup
+instead of substituting another interpreter. Without that option, the original
+same-observed-base behavior is unchanged. The separate [pinned private-base
+check](../interpreter/README.md) verifies complete archive-derived base prefixes
+before/after running this corpus; that evidence is not inferred from a binary
+hash or this tool's site-packages comparison alone.
+
 Each case gets a fresh file copy and a fresh subprocess. There is no preflight
 collection. A separate runtime metadata check reads Python/package versions and
 pytest entry points, not the project or pytest collection. The subject environment

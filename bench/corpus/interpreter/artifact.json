@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "profile": "pbs-20260211-cpython-3.12.12-linux-x86_64-gnu-stripped-v1",
+  "status": "pinned_development_artifact_not_qualified",
+  "target": {"implementation": "cpython", "version": [3, 12, 12], "platform": "linux", "machine": "x86_64", "gil_disabled": false},
+  "source": {
+    "release_url": "https://github.com/astral-sh/python-build-standalone/releases/tag/20260211",
+    "api_url": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20260211",
+    "asset_id": 354545704,
+    "download_url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260211/cpython-3.12.12%2B20260211-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "identity_evidence": "GitHub HTTPS release API advertised SHA-256 and size, observed 2026-11-10; not signed-build attestation",
+    "signed_build_attestation": null
+  },
+  "archive": {
+    "name": "cpython-3.12.12+20260211-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "bytes": 33887801,
+    "sha256": "1dbaa624a09e15afe7efbdac08d42993135a68db8d34f986ef6977a6d77bdc3c"
+  },
+  "executable": {
+    "path": "bin/python3.12",
+    "bytes": 27817640,
+    "sha256": "3008abbb48c1e2b0fa3072ae72334b9b352e1346ea3a20d34126a455f0c7bc66"
+  }
+}
