@@ -118,6 +118,25 @@ work; the explicit development observer is not a fallback or successful runner.
 Unknown reader accounting cannot fit revision 1 and therefore produces an
 unavailable final record, never zero counts or saved-file recovery.
 
+Bridge bootstrap schema 2 optionally names one required JUnit artifact with a
+canonical relative source and finite byte bound. The ordinary requested pytest
+formatter/path must match; producer hashing is charged work and does not replace
+native post-cleanup publication/completeness checks. Schema 1 remains closed /
+non-discovering and wire protocol stays 0 / revision 1. The installed-wheel smoke
+accepts explicit `--base-python` for **new disposable environments** and `--output`
+for a **new exclusive retained smoke directory**; it never upgrades/repairs an
+existing environment. See the [bridge instructions](../python/pt_bridge/README.md).
+
+Isolated Python probes ignore `PYTHONDONTWRITEBYTECODE`; preserve interpreter
+inputs with the explicit test-only [private read-only wrapper](../tests/packaging/readonly_interpreter_setup.py),
+not cache deletion or silent rebaselining. The [readiness verification driver](../tests/packaging/verify_declared_junit.py)
+requires two distinct already prepared read-only temporary prefixes and a pinned
+archive-derived manifest. It creates a new exclusive output/fresh subject,
+freezes source/pin/command plans and preserves failed, unknown and not-run stages.
+Both native and independent post-setup prefix checks are required. This is a
+different setup/UID/mount policy, **not a production launcher, immutable-generation
+certificate, sandbox, equivalent timing arm or release qualification**.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

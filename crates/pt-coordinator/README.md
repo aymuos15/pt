@@ -123,5 +123,13 @@ unsupported outer finalization without inventing qualified success. An actual
 JUnit file without a bridge readiness event remains pending; its existence is not
 permission to substitute an independent test oracle's hash as a live claim.
 
+An explicitly chosen bridge bootstrap schema 2 now supplies real required-JUnit
+readiness. Additional controls carry that live claim through owned native copy /
+projection publication and an independent stdlib XML/hash probe, including both
+entrypoints, failure, collect-only/no-tests and interrupted partial reports.
+Properties remain rejected by the pinned native policy, and output removed by a
+finalizer remains pending with the actual read error/pytest return retained.
+This is not environment, startup, immutable generation or full-result authority.
+
 All production dependencies are existing local/pinned workspace identities; no
 new registry package/version is introduced.

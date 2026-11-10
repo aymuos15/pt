@@ -943,7 +943,11 @@ fn format_validation_does_not_waive_staging_substitution_no_replace_or_publicati
                 Ok(())
             },
         );
-        assert!(result.is_err(), "{mode}");
+        eprintln!(
+            "artifact boundary control: mode={mode}; result={result:?}; state={:?}",
+            store.state("junit")
+        );
+        assert!(result.is_err(), "{mode}: result={result:?}");
         assert!(!store.required_artifacts_satisfied());
         if mode == "target_race" {
             assert_eq!(
@@ -955,7 +959,187 @@ fn format_validation_does_not_waive_staging_substitution_no_replace_or_publicati
             assert_eq!(fs::read(f.target("junit")).unwrap(), raw.as_bytes());
         }
         assert!(
-            matches!(store.state("junit"),Some(ArtifactState::Failed{publication_may_exist,..}) if *publication_may_exist==(mode=="late_return_loss"))
+            matches!(store.state("junit"),Some(ArtifactState::Failed{publication_may_exist,..}) if *publication_may_exist==(mode=="late_return_loss")),
+            "mode={mode}; result={result:?}; state={:?}; target_exists={}",
+            store.state("junit"),
+            f.target("junit").exists()
+        );
+    }
+}
+
+#[test]
+fn pending_recheck_rejects_changed_bytes_even_when_metadata_checks_are_explicitly_neutralized() {
+    let f = Fixture::new();
+    let raw = junit::tests::passing_xml();
+    junit_expectation()
+        .validate(raw.as_bytes(), budget().deadline)
+        .unwrap();
+    let store = f.store(vec![junit_declaration()]);
+    let pending = f.retention.join("private/.pending-junit");
+    fs::write(&pending, &raw).unwrap();
+    let mut output = File::open(&pending).unwrap();
+    let before = stamp(&output).unwrap();
+    let times =
+        std::fs::FileTimes::new().set_modified(output.metadata().unwrap().modified().unwrap());
+    let changed = raw.replace("test_first", "wrong_name");
+    assert_eq!(changed.len(), raw.len());
+    fs::write(&pending, &changed).unwrap();
+    output.set_times(times).unwrap();
+    // Synthetic metadata-guard neutralization, not a claim that ctime can be
+    // restored on this host. The expected stamp is explicitly adjusted so only
+    // the independent pending byte read can reject this unchanged-length edit.
+    let masked = stamp(&output).unwrap();
+    assert_eq!(masked.dev, before.dev);
+    assert_eq!(masked.ino, before.ino);
+    assert_eq!(masked.bytes, before.bytes);
+    assert_eq!(masked.mode, before.mode);
+    assert_eq!(masked.mtime, before.mtime);
+    assert_eq!(
+        named_stamp(store.retained.tail(), Path::new(".pending-junit")).unwrap(),
+        masked
+    );
+    let error = recheck_pending(
+        &mut output,
+        store.retained.tail(),
+        Path::new(".pending-junit"),
+        &masked,
+        &Fixture::claim("junit", raw.as_bytes(), true),
+        store.budget.deadline,
+        &mut |_| Ok(()),
+    )
+    .unwrap_err();
+    assert_eq!(error.code(), "artifact_pending_readback_mismatch");
+    assert_eq!(fs::read(&pending).unwrap(), changed.as_bytes());
+    assert!(!f.target("junit").exists());
+    assert!(!store.required_artifacts_satisfied());
+}
+
+#[test]
+fn junit_parser_never_validates_bytes_that_differ_from_the_live_readiness_digest() {
+    let f = Fixture::new();
+    let valid = junit::tests::passing_xml();
+    let original = valid.replace("test_first", "wrong_name");
+    assert_eq!(original.len(), valid.len());
+    fs::write(f.source.join("junit.xml"), &original).unwrap();
+    let mut store = f.store(vec![junit_declaration()]);
+    let mut reached_after_validation = false;
+    let error = store
+        .commit_context(
+            &Fixture::claim("junit", original.as_bytes(), true),
+            &f.writers(),
+            Some(&junit_expectation()),
+            &mut |step| {
+                match step {
+                    Step::BeforeValidation => {
+                        fs::write(f.retention.join("private/.pending-junit"), &valid).unwrap()
+                    }
+                    Step::AfterValidation => reached_after_validation = true,
+                    _ => {}
+                }
+                Ok(())
+            },
+        )
+        .unwrap_err();
+    assert_eq!(error.code(), "junit_copy_digest_mismatch");
+    assert!(
+        !reached_after_validation,
+        "a different byte domain reached successful format validation"
+    );
+    assert!(!f.target("junit").exists());
+    assert!(matches!(
+        store.state("junit"),
+        Some(ArtifactState::Failed {
+            publication_may_exist: false,
+            ..
+        })
+    ));
+    assert_eq!(
+        fs::read(f.source.join("junit.xml")).unwrap(),
+        original.as_bytes()
+    );
+    assert_eq!(
+        fs::read(f.retention.join("private/.pending-junit")).unwrap(),
+        valid.as_bytes()
+    );
+}
+
+#[test]
+fn pending_readback_failure_deadline_or_binding_change_is_terminal_before_rename() {
+    for mode in ["io_failure", "deadline", "substitute", "grow"] {
+        let f = Fixture::new();
+        fs::write(f.source.join("input"), b"abc").unwrap();
+        let mut store = f.store(vec![Fixture::declare("input", "a", true)]);
+        if mode == "deadline" {
+            store.budget.deadline = Instant::now() + Duration::from_millis(250);
+        }
+        let pending = f.retention.join("private/.pending-a");
+        let mut injected = false;
+        let error = store
+            .commit_with(
+                &Fixture::claim("a", b"abc", true),
+                &f.writers(),
+                &mut |step| {
+                    if matches!(step, Step::PendingReadbackChunk) && !injected {
+                        injected = true;
+                        match mode {
+                            "io_failure" => {
+                                return Err(ArtifactError::io(
+                                    "synthetic_pending_read_failure",
+                                    std::io::Error::from_raw_os_error(nix::libc::EIO),
+                                ));
+                            }
+                            "deadline" => std::thread::sleep(Duration::from_millis(350)),
+                            "substitute" => {
+                                fs::rename(&pending, f.retention.join("private/original-pending"))
+                                    .unwrap();
+                                fs::write(&pending, b"foreign bytes remain").unwrap();
+                            }
+                            _ => {
+                                let mut changed = std::fs::OpenOptions::new()
+                                    .append(true)
+                                    .open(&pending)
+                                    .unwrap();
+                                changed.write_all(b"extra bytes").unwrap();
+                            }
+                        }
+                    }
+                    Ok(())
+                },
+            )
+            .unwrap_err();
+        assert!(injected, "{mode}: injection was not reached; error={error}");
+        assert_eq!(
+            error.code(),
+            match mode {
+                "io_failure" => "synthetic_pending_read_failure",
+                "deadline" => "artifact_absolute_deadline_expired",
+                "substitute" => "artifact_copy_binding_changed_before_publish",
+                _ => "artifact_pending_grew_during_readback",
+            }
+        );
+        assert!(
+            matches!(
+                store.state("a"),
+                Some(ArtifactState::Failed {
+                    publication_may_exist: false,
+                    ..
+                })
+            ),
+            "{mode}: {:?}",
+            store.state("a")
+        );
+        assert!(!store.required_artifacts_satisfied());
+        assert!(!f.target("a").exists());
+        assert_eq!(fs::read(f.source.join("input")).unwrap(), b"abc");
+        if mode == "substitute" {
+            assert_eq!(fs::read(&pending).unwrap(), b"foreign bytes remain");
+        }
+        assert_eq!(
+            store
+                .commit(&Fixture::claim("a", b"abc", true), &f.writers())
+                .unwrap_err()
+                .code(),
+            "artifact_already_terminal_no_retry"
         );
     }
 }

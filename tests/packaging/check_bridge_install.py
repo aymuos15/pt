@@ -27,12 +27,13 @@ def run(argv, *, cwd, env, expected=0, pass_fds=()):
     return result
 
 
-def check(wheel, binary, parent):
+def check(wheel, binary, parent, base_python="3.12.12"):
     with zipfile.ZipFile(wheel) as archive:
         names = archive.namelist()
         assert "pt_bridge/__init__.py" in names
         assert "pt_bridge/_wire.py" in names
         assert "pt_bridge/_observer.py" in names and "pt_bridge/pytest_observer.py" in names
+        assert "pt_bridge/_artifacts.py" in names
         assert not any(name == "pytest.py" or name.startswith("pytest/") for name in names)
         assert not any(name.endswith("entry_points.txt") for name in names)
     environment = parent / "environment"
@@ -46,7 +47,7 @@ def check(wheel, binary, parent):
     for key in ("PYTHONPATH", "PYTHONHOME", "PYTEST_ADDOPTS", "PYTEST_PLUGINS",
                 "PYTEST_DISABLE_PLUGIN_AUTOLOAD", "VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"):
         env.pop(key, None)
-    run(["uv", "venv", "--offline", "--python", "3.12.12", str(environment)], cwd=parent, env=env)
+    run(["uv", "venv", "--offline", "--python", base_python, str(environment)], cwd=parent, env=env)
     env["VIRTUAL_ENV"] = str(environment)
     run(["uv", "sync", "--offline", "--locked", "--active", "--project", str(ROOT / "bench/harness")],
         cwd=parent, env=env)
@@ -106,7 +107,8 @@ def check(wheel, binary, parent):
         "def test_installed_component(observed_fixture):\n"
         "    assert not os.get_inheritable(json.loads(os.environ['PT_BRIDGE_CONTROL'])['fd'])\n"
         "    print('CONTROL-LOOKING STDOUT IS NOT IPC')\n")
-    for profile in ("pytest_module", "pytest_console"):
+    for profile, readiness in (("pytest_module", False), ("pytest_console", False),
+                               ("pytest_module", True), ("pytest_console", True)):
         receiving, sending = socket.socketpair()
         frames, faults = [], []
 
@@ -144,11 +146,21 @@ def check(wheel, binary, parent):
                     "identity": {"request_id": "installed-request", "run_id": "installed-run", "generation_id": "installed-generation",
                                  "session_id": "installed-session", "producer_id": "installed-bridge"},
                     "invocation_profile": profile, "mode": "run", "max_items": 256, "max_collection_reports": 1024,
-                    "max_nodeid_bytes": 1024*1024, "byte_budget": 1024*1024, "event_budget": 256, "timeout_seconds": 30}
+                     "max_nodeid_bytes": 1024*1024, "byte_budget": 1024*1024, "event_budget": 256, "timeout_seconds": 30}
+        token = profile + ("-junit" if readiness else "")
+        report = project / ("installed-junit-" + profile + ".xml")
+        if readiness:
+            settings.update(schema_version=2, junit_artifact={"artifact_id": "installed-junit", "source": report.name,
+                            "max_bytes": 1024*1024, "required": True})
+            with report.open("xb"):
+                pass
+            report.chmod(0o600)  # Only this explicitly new test-owned output.
         argv = ([str(startup_python), "-m", "pytest"] if profile == "pytest_module" else [str(startup_environment / "bin/pytest")])
         argv += ["-q", "-p", "pt_bridge.pytest_observer", "test_installed_observer.py"]
+        if readiness:
+            argv += ["--junitxml=" + report.name]
         try:
-            run(argv, cwd=project, env={**startup_env, "PT_PACKAGING_PROFILE": profile, "PT_BRIDGE_CONTROL": json.dumps(settings)}, pass_fds=(sending.fileno(),))
+            run(argv, cwd=project, env={**startup_env, "PT_PACKAGING_PROFILE": token, "PT_BRIDGE_CONTROL": json.dumps(settings)}, pass_fds=(sending.fileno(),))
         finally:
             sending.close()
             reader.join(40)
@@ -164,7 +176,13 @@ def check(wheel, binary, parent):
         assert terminal["accounting"]["completed_count"] == 1 and terminal["accounting"]["not_run_count"] == 0
         assert sum(frame["kind"] == "phase_report" for frame in frames) == 3
         assert not any(frame["kind"] == "session_error" for frame in frames)
-        assert (project / ("cleanup-"+profile)).read_text() == "actually finalized"
+        claims = [frame["payload"] for frame in frames if frame["kind"] == "artifact_ready"]
+        if readiness:
+            raw = report.read_bytes()
+            assert claims == [{"artifact_id": "installed-junit", "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw), "complete": True}]
+        else:
+            assert claims == []
+        assert (project / ("cleanup-"+token)).read_text() == "actually finalized"
     run(ordinary, cwd=project, env=env)  # No autoload or process-state leak after explicit sessions.
 
     # Doctor is explicit, isolated metadata inspection: hostile-looking module
@@ -194,7 +212,7 @@ def check(wheel, binary, parent):
     assert not (project / "project-imported").exists() and not (project / "site-imported").exists()
     assert pth.exists(), "guard must not delete an unknown startup input"
     pth.unlink()  # Only this explicitly test-created sentinel is removed.
-    run([str(python), "-I", "-c", "import pt_bridge,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
+    run([str(python), "-I", "-c", "import pt_bridge,pt_bridge._artifacts,sys; assert pt_bridge.__version__ == '0.0.0'; assert 'pytest' not in sys.modules"],
         cwd=project, env=env)
 
     # This explicitly imports only the installed framing component. It is not
@@ -256,6 +274,7 @@ with ControlStream.take_fd(int(sys.argv[1]),identity,byte_budget=4096,event_budg
             "doctor_rejects_bridge_autoload": True,
             "installed_private_framing_component_passed": True,
             "installed_explicit_observer_both_profiles_passed": True,
+            "installed_explicit_junit_readiness_both_profiles_passed": True,
             "framing_component_imports_no_pytest": True,
             "static_startup_inputs_checked_unqualified": True,
             "unreviewed_harness_startup_inputs_rejected_not_removed": True,
@@ -269,9 +288,17 @@ def main():
     parser.add_argument("--wheel", type=Path, required=True)
     parser.add_argument("--binary", type=Path, default=ROOT / "target/release/pt")
     parser.add_argument("--temp-root", type=Path, default=Path("/tmp/opencode"))
+    parser.add_argument("--base-python", default="3.12.12", help="explicit interpreter for new disposable environments; no dependency repair")
+    parser.add_argument("--output", type=Path, help="new exclusive directory retaining the smoke environments and fixtures")
     args = parser.parse_args()
-    with tempfile.TemporaryDirectory(prefix="pt-packaging-", dir=args.temp_root) as directory:
-        report = check(args.wheel.resolve(strict=True), args.binary.resolve(strict=True), Path(directory))
+    if args.output is not None:
+        args.output.mkdir(mode=0o700)
+        report = check(args.wheel.resolve(strict=True), args.binary.resolve(strict=True), args.output.resolve(strict=True), args.base_python)
+        with (args.output / "result.json").open("x") as output:
+            json.dump(report, output, sort_keys=True, indent=2)
+    else:
+        with tempfile.TemporaryDirectory(prefix="pt-packaging-", dir=args.temp_root) as directory:
+            report = check(args.wheel.resolve(strict=True), args.binary.resolve(strict=True), Path(directory), args.base_python)
     print(json.dumps(report, sort_keys=True))
 
 

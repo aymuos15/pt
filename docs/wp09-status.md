@@ -327,3 +327,222 @@ abandonment/durable reporting and independent release gates remain open.
 Static precommit read-back checked **81 local links**, seven unchanged pin /
 candidate/schema files, unchanged bridge modules, Python test syntax and all
 still-matching frozen native/test/schema sources.
+
+## Explicit real-JUnit producer readiness (base 809b2f0)
+
+The bridge now has opt-in **bootstrap schema 2** for one explicitly declared
+required JUnit artifact, alongside unchanged closed schema 1. This is **not** a
+wire-version change: protocol **0 / contract revision 1** still uses its existing
+`artifact_ready` shape; the independent reference trace's v2 is unrelated.
+Configuration is bounded in actual UTF-8 bytes, including Unicode/whitespace.
+
+Only the actual enabled pinned pytest JUnit formatter's matching destination is
+eligible. No plugin is enabled/disabled, no requested path/options/properties /
+capture data is rewritten, and no report is auto-discovered. Native no-follow
+root/parent/leaf operations, exact modes/ownership/link count/length/bindings,
+bounded hashing and the observer's one absolute deadline produce a **readiness
+assertion only** after underlying finalizers. The coordinator independently
+copies/hashes/checks live-context JUnit completeness and actual process cleanup;
+matching ready/hash claims cannot certify XML/semantic/generation/environment
+truth. Optional/arbitrary/coverage output observation is not inferred supported.
+
+The new controls preserve partial interrupted JUnit, unsupported properties,
+root/leaf substitution, missing/unsafe output and explicit finalizer removal.
+A removal is a read failure with pending required output and preserved actual
+pytest return/effects, not an automatic file repair, report adoption or replay.
+Qualified launch and current-full success remain unavailable. The installed
+wheel smoke now selects both schema 1 and opt-in schema 2 for both entrypoints
+in new disposable environments; ordinary pytest before/after still must not
+autoload PT. Its optional explicit base/output settings retain new test-owned
+setup rather than mutating an existing environment.
+
+Development failures remain explicit: the first eight-method file-control run
+had **seven passing methods and one error** (four negative subcases). Those
+subcases correctly raised the existing `ObserverError` RuntimeError, but the
+test only expected ValueError. The expected exception class was corrected;
+no product rejection was relaxed. The corrected eight-method focused run and
+seven native coordinator methods / **17 real pytest requests** passed before
+the additional FD-closure/formatter-binding controls and full verification.
+Final locked native, Python/oracle/contracts and rebuilt-wheel checks are
+recorded only after their actual returns.
+
+The initial unprotected bundle's **locked offline release workspace passed 183 tests**, no
+skips; strict clippy, rustfmt and the release CLI build passed. Python regression
+passed **66 integration checks / 76 plain-reference-bridge requests**, **63
+independent oracle checks** and **68 contract checks**, all without skips.
+Evidence: `/tmp/opencode/pt-declared-junit-final-verification-9z9f9j35`, with fixed
+source hashes, the predeclared command plan and distinct actual command return /
+stdout/stderr records. These are development correctness/setup checks, not a
+timing/resource campaign or current-generation qualification.
+
+The coordinator subset retains **41 process reports**, including **17 real
+pytest requests**. **Seven** explicitly select bootstrap schema 2: four commit
+the independently checked JUnit projection (ordinary module, console failure,
+collect-only and no-tests), one interrupted report commits **partial** content,
+one properties extension is **failed**, and one intentionally removed report
+stays **pending** with its read error. **Six independent stdlib XML/hash probes**
+agree with observed readiness bytes. Every coordinator record remains nonzero /
+environment-unverified / not-current-full-success. Producer assertions do not
+upgrade that gate just because required artifact projection completeness passed.
+
+The offline wheel rebuild and retained disposable installed-wheel smoke passed
+schema 1 and schema 2 on **both** entrypoints. Plain pytest still did not load PT;
+pytest11 entries stayed unchanged, and unknown startup hooks stayed present and
+rejected rather than imported/suppressed/repaired. The new wheel is
+`/tmp/opencode/pt-declared-junit-final-verification-9z9f9j35/wheel/pt_bridge-0.0.0-py3-none-any.whl`,
+SHA-256 `f0612542649a80f365129f6c5704274ac39c111579ae7ac631b24c153d5768f1`.
+It is an unauthenticated development build, **not a release**; the earlier wheel
+and failed development records are not overwritten. The smoke explicitly uses
+the retained private interpreter for its new environments. Existing user/managed
+environments are not upgraded or repaired.
+
+All **50 Cargo package identities/checksums** remain identical, with no registry,
+lock, Python dependency, protocol/result schema, support/toolchain or external
+candidate-allocation change. The source changes are the bridge readiness
+component/hooks, independent controls and explicit packaging reproduction options.
+The unchanged large independent timing harness was not rerun or relabelled as
+qualification. Environment/startup closure, current immutable declared inputs,
+complete positive finalization, coverage/rich exceptions and independent release
+gates remain open; `pt run` remains unavailable.
+
+### Required post-setup identity failure and corrected setup control
+
+The nine commands in the retained readiness bundle above returned zero, but
+the **subsequent required prefix-stability check failed**: native Cargo exit
+**101**, independently confirmed by the read-only Python verifier. Original
+`prefix-1` now has **5,069 entries: 98 extra entries and three changed encoding
+bytecode files**; `prefix-2` still matches all 4,971 archive-manifest entries.
+Evidence is retained in that bundle's `prefix-after-setup.*` files. Thus its
+passing component checks are **not a complete environment/stable-input pass**.
+No cache was deleted, changed file repaired, extra ignored or expected manifest
+rebuilt from the mutated installation. Earlier matching endpoint observations
+remain historical, not current proof.
+
+An explicitly new negative-control prefix at
+`/tmp/opencode/pt-isolated-probe-prefix-control-ncmm4r2y` reproduced the mechanism:
+`python -I` with `PYTHONDONTWRITEBYTECODE=1` reported
+`dont_write_bytecode: false`, returned zero and generated 21 extra entries /
+three changed bytecode files during a small stdlib probe. Isolated mode ignores
+that environment setting. Existing packaging metadata commands include such
+isolated probes; setup-tool interpreter discovery can do so too. This control
+does not claim a unique writer/stage for all 98 observed extras. Its changed
+prefix and original changed `prefix-1` remain intact as failed evidence.
+
+The explicit test-only `readonly_interpreter_setup.py` wrapper now creates a new
+user/private mount namespace and read-only bind views of **only named temporary
+interpreter inputs**, then executes the requested validation/setup command.
+Distinct original namespace descriptors and private propagation are checked;
+there is no parent mount/permission/input repair and no automatic retry. The
+new `verify_declared_junit.py` driver refuses writable interpreter inputs,
+creates a fresh native subject environment, freezes the command/source plan and
+checks both prefixes again after all setup. It does not reuse the changed
+prefix as expected truth.
+
+A focused read-only control at
+`/tmp/opencode/pt-readonly-probe-setup-control-bxvtw4p7` ran the same isolated
+probe with bytecode writing still enabled: the child observed a read-only base,
+both the untouched original `prefix-2` and a new archive-derived prefix remained
+exact matches, and the parent's read-only flags stayed false. A separate native
+process-only namespace capability observation is at
+`/tmp/opencode/pt-snapshot-capability-diagnostic-9nfm6cuf`; it is not a snapshot.
+
+This is an explicitly different **test-setup policy**, including a mapped UID
+view inside the temporary namespace, not a shipping launcher or equivalent
+performance arm. Writable host aliases, namespace capabilities, external inputs,
+complete environment and current immutable-generation assurance remain outside
+the claim. Corrected full reproduction follows its new actual return, never
+overwrites the failed bundle or upgrades these controls into qualification.
+
+### Artifact boundary exposed by the protected-input run
+
+The first corrected full setup at
+`/tmp/opencode/pt-declared-junit-readonly-verification-lv_haw8u` returned **1**:
+new-environment setup commands 1–2 returned zero, but native command 3 returned
+Cargo **101**, with **35 passing / one failing pt-report method**. Nine later
+planned commands (clippy, formatting, Python suites, build/wheel/install and the
+native post-setup check) were **not run**. Both interpreter inputs still matched
+their expected 4,971 entries in the independent after-failure inventory; no
+changed input or later passing component return erases this native failure.
+
+The failing four-arm test's old assertion recorded no arm/error. Additional
+diagnostics passed a focused run and a full 36-method report-library run at
+`/tmp/opencode/pt-artifact-boundary-diagnostic-dlbdtizi` and
+`/tmp/opencode/pt-artifact-parallel-diagnostic-noifx9r0`. Thus the exact original
+arm cannot be retrospectively proven from those reruns. The assertions are not
+relaxed; future failures retain mode, error, state and target-presence diagnostics.
+Inspection found an actual independent gap: pending bytes were hashed **before**
+XML validation, followed only by stat/binding checks before rename. Same-stat
+changes could reach publication and fail only during the later published read.
+
+Two deterministic controls at
+`/tmp/opencode/pt-artifact-boundary-red-controls-0ogi9eay` returned Cargo **101**:
+**22 passed / two failed**. One explicitly masks the pending metadata guard and
+shows it accepts different same-length bytes; this is synthetic isolation, not
+a claim that this host's ctime was restored. The other shows that a different
+same-length buffer can reach successful XML validation before metadata detects
+the substitution. This identifies byte-domain/ordering gaps without claiming a
+unique explanation for the earlier undiagnosed arm.
+
+The native publisher now rehashes the owned pending FD **after validation and all
+pre-rename hooks**, under the original deadline and byte ceiling, before rename.
+It checks both open/named bindings around that read and revalidates ancestors /
+deadline before publication. The actual XML buffer is independently hashed to
+the readiness digest **before parsing**, too. Copy/XML/published readbacks now
+check the original deadline after each read. These are endpoint observations,
+not a content freeze or waiver of the mandatory independent post-rename check.
+
+The focused corrected run at
+`/tmp/opencode/pt-artifact-boundary-fixed-controls-d0fkxhyq` passed **39 report
+methods**, strict workspace clippy and rustfmt. The three added methods cover
+metadata-neutralized byte verification, validation-buffer binding and pending
+read fault/expiry/substitution/growth. Prepublication failures stay terminal with
+`publication_may_exist: false`; return loss after rename retains **true**, without
+recovery, repair, retry or deletion of foreign data. Full acceptance still follows
+the new protected-input run's actual returns and post-setup checks.
+
+### Corrected protected-input final verification
+
+The new exclusive run at
+`/tmp/opencode/pt-declared-junit-protected-final-rzazf7qr/run` returned zero for
+**all 12 planned commands, with zero not-run commands**. The locked offline
+release workspace passed **186 tests**, no skips, including all **39 pt-report
+methods**. Strict clippy, rustfmt, the CLI release build, **66 integration checks /
+76 observer requests**, **63 oracle checks**, **68 contract checks**, the offline
+wheel build and disposable installed-wheel smoke all passed. An additional
+explicit native two-prefix test passed **after** the setup/test/wheel stages.
+
+Native before/after and independent after-setup/after-outer inventories agree on
+both protected interpreter inputs: **4,971 entries each**, no extra, missing or
+changed entries, with the same archive-derived canonical digest
+`aef7ea220c93ad437c655d74c617c0b7a7a1cfc0a51c47e6a960d7185a39f499`.
+Each successful native verification hashes **191,199,150 bytes**, twice the
+95,599,575 unique regular-file bytes. The independent read-back rechecked the
+original archive/manifest hashes, re-derived the expected archive entries and
+canonical digest, and checked both native proof files. Parent read-only flags
+remained false; the private setup view did not change parent mount policy.
+Original changed `prefix-1` and the negative isolated-probe prefix remain intact.
+
+The corrected coordinator denominator is **51 retained cases / 41 process
+reports**, including **39 launched PIDs / two not-launched reports**, **17 real
+pytest requests**, **41 independent schema/raw-process projection probes** and
+**six independent XML/hash probes**. The seven opt-in readiness outcomes remain
+four complete projection commits, one partial interrupt commit, one properties
+failure and one missing-output pending state. All coordinator results stay
+nonzero, environment-unverified and not-current-full-success.
+
+The wheel reproduces SHA-256
+`f0612542649a80f365129f6c5704274ac39c111579ae7ac631b24c153d5768f1`.
+Both schemas/entrypoints pass the installed smoke, without ordinary pytest
+autoload changes. Independent precommit read-back checked **186 frozen source /
+pin/schema files**, **50 identical Cargo package identities/checksums**, **eight
+unchanged lock/pin/candidate/schema files**, Python 3.12 grammar and **43 local
+links**. The corrected driver now records every not-run stage explicitly and
+freezes independent oracle/corpus/harness sources and pins too; frozen copies
+are audit evidence, not an immutable execution snapshot.
+
+This accepts the **development readiness/setup/artifact fix only**. It does not
+overwrite earlier failures or qualify complete environment/startup closure,
+immutable/current declared-input generations, a positive final result, coverage /
+rich exception completeness, native memory peaks, independent release review or
+authenticated release provenance. No accelerator, release or successful `pt run`
+is enabled.

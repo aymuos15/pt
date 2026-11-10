@@ -104,6 +104,50 @@ prefixes after all subject setup: each still matched **all 4,971 manifest entrie
 with no missing, extra or changed entries. This is an end observation, not atomic
 runtime/environment or immutable-generation proof.
 
+## Subsequent explicitly declared JUnit readiness (base 809b2f0)
+
+The bridge's opt-in **bootstrap schema 2** now observes exactly one declared
+required JUnit output after underlying finalizers, without changing the existing
+closed schema 1 or wire protocol **0 / revision 1**. It matches the actual enabled
+pytest formatter destination, pins no-follow directories, checks safe regular
+file identity and hashes bounded bytes under the original deadline. Readiness
+is **not** a native commit or report/semantic/environment/generation certificate;
+the [native coordinator/report checks](wp09-status.md) still decide independently.
+Interrupted reports stay partial, unsupported properties fail the pinned XML
+adapter, and intentionally removed output stays pending with its error and raw
+pytest return/effects retained. No file creation/repair, plugin suppression,
+report-path rewrite, automatic discovery or replay was introduced.
+
+Initial unprotected component evidence at `/tmp/opencode/pt-declared-junit-final-verification-9z9f9j35`
+passed **183 locked release Rust tests**, strict clippy/rustfmt, **66 integration
+checks / 76 observer requests**, **63 oracle checks** and **68 contract checks**.
+The 66 include ten new read-only output/bootstrap/FD/binding controls. The native
+coordinator separately exercised **17 real requests**, seven with explicit
+readiness; six independent stdlib XML/hash probes agreed. These denominators are
+not combined or promoted to representative/full-result qualification.
+
+A newly built/installed development wheel passed ordinary-pytest before/after
+checks and both entrypoints under both bootstrap schemas; its SHA-256 is
+`f0612542649a80f365129f6c5704274ac39c111579ae7ac631b24c153d5768f1`.
+The earlier wheel/evidence above remains historical and unchanged. Neither
+wheel is authenticated release provenance. Complete startup/installed/host identity,
+immutable declared-input/current-generation assurance and release gates below
+remain open. No zero/qualified coordinator result is enabled.
+
+That initial bundle's subsequent **post-setup interpreter check failed**; it is
+not a stable-input/environment pass. The changed private prefix remains unrepaired.
+The explicit private read-only setup policy and subsequent artifact-publication
+failure/fix are recorded in [WP09](wp09-status.md); neither passing component
+checks nor endpoint identity is promoted to environment/generation qualification.
+
+The corrected protected-input run subsequently passed **186 locked release Rust
+tests**, **66 integration / 63 oracle / 68 contract checks**, strict clippy/fmt and
+offline wheel/install smoke. Native and independent post-setup checks still
+matched both exact interpreter prefixes. Evidence:
+`/tmp/opencode/pt-declared-junit-protected-final-rzazf7qr`. Earlier failures and
+changed inputs remain preserved; this closes the bounded readiness/fix batch,
+not the remaining backend/environment/generation/release gates.
+
 ## Required before acceptance or enabling successful `pt run`
 
 - Integrate the coordinator request/entrypoint/process boundary without unsafe

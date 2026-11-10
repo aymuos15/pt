@@ -43,12 +43,23 @@ For each declared artifact, `commit`:
    hashing actual source bytes. Source identity/stat/ancestor bindings are checked
    again; same-stat byte edits are not accepted merely by stat equality.
 4. Syncs and independently rereads/hashes the pending copy, checks exact private
-   permissions/identity and atomically publishes with native **rename no-replace**.
-   There is no fallback that streams into or overwrites a final name.
+   permissions/identity, performs any declared JUnit validation, then **rehashes
+   the pending FD again after validation and pre-rename hooks**. The exact buffer
+   parsed as XML must also match the readiness digest; hashes of earlier/later
+   bytes cannot certify a different validation buffer. Open/named bindings,
+   ancestors and the original deadline are checked before native **rename
+   no-replace**. There is no fallback that streams into or overwrites a final name.
 5. Syncs the directory, checks named/root bindings and independently rereads the
    published descriptor too. A same-size edit after rename cannot pass on inode
    and length alone. A late error/deadline remains failed/uncertain even when
    complete-looking published bytes exist.
+
+Stat/ctime agreement never substitutes for the post-validation byte read. These
+are bounded endpoint checks, not an atomic content freeze: an edit/revert between
+observations or a change after a relevant read can still escape that particular
+check. The independent post-rename hash remains mandatory. Failure before rename
+and possible publication after rename remain distinct; neither is recovered from
+filesystem appearance.
 
 Failures are immutable per artifact: no retry, automatic recovery, source repair
 or deletion of a substituted/foreign entry. Private pending/published leftovers
@@ -176,6 +187,13 @@ unknown completeness and no recovery from complete-looking files. A real fresh
 pytest assertion failure produces the requested JUnit, finishes its fixture and
 is reaped; an independent isolated stdlib probe checks XML/hash, then Rust retains
 the exact bytes while **required generic completeness stays blocked**.
+
+Deterministic controls separately neutralize the metadata guard around a changed
+pending file, substitute a different XML buffer before parsing, and inject a
+pending-read fault, original-deadline expiry, name substitution and file growth.
+Metadata neutralization is explicitly synthetic, not a host ctime manipulation
+or generation certificate. The existing four-arm validation/race/return-loss /
+deadline control now reports its exact mode/error/state on an assertion failure.
 
 Additional controls exercise actual fresh pytest/JUnit + native frames/ledger /
 retention across all ten core fixtures, report modes, both entrypoints, Unicode /

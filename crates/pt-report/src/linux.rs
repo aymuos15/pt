@@ -422,6 +422,7 @@ enum Step {
     BeforeValidation,
     AfterValidation,
     BeforeRename,
+    PendingReadbackChunk,
     AfterRename,
 }
 
@@ -697,6 +698,7 @@ impl ArtifactStore {
             let size = output
                 .read(&mut chunk[..maximum])
                 .map_err(|e| ArtifactError::io("artifact_copy_readback", e))?;
+            check_deadline(self.budget.deadline)?;
             if size == 0 {
                 break;
             }
@@ -726,6 +728,7 @@ impl ArtifactStore {
             let mut raw = Vec::new();
             raw.try_reserve_exact(claim.bytes as usize)
                 .map_err(|e| ArtifactError::io("junit_copy_allocation_bound", e))?;
+            let mut digest = Sha256::new();
             loop {
                 check_deadline(self.budget.deadline)?;
                 let maximum =
@@ -733,6 +736,7 @@ impl ArtifactStore {
                 let size = output
                     .read(&mut chunk[..maximum])
                     .map_err(|e| ArtifactError::io("junit_copy_read", e))?;
+                check_deadline(self.budget.deadline)?;
                 require(
                     raw.len() as u64 + size as u64 <= claim.bytes,
                     "junit_copy_length_changed",
@@ -740,9 +744,16 @@ impl ArtifactStore {
                 if size == 0 {
                     break;
                 }
+                digest.update(&chunk[..size]);
                 raw.extend_from_slice(&chunk[..size]);
             }
             require(raw.len() as u64 == claim.bytes, "junit_copy_length_changed")?;
+            // Completeness applies to these exact parsed bytes, not a different
+            // same-length buffer seen between the earlier and later hashes.
+            require(
+                hex(&digest.finalize()) == claim.sha256,
+                "junit_copy_digest_mismatch",
+            )?;
             expectation.validate(&raw, self.budget.deadline)?;
             step(Step::AfterValidation)?;
             require(
@@ -754,10 +765,18 @@ impl ArtifactStore {
         check_deadline(self.budget.deadline)?;
         source.validate()?;
         self.retained.validate()?;
-        require(
-            named_stamp(self.retained.tail(), &pending)? == copied,
-            "artifact_copy_binding_changed_before_publish",
+        recheck_pending(
+            &mut output,
+            self.retained.tail(),
+            &pending,
+            &copied,
+            claim,
+            self.budget.deadline,
+            step,
         )?;
+        source.validate()?;
+        self.retained.validate()?;
+        check_deadline(self.budget.deadline)?;
         renameat2(
             self.retained.tail(),
             &pending,
@@ -796,6 +815,7 @@ impl ArtifactStore {
             let size = output
                 .read(&mut chunk[..maximum])
                 .map_err(|e| ArtifactError::io("artifact_published_readback", e))?;
+            check_deadline(self.budget.deadline)?;
             if size == 0 {
                 break;
             }
@@ -823,6 +843,57 @@ impl ArtifactStore {
             ready_complete_claim: claim.complete,
         })
     }
+}
+
+fn recheck_pending(
+    output: &mut File,
+    parent: &File,
+    pending: &Path,
+    copied: &FileStamp,
+    claim: &ArtifactReady,
+    deadline: Instant,
+    step: &mut impl FnMut(Step) -> Result<()>,
+) -> Result<()> {
+    check_deadline(deadline)?;
+    require(
+        stamp(output)? == *copied && named_stamp(parent, pending)? == *copied,
+        "artifact_copy_binding_changed_before_publish",
+    )?;
+    // The parser and every preceding hook have returned. Re-read the owned
+    // pending FD before rename: unchanged stat/ctime is not byte verification.
+    output
+        .seek(SeekFrom::Start(0))
+        .map_err(|error| ArtifactError::io("artifact_pending_seek", error))?;
+    let mut digest = Sha256::new();
+    let mut verified = 0;
+    let mut chunk = [0u8; 65536];
+    loop {
+        check_deadline(deadline)?;
+        let maximum = std::cmp::min(chunk.len() as u64, claim.bytes - verified + 1) as usize;
+        let size = output
+            .read(&mut chunk[..maximum])
+            .map_err(|error| ArtifactError::io("artifact_pending_readback", error))?;
+        step(Step::PendingReadbackChunk)?;
+        check_deadline(deadline)?;
+        if size == 0 {
+            break;
+        }
+        verified += size as u64;
+        require(
+            verified <= claim.bytes,
+            "artifact_pending_grew_during_readback",
+        )?;
+        digest.update(&chunk[..size]);
+    }
+    require(
+        verified == claim.bytes && hex(&digest.finalize()) == claim.sha256,
+        "artifact_pending_readback_mismatch",
+    )?;
+    require(
+        stamp(output)? == *copied && named_stamp(parent, pending)? == *copied,
+        "artifact_copy_binding_changed_before_publish",
+    )?;
+    check_deadline(deadline)
 }
 
 fn hex(bytes: &[u8]) -> String {

@@ -20,7 +20,7 @@ def pytest_configure(config):
 
 
 def pytest_sessionstart(session):
-    _OBSERVER.session = session
+    _OBSERVER.session_start(session)
 
 
 @pytest.hookimpl(wrapper=True, tryfirst=True)

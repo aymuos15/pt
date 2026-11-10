@@ -33,10 +33,13 @@ def text(value):
 def configuration(raw):
     if type(raw) is not str or len(raw) > 8192:
         raise ObserverError("explicit PT_BRIDGE_CONTROL configuration is required and bounded")
+    if len(raw.encode("utf-8", errors="strict")) > 8192:
+        raise ObserverError("explicit PT_BRIDGE_CONTROL UTF-8 bytes exceed the bootstrap bound")
     value = json.loads(raw, object_pairs_hook=_pairs, parse_float=_no_float, parse_constant=_no_float)
     fields = {"schema_version", "fd", "identity", "invocation_profile", "mode", "max_items", "max_collection_reports",
               "max_nodeid_bytes", "byte_budget", "event_budget", "timeout_seconds"}
-    if (type(value) is not dict or set(value) != fields or type(value["schema_version"]) is not int or value["schema_version"] != 1
+    if (type(value) is not dict or type(value.get("schema_version")) is not int or value["schema_version"] not in (1, 2)
+            or set(value) != (fields if value["schema_version"] == 1 else fields | {"junit_artifact"})
             or value["invocation_profile"] not in ("pytest_module", "pytest_console") or value["mode"] not in ("run", "collect_only")
             or type(value["fd"]) is not int or value["fd"] < 3):
         raise ObserverError("unsupported closed observer bootstrap configuration")
@@ -45,6 +48,9 @@ def configuration(raw):
         if type(value[key]) is not int or not 1 <= value[key] <= maximum:
             raise ObserverError("invalid explicit observer bound: " + key)
     value["identity"] = _identity(value["identity"])
+    if value["schema_version"] == 2:
+        from ._artifacts import declaration
+        value["junit_artifact"] = declaration(value["junit_artifact"])
     return value
 
 
@@ -66,6 +72,10 @@ class Observer:
     def __init__(self, settings, channel):
         self.settings, self.channel = settings, channel
         self.deadline = time.monotonic() + settings["timeout_seconds"]
+        self.junit_artifact = None
+        if settings["schema_version"] == 2:
+            from ._artifacts import DeclaredJunit
+            self.junit_artifact = DeclaredJunit(settings["junit_artifact"], os.getcwd(), self.deadline)
         self.session = self.config = None
         self.items, self.deselected, self.selected, self.nodeids = [], [], [], []
         self.ordinals, self.attempts, self.not_run = {}, {}, {}
@@ -90,6 +100,8 @@ class Observer:
                 "bridge_version": __version__, "invocation_profile": settings["invocation_profile"]})
             return observer
         except BaseException:
+            if "observer" in locals():
+                observer.close_artifacts()
             channel.close()
             raise
 
@@ -108,12 +120,26 @@ class Observer:
     def configure(self, config):
         self.config = config
         config.add_cleanup(self.channel.close)
+        if self.junit_artifact is not None:
+            config.add_cleanup(self.close_artifacts)
         if bool(config.option.collectonly) != (self.settings["mode"] == "collect_only"):
             self.error("request_mode_mismatch", "actual pytest collection mode differs from the explicit request")
         if getattr(config.option, "numprocesses", None) not in (None, 0) or hasattr(config, "workerinput"):
             self.error("parallel_adapter_unsupported", "this observer has no parallel or worker adapter")
         if getattr(config.option, "reruns", 0):
             self.error("retry_adapter_unsupported", "this observer has no retry-plugin adapter; plugins were not disabled")
+
+    def close_artifacts(self):
+        if self.junit_artifact is not None:
+            self.junit_artifact.close()
+
+    def session_start(self, session):
+        self.session = session
+        if self.junit_artifact is not None:
+            from _pytest.junitxml import LogXML, xml_key
+            actual = session.config.stash.get(xml_key, None)
+            if type(actual) is not LogXML or type(actual.logfile) is not str or os.fsencode(actual.logfile) != self.junit_artifact.expected_path:
+                self.error("junit_artifact_request_mismatch", "the explicit JUnit artifact does not match the actual enabled pytest formatter destination; no option or plugin was changed")
 
     def collection_start(self):
         if self.collection_started:
@@ -267,9 +293,17 @@ class Observer:
                 "deselected_count": len(self.nodeids)-len(self.selected), "executed_count": len(self.attempts),
                 "completed_count": completed, "not_run_count": len(self.not_run), "attempts_started": len(self.attempts), "attempts_completed": completed}
             incomplete = [ordinal for ordinal in self.selected if ordinal not in self.not_run and
-                          (ordinal not in self.attempts or self.attempts[ordinal]["disposition"] != "completed")]
+                           (ordinal not in self.attempts or self.attempts[ordinal]["disposition"] != "completed")]
+            if self.junit_artifact is not None:
+                try:
+                    self.emit("artifact_ready", self.junit_artifact.ready(complete=hooks_completed and not self.unsupported
+                        and not (self.interrupted and not self.collection_failed)))
+                except (OSError, ValueError) as exc:
+                    if not self.channel.failed:
+                        self.error("junit_artifact_observation_failed", text(str(exc)), abort=False, category="infrastructure")
             self.emit("session_terminated", {"termination": "interrupted" if self.interrupted and not self.collection_failed else "backend_exited",
                 "backend_exit_code": self.exit_code, "reporting_complete": hooks_completed and not self.unsupported,
                 "accounting": accounting, "phase_counts": self.phase_counts, "incomplete_ordinals": incomplete})
         finally:
+            self.close_artifacts()
             self.channel.close()

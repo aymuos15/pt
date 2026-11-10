@@ -101,9 +101,31 @@ impl Case {
         scope: RequestedScope,
         report: bool,
     ) -> RunRequest {
-        let configuration = json!({"schema_version":1,"fd":3,"identity":{"request_id":id,"run_id":"coordinator-run","generation_id":"unqualified-generation","session_id":"coordinator-session","producer_id":"coordinator-bridge"},
+        self.request_report(
+            id,
+            args,
+            mode,
+            profile,
+            scope,
+            if report { Some(false) } else { None },
+        )
+    }
+    fn request_report(
+        &self,
+        id: &str,
+        args: &[&str],
+        mode: RequestMode,
+        profile: InvocationProfile,
+        scope: RequestedScope,
+        report: Option<bool>,
+    ) -> RunRequest {
+        let mut configuration = json!({"schema_version":1,"fd":3,"identity":{"request_id":id,"run_id":"coordinator-run","generation_id":"unqualified-generation","session_id":"coordinator-session","producer_id":"coordinator-bridge"},
             "invocation_profile":if profile==InvocationProfile::PytestModule {"pytest_module"}else{"pytest_console"},"mode":if mode==RequestMode::Run {"run"}else{"collect_only"},
             "max_items":256,"max_collection_reports":1024,"max_nodeid_bytes":1024*1024,"byte_budget":8*1024*1024,"event_budget":25000,"timeout_seconds":30});
+        if report == Some(true) {
+            configuration["schema_version"] = json!(2);
+            configuration["junit_artifact"] = json!({"artifact_id":"junit","source":"requested.xml","max_bytes":1024*1024,"required":true});
+        }
         let mut argv = vec![
             format!("PT_BRIDGE_CONTROL={configuration}").into(),
             format!(
@@ -126,7 +148,7 @@ impl Case {
         argv.extend(["-q".into(), "-p".into(), "pt_bridge.pytest_observer".into()]);
         argv.extend(args.iter().map(std::ffi::OsString::from));
         let mut declarations = vec![];
-        if report {
+        if report.is_some() {
             OpenOptions::new()
                 .write(true)
                 .create_new(true)
@@ -176,7 +198,11 @@ impl Case {
                     max_items: 256,
                     max_collection_reports: 1024,
                     max_nodeid_bytes: 1024 * 1024,
-                    declared_artifact_ids: if report { vec!["junit".into()] } else { vec![] },
+                    declared_artifact_ids: if report.is_some() {
+                        vec!["junit".into()]
+                    } else {
+                        vec![]
+                    },
                 },
                 stream_budget: StreamBudget {
                     bytes: 8 * 1024 * 1024,
@@ -261,6 +287,53 @@ impl Case {
         assert_eq!(process.exit_code(), 0);
         assert_eq!(process.cleanup, Cleanup::Complete);
         run
+    }
+    fn xml_probe(&self) -> Value {
+        let output = self.path.join("independent-junit.json");
+        let process = supervise(
+            &ProcessRequest {
+                executable: python().into_os_string(),
+                args: vec![
+                    "-I".into(),
+                    "-S".into(),
+                    "-B".into(),
+                    root()
+                        .join("crates/pt-report/tests/junit_reference.py")
+                        .into_os_string(),
+                    self.work.join("requested.xml").into_os_string(),
+                    output.clone().into_os_string(),
+                ],
+                cwd: self.work.clone(),
+                timeout: Duration::from_secs(5),
+                cleanup_timeout: Duration::from_secs(1),
+            },
+            &AtomicI32::new(0),
+        )
+        .unwrap();
+        fs::write(
+            self.path.join("xml-oracle-process.json"),
+            serde_json::to_vec_pretty(&process).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(process.exit_code(), 0);
+        assert_eq!(process.cleanup, Cleanup::Complete);
+        serde_json::from_slice(&fs::read(output).unwrap()).unwrap()
+    }
+    fn check_junit_copy(&self, run: &FinishedRun, complete: bool) {
+        let oracle = self.xml_probe();
+        let result = run.record().unwrap().as_json();
+        let claim = &run.session().snapshot().unwrap().artifact_ready_claims[0];
+        assert_eq!(claim.artifact_id, "junit");
+        assert_eq!(claim.sha256, oracle["sha256"].as_str().unwrap());
+        assert_eq!(claim.bytes, oracle["bytes"].as_u64().unwrap());
+        assert_eq!(result["artifacts"][0]["status"], "committed");
+        assert_eq!(result["artifacts"][0]["sha256"], oracle["sha256"]);
+        assert_eq!(result["artifacts"][0]["complete"], complete);
+        assert_eq!(result["artifacts_verified"], complete);
+        assert_eq!(
+            fs::read(self.work.join("requested.xml")).unwrap(),
+            fs::read(self.retained.join("private/artifact-junit")).unwrap()
+        );
     }
 }
 
@@ -457,4 +530,168 @@ fn actual_junit_file_without_bridge_ready_is_not_adopted_as_required_complete() 
     assert_eq!(value["artifacts"][0]["sha256"], Value::Null);
     assert!(fs::read(case.work.join("requested.xml")).unwrap().len() > 100);
     assert!(!case.retained.join("private/artifact-junit").exists());
+}
+
+#[test]
+fn explicitly_requested_real_junit_readiness_flows_through_native_owned_publication_without_qualifying_the_run()
+ {
+    let failing = SOURCE.replace(
+        "effect('second')",
+        "effect('second')\n    assert False,'PT_DECLARED_JUNIT_FAILURE'",
+    );
+    for (id, source, args, mode, profile, code) in [
+        (
+            "declared-junit-module",
+            SOURCE,
+            vec!["test_actual.py"],
+            RequestMode::Run,
+            InvocationProfile::PytestModule,
+            0,
+        ),
+        (
+            "declared-junit-console-failure",
+            failing.as_str(),
+            vec!["test_actual.py"],
+            RequestMode::Run,
+            InvocationProfile::PytestConsole,
+            1,
+        ),
+        (
+            "declared-junit-collect",
+            SOURCE,
+            vec!["--collect-only", "test_actual.py"],
+            RequestMode::CollectOnly,
+            InvocationProfile::PytestModule,
+            0,
+        ),
+        (
+            "declared-junit-no-tests",
+            SOURCE,
+            vec!["-k", "not_present", "test_actual.py"],
+            RequestMode::Run,
+            InvocationProfile::PytestModule,
+            5,
+        ),
+    ] {
+        let case = Case::new(id, source, None);
+        let run = case.invoke(case.request_report(
+            id,
+            &args,
+            mode,
+            profile,
+            RequestedScope::Explicit,
+            Some(true),
+        ));
+        assert_eq!(run.session().process().exit_code(), code);
+        assert_eq!(
+            run.session()
+                .snapshot()
+                .unwrap()
+                .artifact_ready_claims
+                .len(),
+            1
+        );
+        case.check_junit_copy(&run, true);
+        assert!(run.record().unwrap().cli_exit_code() > 0);
+        assert_eq!(
+            run.record().unwrap().as_json()["environment_verified"],
+            false
+        );
+        assert_eq!(
+            run.record().unwrap().as_json()["current_full_success"],
+            false
+        );
+        assert_eq!(
+            fs::read_to_string(case.work.join("test_actual.py")).unwrap(),
+            source
+        );
+    }
+}
+
+#[test]
+fn interrupted_and_unsupported_real_junit_do_not_inherit_completeness_from_ready_hash_agreement() {
+    let id = "declared-junit-interrupted";
+    let source = "from pathlib import Path\ndef test_actual():\n    with Path('started-once').open('x') as output: output.write('effect')\n    raise KeyboardInterrupt('PT_DECLARED_JUNIT_INTERRUPT')\n";
+    let case = Case::new(id, source, None);
+    let run = case.invoke(case.request_report(
+        id,
+        &["test_actual.py"],
+        RequestMode::Run,
+        InvocationProfile::PytestModule,
+        RequestedScope::Explicit,
+        Some(true),
+    ));
+    assert_eq!(run.session().process().exit_code(), 2);
+    assert!(!run.session().snapshot().unwrap().artifact_ready_claims[0].complete);
+    case.check_junit_copy(&run, false);
+    assert!(!run.artifact_diagnostics().is_empty());
+    assert_eq!(
+        fs::read_to_string(case.work.join("started-once")).unwrap(),
+        "effect"
+    );
+    let id = "declared-junit-properties";
+    let source =
+        "def test_actual(record_property):\n    record_property('PT_PROPERTY','retained')\n";
+    let case = Case::new(id, source, None);
+    let run = case.invoke(case.request_report(
+        id,
+        &["test_actual.py"],
+        RequestMode::Run,
+        InvocationProfile::PytestModule,
+        RequestedScope::Explicit,
+        Some(true),
+    ));
+    let oracle = case.xml_probe();
+    assert_eq!(run.session().process().exit_code(), 0);
+    assert!(run.session().snapshot().unwrap().artifact_ready_claims[0].complete);
+    assert_eq!(
+        run.session().snapshot().unwrap().artifact_ready_claims[0].sha256,
+        oracle["sha256"].as_str().unwrap()
+    );
+    assert_eq!(
+        run.record().unwrap().as_json()["artifacts"][0]["status"],
+        "failed"
+    );
+    assert_eq!(run.record().unwrap().as_json()["artifacts_verified"], false);
+    assert!(!case.retained.join("private/artifact-junit").exists());
+}
+
+#[test]
+fn explicit_junit_read_failure_preserves_actual_pytest_zero_and_finalizer_effects_without_repair_or_replay()
+ {
+    let id = "declared-junit-removed-by-finalizer";
+    let conftest = "from pathlib import Path\ndef pytest_unconfigure(config):\n    Path('requested.xml').unlink()\n    with Path('removal-once').open('x') as output: output.write('removed intentionally')\n";
+    let case = Case::new(id, SOURCE, Some(conftest));
+    let run = case.invoke(case.request_report(
+        id,
+        &["test_actual.py"],
+        RequestMode::Run,
+        InvocationProfile::PytestModule,
+        RequestedScope::Explicit,
+        Some(true),
+    ));
+    let snapshot = run.session().snapshot().unwrap();
+    assert_eq!(run.session().process().exit_code(), 0);
+    assert!(snapshot.artifact_ready_claims.is_empty());
+    assert!(
+        snapshot
+            .session_errors
+            .iter()
+            .any(|value| value.code == "junit_artifact_observation_failed")
+    );
+    assert!(!snapshot.terminal.as_ref().unwrap().reporting_complete);
+    assert_eq!(
+        run.record().unwrap().as_json()["artifacts"][0]["status"],
+        "pending"
+    );
+    assert!(!case.work.join("requested.xml").exists());
+    assert!(!case.retained.join("private/artifact-junit").exists());
+    assert_eq!(
+        fs::read_to_string(case.work.join("removal-once")).unwrap(),
+        "removed intentionally"
+    );
+    assert_eq!(
+        fs::read_to_string(case.work.join("effects")).unwrap(),
+        "import\nsetup\nfirst\nsecond\nthird\nteardown\n"
+    );
 }
