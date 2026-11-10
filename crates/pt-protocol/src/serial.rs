@@ -316,6 +316,11 @@ impl SerialLedger {
         }
     }
 
+    /// Presence only, not validity, normal process return or full completion.
+    pub fn terminal_observed(&self) -> bool {
+        self.terminal.is_some()
+    }
+
     fn dispatch(&mut self, payload: &BridgePayload) -> Result<(), ProtocolError> {
         match payload {
             BridgePayload::SessionStarted(value) => {

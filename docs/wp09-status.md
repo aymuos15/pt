@@ -156,6 +156,9 @@ frozen native source hashes before committing this batch.
 
 ## Required before acceptance
 
+The owned session-lifecycle foundation below joins process/channel observation,
+but does not remove the remaining requirements in this list.
+
 - Wire the complete coordinator-owned request, environment, artifact, process /
   cleanup, generation and final-result catalog to actual independent evidence.
 - Implement supported required report/coverage/exception completeness and request
@@ -172,3 +175,71 @@ frozen native source hashes before committing this batch.
 
 No production speedup, complete work-package acceptance or release claim follows
 from these components.
+
+## Owned session lifecycle integration (base 145c73c)
+
+[`pt-session`](../crates/pt-session/README.md) now owns a concurrent bounded
+reader/ledger and a single fresh native launch together. Framing/ledger faults
+or unexplained EOF stop still-live owned execution via a **distinct observer-
+failure flag**, then reap required group members. A terminal/EOF never returns
+before the actual process/finalizer/cleanup result. Raw arguments/environment /
+stdout/stderr are unchanged; this layer does not choose/bootstrap Python, collect
+again, install/suppress plugins or replay started effects.
+
+Protocol errors expose typed invalid-data/limit/truncation/deadline/I/O/closed
+categories. Complete contradictory data is independent failure; incompleteness
+on a known actual stop/death remains secondary. Counters/snapshots stay observed;
+a lost observer return is **unknown/None**, not reconstructed completion. The
+read-only observation exposes no full-success/final-result API.
+`NormalExitAccounted` means necessary channel/accounting + actual normal process
+return, **not** all work passed or current/full execution. No schema is weakened.
+
+The process supervisor adds a checked-control entrypoint and metadata-only
+validation access. Existing `pt exec`, ordinary supervision and CLI semantics
+are unchanged. Observer stops are not fake user interruptions; raw later statuses
+remain retained. One bounded tick lets descriptor closure during process exit
+become waitable status before stopping a still-live leader for channel failure.
+
+Initial checks passed **13 lifecycle methods** over native synthetic failures,
+missing terminal after complete-looking XML/effects, live descendant cleanup,
+EOF before finalizer/process exit, late mismatch/timeout, handled-SIGTERM zero,
+actual SIGKILL/exit-17, budgets, exact empty/Unicode/non-UTF-8 arguments, inherited
+environment, reader panic and prelaunch rejection/cancellation. Raw producer
+broken-pipe diagnostics remain evidence, not erased failed attempts. Four more
+real-pytest methods / **eight fresh requests** passed, composing live process /
+EOF/ledger with JUnit publication for fresh shared-state fixtures, intentional
+failure, collect-only, fail-fast and no-tests; actual interrupt/death stayed
+partial. An unsupported outer finalizer still finished its cleanup and returned
+actual zero, while reporting completeness remained rejected. Final locked release
+and retained/dependency evidence follows its actual return.
+
+The final **locked offline release workspace passed 147 tests**, no skips;
+clippy `-D warnings` and rustfmt passed. The prior 128 remain, plus one explicit
+process observer-stop control, one typed framing-category method and **17 session
+methods** (13 lifecycle / four real-pytest composition). Evidence:
+`/tmp/opencode/pt-session-final-verification-xikqfoxt`, with frozen unchanged
+sources and full actual command returns/stdout/stderr.
+
+The retained session plan has **37 cases**: **33 actual process reports** with
+**30 launched leader PIDs / three not-launched reports**, plus **four explicit
+prelaunch rejections**. The 33 include **eight real pytest requests** and synthetic
+channel/process controls; these denominators are not silently interchangeable.
+Five real requests completed the independently hashed required JUnit projection
+publication, while fail-fast/no-tests/intentional failure semantics stayed
+separate. The prior JUnit adapter's **23** actual requests also passed again in
+the full regression. Reader-panic unknown counters and unstarted cases remain
+visible; none is reconstructed as successful work from artifacts.
+
+All **47 previous Cargo package identities/checksums** remain unchanged; only
+local **pt-session 0.0.0** is added. There are **no new registry versions** in
+this batch. Existing Python/bridge, support/toolchain/candidate and schema files
+are unchanged. The first focused lifecycle build reported three unused test-
+import warnings (all 13 methods passed); those imports were removed before final
+strict checks. No runtime plugin policy changed to make a control pass.
+Before commit, static read-back checked **81 local links**, seven unchanged pin /
+candidate/schema files, unchanged bridge sources, Python test-source syntax and
+all still-matching frozen native source hashes.
+
+Supported launch, coordinator request/final-result catalog, complete environment /
+immutable-generation assurance, generic coverage/exception completeness and
+independent release prerequisites stay open. Successful `pt run` is not enabled.

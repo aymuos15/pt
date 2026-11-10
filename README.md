@@ -19,7 +19,9 @@ now check necessary stream/accounting conditions, not a complete backend or
 artifact/environment/generation certification. The
 bounded [artifact-retention component](crates/pt-report/README.md) also verifies
 owned bytes/publication after cleanup, with a pinned pytest-JUnit projection
-adapter; unknown/unsupported report completeness stays blocked.
+adapter; unknown/unsupported report completeness stays blocked. The
+[owned session lifecycle](crates/pt-session/README.md) now joins bounded private
+reading, actual process/cleanup and serial accounting, not a full result.
 The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.

@@ -1,6 +1,6 @@
 use crate::{
     BridgeMessage, ChannelIdentity, MAX_EVENTS, MAX_FRAME_BYTES, MAX_STREAM_BYTES, ProtocolError,
-    StreamEnd, decode_bridge,
+    ProtocolErrorKind, StreamEnd, decode_bridge,
 };
 use std::io::{ErrorKind, Read};
 use std::os::unix::net::UnixStream;
@@ -93,19 +93,38 @@ impl FrameReader {
             let remaining = deadline
                 .checked_duration_since(Instant::now())
                 .filter(|value| !value.is_zero())
-                .ok_or_else(|| ProtocolError::new("absolute private control deadline expired"))?;
+                .ok_or_else(|| {
+                    ProtocolError::with_kind(
+                        ProtocolErrorKind::Deadline,
+                        "absolute private control deadline expired",
+                    )
+                })?;
             self.stream.set_read_timeout(Some(remaining))?;
             let result = self.stream.read(&mut raw[position..]);
             if Instant::now() >= deadline {
-                return Err(ProtocolError::new(
+                return Err(ProtocolError::with_kind(
+                    ProtocolErrorKind::Deadline,
                     "absolute private control deadline expired",
                 ));
             }
             match result {
                 Ok(0) if position == 0 && eof => return Ok(false),
-                Ok(0) => return Err(ProtocolError::new("truncated private control frame")),
+                Ok(0) => {
+                    return Err(ProtocolError::with_kind(
+                        ProtocolErrorKind::Truncated,
+                        "truncated private control frame",
+                    ));
+                }
                 Ok(size) => position += size,
                 Err(error) if error.kind() == ErrorKind::Interrupted => continue,
+                Err(error)
+                    if matches!(error.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) =>
+                {
+                    return Err(ProtocolError::with_kind(
+                        ProtocolErrorKind::Deadline,
+                        "absolute private control read deadline expired",
+                    ));
+                }
                 Err(error) => return Err(error.into()),
             }
         }
@@ -114,7 +133,8 @@ impl FrameReader {
 
     pub fn receive(&mut self, deadline: Instant) -> Result<Option<BridgeMessage>, ProtocolError> {
         if self.failed || self.ended {
-            return Err(ProtocolError::new(
+            return Err(ProtocolError::with_kind(
+                ProtocolErrorKind::Closed,
                 "failed/ended control stream cannot be resumed",
             ));
         }
@@ -133,13 +153,17 @@ impl FrameReader {
         }
         let size = u32::from_be_bytes(prefix) as usize;
         if size == 0 || size > MAX_FRAME_BYTES {
-            return Err(ProtocolError::new("zero/oversize private control frame"));
+            return Err(ProtocolError::with_kind(
+                ProtocolErrorKind::Limit,
+                "zero/oversize private control frame",
+            ));
         }
         let wire_bytes = size as u64 + 4;
         if self.confirmed_events >= self.budget.events
             || wire_bytes > self.budget.bytes - self.confirmed_bytes
         {
-            return Err(ProtocolError::new(
+            return Err(ProtocolError::with_kind(
+                ProtocolErrorKind::Limit,
                 "private control budget exceeded before payload allocation",
             ));
         }
@@ -152,7 +176,8 @@ impl FrameReader {
             ));
         }
         if Instant::now() >= deadline {
-            return Err(ProtocolError::new(
+            return Err(ProtocolError::with_kind(
+                ProtocolErrorKind::Deadline,
                 "absolute private control deadline expired during decoding",
             ));
         }

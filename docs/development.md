@@ -96,6 +96,13 @@ occurrences, outcomes/messages and formatter counters against live ledger
 observations before publication. Generic coverage/exception completeness and
 the coordinator/environment/current immutable-generation gates stay open.
 
+The [owned session lifecycle component](../crates/pt-session/README.md) joins one
+explicit exact invocation with its private reader/ledger and process cleanup.
+`PT_SESSION_CASE_ROOT` optionally retains its test-owned fault and real-pytest
+cases, including actual unstarted/rejected/failed outcomes. It neither chooses a
+supported Python/bootstrap nor makes accounted normal exits a full/current test
+result; installed/host identity and immutable-generation prerequisites stay open.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

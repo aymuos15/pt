@@ -253,3 +253,33 @@ fn expired_or_stalled_deadlines_are_permanent_and_fragment_arrival_cannot_reset_
     assert!(reader.end_evidence().is_none());
     writer.join().unwrap();
 }
+
+#[test]
+fn typed_faults_distinguish_complete_corruption_from_truncation_deadline_and_closed_readers() {
+    use pt_protocol::ProtocolErrorKind;
+    for (wire, kind) in [
+        (vec![0, 0], ProtocolErrorKind::Truncated),
+        (vec![0, 0, 0, 0], ProtocolErrorKind::Limit),
+        (frame(b"not JSON"), ProtocolErrorKind::InvalidData),
+    ] {
+        let (parent, mut child) = UnixStream::pair().unwrap();
+        child.write_all(&wire).unwrap();
+        drop(child);
+        let mut reader = FrameReader::new(parent, identity(), budget()).unwrap();
+        assert_eq!(reader.receive(deadline()).unwrap_err().kind(), kind);
+        assert_eq!(
+            reader.receive(deadline()).unwrap_err().kind(),
+            ProtocolErrorKind::Closed
+        );
+        assert!(reader.end_evidence().is_none());
+    }
+    let (parent, _child) = UnixStream::pair().unwrap();
+    let mut reader = FrameReader::new(parent, identity(), budget()).unwrap();
+    assert_eq!(
+        reader
+            .receive(Instant::now() + Duration::from_millis(20))
+            .unwrap_err()
+            .kind(),
+        ProtocolErrorKind::Deadline
+    );
+}

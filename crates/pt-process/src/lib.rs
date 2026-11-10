@@ -7,7 +7,7 @@ mod linux;
 #[cfg(target_os = "linux")]
 pub use linux::{
     CONTROL_FD, ChildControl, ProcessRequest, RequestError, control_channel_pair, supervise,
-    supervise_with_control,
+    supervise_with_control, supervise_with_control_checked,
 };
 
 /// The first terminal cause observed by the supervisor, never changed by a

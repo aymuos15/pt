@@ -33,17 +33,41 @@ pub struct StreamEnd {
 }
 
 #[derive(Debug)]
-pub struct ProtocolError(String);
+pub struct ProtocolError {
+    kind: ProtocolErrorKind,
+    detail: String,
+}
+
+/// Distinguish independently malformed complete data from missing/truncated
+/// transport evidence that an actually observed stop/death may explain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProtocolErrorKind {
+    InvalidData,
+    Limit,
+    Truncated,
+    Deadline,
+    Io,
+    Closed,
+}
 
 impl ProtocolError {
     pub(crate) fn new(detail: impl Into<String>) -> Self {
-        Self(detail.into())
+        Self::with_kind(ProtocolErrorKind::InvalidData, detail)
+    }
+    pub(crate) fn with_kind(kind: ProtocolErrorKind, detail: impl Into<String>) -> Self {
+        Self {
+            kind,
+            detail: detail.into(),
+        }
+    }
+    pub fn kind(&self) -> ProtocolErrorKind {
+        self.kind
     }
 }
 
 impl fmt::Display for ProtocolError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.0)
+        formatter.write_str(&self.detail)
     }
 }
 
@@ -51,7 +75,10 @@ impl Error for ProtocolError {}
 
 impl From<std::io::Error> for ProtocolError {
     fn from(error: std::io::Error) -> Self {
-        Self::new(format!("private control I/O: {error}"))
+        Self::with_kind(
+            ProtocolErrorKind::Io,
+            format!("private control I/O: {error}"),
+        )
     }
 }
 

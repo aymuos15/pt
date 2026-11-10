@@ -17,7 +17,7 @@ use std::os::unix::net::UnixStream;
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -68,7 +68,9 @@ impl fmt::Display for RequestError {
 impl Error for RequestError {}
 
 impl ProcessRequest {
-    fn validate(&self) -> Result<(), RequestError> {
+    /// Metadata/process-capability checks only; does not launch an interpreter,
+    /// import project code, collect tests or authorize a qualified pytest run.
+    pub fn validate(&self) -> Result<(), RequestError> {
         let bad_argument = self.executable.is_empty()
             || self.executable.as_bytes().contains(&0)
             || self.args.iter().any(|arg| arg.as_bytes().contains(&0));
@@ -251,7 +253,7 @@ pub fn supervise(
     request: &ProcessRequest,
     cancelled: &AtomicI32,
 ) -> Result<ProcessReport, RequestError> {
-    supervise_inner(request, cancelled, None)
+    supervise_inner(request, cancelled, None, None)
 }
 
 /// Launch with exactly one explicitly supplied connected control capability at
@@ -265,13 +267,26 @@ pub fn supervise_with_control(
     cancelled: &AtomicI32,
     control: ChildControl,
 ) -> Result<ProcessReport, RequestError> {
-    supervise_inner(request, cancelled, Some(control))
+    supervise_inner(request, cancelled, Some(control), None)
+}
+
+/// As above, with a separate trusted observer-failure stop flag. This is not a
+/// user signal. A live leader is killed/reaped on a detected control failure;
+/// a leader already observed dead retains its raw cause for caller classification.
+pub fn supervise_with_control_checked(
+    request: &ProcessRequest,
+    cancelled: &AtomicI32,
+    control: ChildControl,
+    observer_failed: &AtomicBool,
+) -> Result<ProcessReport, RequestError> {
+    supervise_inner(request, cancelled, Some(control), Some(observer_failed))
 }
 
 fn supervise_inner(
     request: &ProcessRequest,
     cancelled: &AtomicI32,
     control: Option<ChildControl>,
+    observer_failed: Option<&AtomicBool>,
 ) -> Result<ProcessReport, RequestError> {
     request.validate()?;
     let start = Instant::now();
@@ -289,6 +304,13 @@ fn supervise_inner(
     let signal = cancelled.load(Ordering::SeqCst);
     if signal != 0 {
         report.termination = Termination::Interrupted { signal };
+        finish(&mut report, start);
+        return Ok(report);
+    }
+    if observer_failed.is_some_and(|flag| flag.load(Ordering::SeqCst)) {
+        report.termination = Termination::InfrastructureError {
+            detail: "private control observer failed before launch".into(),
+        };
         finish(&mut report, start);
         return Ok(report);
     }
@@ -333,6 +355,7 @@ fn supervise_inner(
         child,
         ownership: true,
     };
+    let mut observer_failure_seen = None;
 
     loop {
         let signal = cancelled.load(Ordering::SeqCst);
@@ -357,6 +380,18 @@ fn supervise_inner(
             Err(error) => {
                 report.termination = Termination::InfrastructureError {
                     detail: format!("observing leader: {error}"),
+                };
+                break;
+            }
+        }
+        if observer_failed.is_some_and(|flag| flag.load(Ordering::SeqCst)) {
+            // Descriptor closure during do_exit can precede waitable status.
+            // Give it one bounded supervisor tick, observing the leader again,
+            // before declaring that a channel fault stopped a still-live child.
+            let first = observer_failure_seen.get_or_insert_with(Instant::now);
+            if first.elapsed() >= TICK {
+                report.termination = Termination::InfrastructureError {
+                    detail: "private control observer failed while execution was live".into(),
                 };
                 break;
             }

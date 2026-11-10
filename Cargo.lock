@@ -212,6 +212,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pt-session"
+version = "0.0.0"
+dependencies = [
+ "pt-process",
+ "pt-protocol",
+ "pt-report",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

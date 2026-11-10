@@ -51,6 +51,13 @@ JUnit or complete-looking artifact cannot recover a lost return. Readiness is
 never publication. The API has no current/full-success, artifact-committed or
 environment-verified field. No signal/timeout can be upgraded by a later zero.
 
+The later [`pt-session`](../pt-session/README.md) layer owns concurrent reader /
+ledger/process lifetimes. `ProtocolError::kind()` distinguishes complete invalid
+data/limits from truncation, deadline, I/O or closed-reader faults, so known
+timeout/death incompleteness need not invent an unrelated corruption cause.
+`terminal_observed()` reports presence only, without cloning the snapshot or
+certifying completion. No wire-version/catalog/support claim is changed.
+
 ## Finite ceilings
 
 1 MiB/frame; 64 MiB total **wire bytes including four-byte headers**; one million

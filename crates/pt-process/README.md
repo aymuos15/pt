@@ -46,6 +46,16 @@ pytest event, artifacts or current generations.** The bridge component's framing
 checks are documented in [`python/pt_bridge`](../../python/pt_bridge/README.md);
 there is no production session adapter or `pt run` integration yet.
 
+The later [`pt-session`](../pt-session/README.md) development component joins
+that reader/ledger with the same fresh native process. Its
+`supervise_with_control_checked` path accepts a distinct observer-failure flag:
+known prelaunch failure starts no work; live control failure kills/reaps the
+owned group without pretending a user signal occurred. Original raw leader
+status stays available. Existing `supervise`/`pt exec` paths have no such flag
+and stay process-only. Metadata-only `ProcessRequest::validate` launches no
+interpreter or hidden collection. Neither API qualifies a supported launcher,
+complete environment, required artifacts or generations.
+
 The worker must mark the descriptor non-inheritable before project imports.
 The native fixture checks that after the explicit framing component adopts it,
 and ordinary exec descendants cannot inherit it. This is **not** proof about

@@ -2,7 +2,7 @@
 
 use pt_process::{
     CONTROL_FD, Cleanup, LeaderStatus, ProcessRequest, Termination, control_channel_pair,
-    supervise, supervise_with_control,
+    supervise, supervise_with_control, supervise_with_control_checked,
 };
 use std::ffi::OsString;
 use std::fs;
@@ -12,7 +12,7 @@ use std::os::unix::ffi::OsStringExt;
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicI32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -102,6 +102,55 @@ fn repeated_invocations_use_fresh_pids_and_python_state() {
     // The owned direct children have been reaped, not merely signaled.
     assert!(!Path::new(&format!("/proc/{}", first.pid.unwrap())).exists());
     assert!(!Path::new(&format!("/proc/{}", second.pid.unwrap())).exists());
+}
+
+#[test]
+fn observer_failure_is_not_a_user_signal_and_prevents_or_stops_the_single_owned_launch() {
+    let root = TestDir::new();
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let report = supervise_with_control_checked(
+        &request(
+            &root.0,
+            "from pathlib import Path;Path('must-not-start').touch()",
+        ),
+        &AtomicI32::new(0),
+        control,
+        &AtomicBool::new(true),
+    )
+    .unwrap();
+    assert!(matches!(
+        report.termination,
+        Termination::InfrastructureError { .. }
+    ));
+    assert_eq!(report.cleanup, Cleanup::NotLaunched);
+    assert!(report.pid.is_none());
+    assert_eq!(reader.join().unwrap().unwrap(), b"");
+    assert!(!root.0.join("must-not-start").exists());
+    let (parent, control) = control_channel_pair().unwrap();
+    let reader = read_private_channel(parent);
+    let failed = AtomicBool::new(false);
+    let report = thread::scope(|scope| {
+        let root = &root.0;
+        let flag = &failed;
+        scope.spawn(move || {
+            wait_for_file(&root.join("started-once"));
+            flag.store(true, Ordering::SeqCst);
+        });
+        supervise_with_control_checked(&request(root,"import os,time\nfrom pathlib import Path\nos.set_inheritable(3,False)\nwith Path('started-once').open('x') as output: output.write('one effect')\ntime.sleep(30)"),&AtomicI32::new(0),control,&failed).unwrap()
+    });
+    assert!(matches!(
+        report.termination,
+        Termination::InfrastructureError { .. }
+    ));
+    assert_eq!(report.cleanup, Cleanup::Complete);
+    assert_eq!(report.exit_code(), 3);
+    assert_no_live_pid(report.pid.unwrap());
+    assert_eq!(reader.join().unwrap().unwrap(), b"");
+    assert_eq!(
+        fs::read_to_string(root.0.join("started-once")).unwrap(),
+        "one effect"
+    );
 }
 
 #[test]
