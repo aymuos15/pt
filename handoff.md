@@ -22,7 +22,11 @@ optimizations ahead of their gates.
 
 **Do not depend on old temporary paths.** The user explicitly requested removal
 of the project's temporary data after preserving important information in Git.
-The cleanup receipt records whether removal has completed. Paths under `/tmp/opencode/pt-*` in older
+Cleanup is complete: **108 PT directories and one generated XML file removed**,
+five reproduction scripts archived in Git, and no PT-specific entries left in
+`/tmp/opencode`. The 75 unrelated entries were left untouched. The receipt also
+retains the initial zero-removal cleanup API failure and the corrected successful
+operation. Paths under `/tmp/opencode/pt-*` in older
 status notes and archived tools are historical evidence identifiers, not usable
 inputs. Raw bundles, prepared interpreters, downloaded archives, disposable
 environments and candidate checkouts are not retained by this handoff. Summaries

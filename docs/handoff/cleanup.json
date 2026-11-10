@@ -42,7 +42,40 @@
   "raw_evidence_retained": false,
   "schema_version": 1,
   "scope": "PT-specific entries directly beneath /tmp/opencode, plus five reviewed PT reproduction scripts moved into Git. Unrelated projects and system/package-manager caches are not in scope.",
-  "status": "planned_not_yet_deleted",
+  "status": "completed",
+  "preservation_commit_verified_on_remote": "3805634c7deefe378568ca847e2effd8c9b894d0",
+  "attempts": [
+    {
+      "interpreter": "system python3",
+      "status": "failed_before_removal",
+      "error": "TypeError: rmtree() got an unexpected keyword argument 'dir_fd'",
+      "removed_entries": 0
+    },
+    {
+      "interpreter": "existing locked harness CPython 3.12.12",
+      "status": "completed",
+      "removed_entries": 109,
+      "removed_directories": 108,
+      "removed_files": 1,
+      "failures": []
+    }
+  ],
+  "remaining_pt_entries": [],
+  "unrelated_entries_preserved": true,
+  "unrelated_entry_count": 75,
+  "mounted_pt_inputs_before_cleanup": 0,
+  "active_pt_references_before_cleanup": 0,
+  "method": "Explicit reviewed allowlist, ownership/type and device/inode checks, pinned parent directory FD and symlink-resistant relative rmtree/unlink; no broad parent removal, mounts, process kills or unrelated-cache deletion.",
+  "post_cleanup_checks": {
+    "remaining_pt_temp_entries": [],
+    "archived_sources_match_and_parse": 5,
+    "frozen_implementation_files_unchanged": 194,
+    "local_links_checked": 77,
+    "json_duplicate_key_check": "passed",
+    "public_metadata_hashes_match": 2,
+    "rebuild_example_bash_syntax": "passed_without_execution",
+    "full_product_suites_rerun_for_handoff": false
+  },
   "temporary_entries": [
     {
       "kind": "directory",
