@@ -630,3 +630,9 @@ Python 3.12 grammar and **44 local links**. No protocol/dependency/support pin o
 external candidate allocation changed. This closes the bounded Config cleanup
 batch, not the complete runner, environment/startup/current-generation, coverage,
 native resource or independent/authenticated release gates.
+
+The subsequent [relative-link identity prerequisite](wp06-status.md) adds an
+opt-in closed **declared** target graph plus the unchanged endpoint byte walks.
+Its **196-test** protected-input regression and independent 1,048-link checks
+remain separate from complete host/runtime environment and immutable-generation
+assurance; no positive coordinator authority is added.

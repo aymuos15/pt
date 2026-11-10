@@ -14,6 +14,8 @@ use std::path::{Component, Path, PathBuf};
 use std::time::{Duration, Instant};
 
 pub const TREE_POLICY_ID: &str = "linux-declared-tree-content-v1";
+mod links;
+pub use links::{ClosedLinkObservation, LinkLimits, RELATIVE_LINK_POLICY_ID};
 #[derive(Debug)]
 pub struct IdentityError {
     code: &'static str,

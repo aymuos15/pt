@@ -72,6 +72,52 @@ across both walks under the same deadline. Relative and absolute root paths are
 each validated; unusual depth/mode/permission/identity fails rather than gaining
 an implicit exemption.
 
+## Opt-in declared relative-link target closure
+
+Ordinary `verify` remains **link-text-only**. The separate
+`verify_with_closed_links(root, LinkLimits)` first resolves every expected link
+through the **declared manifest graph only**, then performs the same two native
+byte walks under the manifest's original deadline. It returns no observation
+unless both the graph and the exact live tree checks succeed. No link referent
+outside that declared graph is opened, adopted as expected truth or repaired.
+
+Policy **`linux-declared-relative-link-closure-v1`** requires relative targets
+whose component-by-component resolution ends at a declared regular file,
+directory or the declared root. Absolute targets (even apparently inside the
+root), root escapes, dangling targets, non-directory traversal, cycles/over-bound
+chains and unknown targets are unsupported. `symlink/..` is expanded before the
+parent traversal; `file/..` and a trailing slash on a file fail. Repeated slashes
+and `.` are traversed with their native relative semantics, **not removed from
+the original hashed link text**. Raw non-UTF-8/Unicode names remain distinct.
+
+All graph limits are explicit and positive: at most **1,000,000 consumed component
+steps across all links**, **40 dereferences per link resolution including the
+initial link**, and **4,096 queued components**. Lower limits are allowed, never
+inferred or silently expanded. No progress resets the original tree deadline.
+This adds real verification work; counts are not speed measurements.
+
+`ClosedLinkObservation` owns the matching read-only `TreeObservation`, closed-link
+count, component-step count, maximum observed dereferences and a resolution digest.
+It is not deserializable authority. `into_tree` explicitly discards the additional
+graph observation and cannot mint an environment/generation success token.
+
+The separate resolution SHA-256 hashes literal
+`b"pt-declared-link-resolution-v1\0"`, a u64-length-delimited **64-byte ASCII
+canonical tree digest**, the symlink count (u64), and, in strict raw source-path
+order, each length-delimited source path, length-delimited resolved relative path
+(empty for the root), then one-byte final kind (**0 directory / 2 file**). All
+integers/lengths are big-endian. This binds the graph projection to the unchanged
+**`linux-declared-tree-content-v1`** identity; the original canonical tree format
+and link text are not weakened or normalized. Absolute root location and chosen
+graph bounds are not part of this relocatable projection digest.
+
+The claim is **declared target-graph closure plus endpoint tree identity**, not
+proof of the paths a later Python process will actually load. Concurrent changes,
+host dynamic loaders/libraries, absolute program inputs, `.pth`/plugin effects,
+filesystem/mount behavior and complete immutable/runtime input domains retain
+their separate gates. This does not certify installed distributions or a full
+environment, follow unknown host targets, authorize launch or enable an optimizer.
+
 ## Explicit assurance exclusions
 
 Two serial walks are **endpoint observations, not an atomic snapshot**. A change

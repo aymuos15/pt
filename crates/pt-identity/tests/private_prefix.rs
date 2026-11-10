@@ -1,7 +1,7 @@
 #![cfg(all(target_os = "linux", target_arch = "x86_64"))]
 //! Optional explicitly selected archive-manifest reproduction, never inferring
 //! expected bytes from the installed tree being checked or modifying that tree.
-use pt_identity::{TreeEntry, TreeKind, TreeLimits, TreeManifest};
+use pt_identity::{LinkLimits, TreeEntry, TreeKind, TreeLimits, TreeManifest};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -74,13 +74,25 @@ fn both_complete_private_prefixes_match_the_archive_derived_declared_tree() {
         let root = PathBuf::from(
             std::env::var_os(variable).expect("both explicit private prefixes required"),
         );
-        let observed = manifest.verify(&root).unwrap();
+        let closed = manifest
+            .verify_with_closed_links(
+                &root,
+                LinkLimits {
+                    steps: 100000,
+                    dereferences: 40,
+                    pending_components: 4096,
+                },
+            )
+            .unwrap();
+        let observed = closed.tree();
         assert_eq!(observed.entries(), 4971);
         assert_eq!(observed.files(), 3722);
         assert_eq!(observed.symlinks(), 1048);
         assert_eq!(observed.directories(), 201);
         assert_eq!(observed.bytes_hashed(), observed.file_bytes() * 2);
-        reports.push(json!({"root":root,"entries":observed.entries(),"files":observed.files(),"symlinks":observed.symlinks(),"directories":observed.directories(),"file_bytes":observed.file_bytes(),"bytes_hashed":observed.bytes_hashed(),"manifest_sha256":observed.manifest_sha256(),"qualified":false}));
+        assert_eq!(closed.links(), 1048);
+        assert_eq!(closed.resolution_steps(), 1648);
+        reports.push(json!({"root":root,"entries":observed.entries(),"files":observed.files(),"symlinks":observed.symlinks(),"directories":observed.directories(),"file_bytes":observed.file_bytes(),"bytes_hashed":observed.bytes_hashed(),"manifest_sha256":observed.manifest_sha256(),"declared_relative_links":{"policy_id":closed.policy_id(),"links":closed.links(),"component_steps":closed.resolution_steps(),"maximum_dereferences":closed.maximum_dereferences(),"resolution_sha256":closed.resolution_sha256()},"qualified":false}));
     }
     if let Some(path) = std::env::var_os("PT_IDENTITY_PROOF_OUTPUT") {
         use std::io::Write;

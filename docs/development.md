@@ -137,6 +137,13 @@ Both native and independent post-setup prefix checks are required. This is a
 different setup/UID/mount policy, **not a production launcher, immutable-generation
 certificate, sandbox, equivalent timing arm or release qualification**.
 
+Native identity optionally adds a separately named declared **relative-link
+target-graph** check before its unchanged two byte walks. All referents must
+resolve within the explicit expected tree; absolute/escaping/dangling/unknown
+targets and non-directory traversal fail. This is not complete host/runtime
+closure or immutable generation. The explicitly selected private-prefix test now
+also checks this bounded graph; see the [identity policy](../crates/pt-identity/README.md).
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to
