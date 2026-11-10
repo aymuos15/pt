@@ -1,0 +1,294 @@
+{
+  "archive": {
+    "ar_members": [
+      "debian-binary",
+      "control.tar.zst",
+      "data.tar.zst"
+    ],
+    "bytes": 3234380,
+    "name": "libc6_2.35-0ubuntu3.4_amd64.deb",
+    "sha256": "00e54c06bde8531d955b3fac7dc13f4bd69e5d03515f68a72db08f9cd4cc2c06"
+  },
+  "artifact_preparation_records": [
+    {
+      "bytes": 1659,
+      "final_url": "https://api.launchpad.net/1.0/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694",
+      "http_status": 200,
+      "name": "build.json",
+      "qualified": false,
+      "sha256": "06c6b3602369c9a1a29cbdb4de1b2170e30796a6cc99bab966bb169d02e25678",
+      "status": "downloaded_identity_checked_unqualified",
+      "url": "https://api.launchpad.net/1.0/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694"
+    },
+    {
+      "bytes": 9037,
+      "final_url": "https://launchpadlibrarian.net/689665863/glibc_2.35-0ubuntu3.4_amd64.changes",
+      "http_status": 200,
+      "name": "glibc_2.35-0ubuntu3.4_amd64.changes",
+      "qualified": false,
+      "sha256": "47a39415048f0091339b36347f4088e98435888d0969214898f54084bdcb95bf",
+      "status": "downloaded_identity_checked_unqualified",
+      "url": "https://launchpad.net/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694/+files/glibc_2.35-0ubuntu3.4_amd64.changes"
+    },
+    {
+      "bytes": 3234380,
+      "final_url": "https://launchpadlibrarian.net/689665881/libc6_2.35-0ubuntu3.4_amd64.deb",
+      "http_status": 200,
+      "name": "libc6_2.35-0ubuntu3.4_amd64.deb",
+      "qualified": false,
+      "sha256": "00e54c06bde8531d955b3fac7dc13f4bd69e5d03515f68a72db08f9cd4cc2c06",
+      "status": "downloaded_identity_checked_unqualified",
+      "url": "https://launchpad.net/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694/+files/libc6_2.35-0ubuntu3.4_amd64.deb"
+    }
+  ],
+  "decompressor": {
+    "argv": [
+      "/usr/bin/zstd",
+      "--decompress",
+      "--stdout",
+      "--memory=64MB"
+    ],
+    "binary_sha256": "d304445daa7e6429293dc02035063b7993fb6a489ee90d8851bff497952836dc",
+    "returncode": 0
+  },
+  "environment_verified": false,
+  "exhaustive_host_inventory_verified": false,
+  "former_bundle_ids": [
+    "pt-host-glibc-artifact-preparation-t_ccxujt",
+    "pt-host-glibc-payload-assessment-r8r50j3u",
+    "pt-host-loader-metadata-assessment-k688wnss"
+  ],
+  "host_alias_and_file_observations": [
+    {
+      "bytes": 9,
+      "kind": "symlink",
+      "mode": 41471,
+      "path": "/lib64",
+      "target": "usr/lib64"
+    },
+    {
+      "bytes": 42,
+      "kind": "symlink",
+      "mode": 41471,
+      "path": "/lib64/ld-linux-x86-64.so.2",
+      "target": "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    },
+    {
+      "bytes": 7,
+      "kind": "symlink",
+      "mode": 41471,
+      "path": "/lib",
+      "target": "usr/lib"
+    },
+    {
+      "bytes": 4096,
+      "kind": "directory",
+      "mode": 16877,
+      "path": "/usr/lib64"
+    },
+    {
+      "bytes": 42,
+      "kind": "symlink",
+      "mode": 41471,
+      "path": "/usr/lib64/ld-linux-x86-64.so.2",
+      "target": "/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    },
+    {
+      "bytes": 319488,
+      "kind": "directory",
+      "mode": 16877,
+      "path": "/usr/lib/x86_64-linux-gnu"
+    },
+    {
+      "bytes": 240936,
+      "kind": "regular",
+      "mode": 33261,
+      "observed_sha256": "e833bd99168bea158d2f2e5d32462479cacfb624003304a9ea74a1607a144f1f",
+      "path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    },
+    {
+      "bytes": 21448,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "fdfd7d83a335ba12bd73e857f95a798dae0355f37935231966fd088647978e23",
+      "path": "/usr/lib/x86_64-linux-gnu/libpthread.so.0"
+    },
+    {
+      "bytes": 14432,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "0b81164b45b35a571bf0beafda3e7dd8c8488cb901090f50c082e96116b883e7",
+      "path": "/usr/lib/x86_64-linux-gnu/libdl.so.2"
+    },
+    {
+      "bytes": 14432,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "1425a5de9fb356b7f8020607c1b01ca7ec5ebb9301f7145befbb215ed1aeca54",
+      "path": "/usr/lib/x86_64-linux-gnu/libutil.so.1"
+    },
+    {
+      "bytes": 14664,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "782662dd5d8b96dd7ecddbba71c8399024c8e72e0ede115aa7643e6050c27920",
+      "path": "/usr/lib/x86_64-linux-gnu/librt.so.1"
+    },
+    {
+      "bytes": 940560,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "ec93672ba45de8a12ff774c9bcd993fa5c00155f0a64dfe1c4e984282eaf236e",
+      "path": "/usr/lib/x86_64-linux-gnu/libm.so.6"
+    },
+    {
+      "bytes": 2216304,
+      "kind": "regular",
+      "mode": 33261,
+      "observed_sha256": "2e15e345ccba1e1e8bf3bc58938d13eb7ccc17044942f0376cd5bc771f429b79",
+      "path": "/usr/lib/x86_64-linux-gnu/libc.so.6"
+    },
+    {
+      "bytes": 132199,
+      "kind": "regular",
+      "mode": 33188,
+      "observed_sha256": "71b2ee8aad03a7e91622101c1c4ce561fd0bf9aa0614b54e72cbdb3d7da3f94d",
+      "path": "/etc/ld.so.cache"
+    },
+    {
+      "path": "/etc/ld.so.preload",
+      "status": "absent_at_observation"
+    }
+  ],
+  "implementation_status": "assessment_only; no offline archive reader or host loader-resolution adapter implemented",
+  "kind": "historical_selected_host_glibc_archive_assessment_not_qualification",
+  "loader_resolution_verified": false,
+  "next_step": "Implement reproducible bounded offline package inspection and explicit native file binding; do not treat selected byte agreement as loader search or runtime closure.",
+  "observed_host": {
+    "architecture": "amd64",
+    "distribution": "Ubuntu 22.04.2 LTS",
+    "libc6_version": "2.35-0ubuntu3.4",
+    "package_query_returncode": 0
+  },
+  "package_installed": false,
+  "payload_tar": {
+    "bytes": 13414400,
+    "entries": 303,
+    "sha256": "e111f47d27847dcd34acb9eccb600a954664cf08024a19c1fc602406884f126b"
+  },
+  "qualified": false,
+  "raw_bundle_retention": "not_preserved_by_this_handoff; see cleanup.json",
+  "schema_version": 1,
+  "selected_file_comparisons": [
+    {
+      "actual_sha256": "e833bd99168bea158d2f2e5d32462479cacfb624003304a9ea74a1607a144f1f",
+      "archive_path": "lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "bytes_matched": true,
+      "expected_bytes": 240936,
+      "expected_kind": "file",
+      "expected_mode_octal": "0755",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "e833bd99168bea158d2f2e5d32462479cacfb624003304a9ea74a1607a144f1f",
+      "host_path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "2e15e345ccba1e1e8bf3bc58938d13eb7ccc17044942f0376cd5bc771f429b79",
+      "archive_path": "lib/x86_64-linux-gnu/libc.so.6",
+      "bytes_matched": true,
+      "expected_bytes": 2216304,
+      "expected_kind": "file",
+      "expected_mode_octal": "0755",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "2e15e345ccba1e1e8bf3bc58938d13eb7ccc17044942f0376cd5bc771f429b79",
+      "host_path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "0b81164b45b35a571bf0beafda3e7dd8c8488cb901090f50c082e96116b883e7",
+      "archive_path": "lib/x86_64-linux-gnu/libdl.so.2",
+      "bytes_matched": true,
+      "expected_bytes": 14432,
+      "expected_kind": "file",
+      "expected_mode_octal": "0644",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "0b81164b45b35a571bf0beafda3e7dd8c8488cb901090f50c082e96116b883e7",
+      "host_path": "/usr/lib/x86_64-linux-gnu/libdl.so.2",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "ec93672ba45de8a12ff774c9bcd993fa5c00155f0a64dfe1c4e984282eaf236e",
+      "archive_path": "lib/x86_64-linux-gnu/libm.so.6",
+      "bytes_matched": true,
+      "expected_bytes": 940560,
+      "expected_kind": "file",
+      "expected_mode_octal": "0644",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "ec93672ba45de8a12ff774c9bcd993fa5c00155f0a64dfe1c4e984282eaf236e",
+      "host_path": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "fdfd7d83a335ba12bd73e857f95a798dae0355f37935231966fd088647978e23",
+      "archive_path": "lib/x86_64-linux-gnu/libpthread.so.0",
+      "bytes_matched": true,
+      "expected_bytes": 21448,
+      "expected_kind": "file",
+      "expected_mode_octal": "0644",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "fdfd7d83a335ba12bd73e857f95a798dae0355f37935231966fd088647978e23",
+      "host_path": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "782662dd5d8b96dd7ecddbba71c8399024c8e72e0ede115aa7643e6050c27920",
+      "archive_path": "lib/x86_64-linux-gnu/librt.so.1",
+      "bytes_matched": true,
+      "expected_bytes": 14664,
+      "expected_kind": "file",
+      "expected_mode_octal": "0644",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "782662dd5d8b96dd7ecddbba71c8399024c8e72e0ede115aa7643e6050c27920",
+      "host_path": "/usr/lib/x86_64-linux-gnu/librt.so.1",
+      "mode_matched": true,
+      "mtime_matched": true
+    },
+    {
+      "actual_sha256": "1425a5de9fb356b7f8020607c1b01ca7ec5ebb9301f7145befbb215ed1aeca54",
+      "archive_path": "lib/x86_64-linux-gnu/libutil.so.1",
+      "bytes_matched": true,
+      "expected_bytes": 14432,
+      "expected_kind": "file",
+      "expected_mode_octal": "0644",
+      "expected_mtime_ns": 1695653150000000000,
+      "expected_sha256": "1425a5de9fb356b7f8020607c1b01ca7ec5ebb9301f7145befbb215ed1aeca54",
+      "host_path": "/usr/lib/x86_64-linux-gnu/libutil.so.1",
+      "mode_matched": true,
+      "mtime_matched": true
+    }
+  ],
+  "signed_archive_authentication": false,
+  "source": {
+    "build_api_url": "https://api.launchpad.net/1.0/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694",
+    "build_id": 26742694,
+    "changes_url": "https://launchpad.net/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694/+files/glibc_2.35-0ubuntu3.4_amd64.changes",
+    "download_url": "https://launchpad.net/~ubuntu-security/+archive/ubuntu/ppa/+build/26742694/+files/libc6_2.35-0ubuntu3.4_amd64.deb",
+    "identity_trust": "Official HTTPS build/changes metadata and matching separately downloaded archive; not signed authentication or build attestation"
+  },
+  "source_record_sha256": {
+    "archive-preparation-result": "bd2767e87f8b5bb7da31ad4db70844ebc8466238ffa719450e781f276be3777c",
+    "host-path-assessment-result": "61672fed8c4a271030f4247d75dc635015137dab0ac4c210c56e757d75e3aeae",
+    "payload-assessment-result": "b6580cfda8ddded78619a6993e863b36091455aac6601921896c4d1cfb239f49"
+  },
+  "target_executed": false,
+  "transformations": [
+    "Reviewed extraction of public artifact identity, selected file descriptors and historical comparison outcomes.",
+    "The complete 303-entry payload catalogue, raw tool output and downloaded archive are omitted.",
+    "Expected descriptors came from the pinned external package, not from the host files being compared."
+  ]
+}

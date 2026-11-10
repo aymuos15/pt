@@ -1,0 +1,113 @@
+Format: 1.8
+Date: Mon, 25 Sep 2023 10:45:50 -0400
+Source: glibc
+Binary: glibc-doc glibc-source libc-bin libc-dev-bin libc-devtools libc6 libc6-dbg libc6-dev libc6-dev-i386 libc6-dev-x32 libc6-i386 libc6-prof libc6-x32 locales locales-all nscd
+Built-For-Profiles: noudeb
+Architecture: all amd64_translations amd64
+Version: 2.35-0ubuntu3.4
+Distribution: jammy
+Urgency: medium
+Maintainer: Launchpad Build Daemon <buildd@lcy02-amd64-010.buildd>
+Changed-By: Marc Deslauriers <marc.deslauriers@ubuntu.com>
+Description:
+ glibc-doc  - GNU C Library: Documentation
+ glibc-source - GNU C Library: sources
+ libc-bin   - GNU C Library: Binaries
+ libc-dev-bin - GNU C Library: Development binaries
+ libc-devtools - GNU C Library: Development tools
+ libc6      - GNU C Library: Shared libraries
+ libc6-dbg  - GNU C Library: detached debugging symbols
+ libc6-dev  - GNU C Library: Development Libraries and Header Files
+ libc6-dev-i386 - GNU C Library: 32-bit development libraries for AMD64
+ libc6-dev-x32 - GNU C Library: X32 ABI Development Libraries for AMD64
+ libc6-i386 - GNU C Library: 32-bit shared libraries for AMD64
+ libc6-prof - GNU C Library: Shared Libraries
+ libc6-x32  - GNU C Library: X32 ABI Shared libraries for AMD64
+ locales    - GNU C Library: National Language (locale) data [support]
+ locales-all - GNU C Library: Precompiled locale data
+ nscd       - GNU C Library: Name Service Cache Daemon
+Changes:
+ glibc (2.35-0ubuntu3.4) jammy-security; urgency=medium
+ .
+   * SECURITY UPDATE: privilege escalation in ld.so
+     - debian/patches/any/CVE-2023-4911.patch: terminate immediately if end
+       of input is reached in elf/dl-tunables.c.
+     - CVE-2023-4911
+Checksums-Sha1:
+ 190214acd296ee1ef92464f019b2861754801167 21356 glibc-doc_2.35-0ubuntu3.4_all.deb
+ 60a4cd3292dc60fe1fa882109ad25c005ed353b9 20716850 glibc-source_2.35-0ubuntu3.4_all.deb
+ 8ded27428d5cb9b236cb77c83ce1eab945785b2d 16587 glibc_2.35-0ubuntu3.4_amd64.buildinfo
+ 0c7493e61c49210218450001f87cb7ab664255a6 2037599 glibc_2.35-0ubuntu3.4_amd64_translations.tar.gz
+ 6e536a8eecc217ea9a45ee8c0a22e482ec811015 2497020 libc-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ aff8045c1c88301229924057a2572b1e04c08842 705872 libc-bin_2.35-0ubuntu3.4_amd64.deb
+ 0559b3d0dce5b4cce74e50b38b8b9d2947cff7af 30106 libc-dev-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ e3cc8112ae7811721946c0fd4ed60c3cddc7d0a3 20304 libc-dev-bin_2.35-0ubuntu3.4_amd64.deb
+ a2a5a98be92925fc913391ace890a3f09858ad43 45420 libc-devtools-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ df6ef8a6c624b0bb5d2cdfbec8e412752505e2d5 28948 libc-devtools_2.35-0ubuntu3.4_amd64.deb
+ 4288fedd58c827d62f6ad8bdd7db4aa226131093 13850702 libc6-dbg_2.35-0ubuntu3.4_amd64.deb
+ cff861215f5ef64c120f531d22ef7f2bcefd01a7 1444416 libc6-dev-i386_2.35-0ubuntu3.4_amd64.deb
+ 693e01f61e1b9560a724d3ee0b407912c6cc33c4 1632376 libc6-dev-x32_2.35-0ubuntu3.4_amd64.deb
+ de137bc6b06be47500fad097a3fa3f7222c8bc4d 2099930 libc6-dev_2.35-0ubuntu3.4_amd64.deb
+ 64c643d717c8ac239b7a1883f4c551233c1c534d 7074360 libc6-i386-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 442b2ee769aa576ad889639b7c8109613511886b 2837210 libc6-i386_2.35-0ubuntu3.4_amd64.deb
+ eaf287d76e4744b6b847665c66c22bf431266da1 1668030 libc6-prof_2.35-0ubuntu3.4_amd64.deb
+ 115c17c354dab683b8b6533e3f0b7077df599ad8 7337808 libc6-x32-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 00297d6493e32275f1b582506ac995db3f83f646 2978106 libc6-x32_2.35-0ubuntu3.4_amd64.deb
+ 2e228fc262064cce4d266afa9df4cfe46e0b794b 3234380 libc6_2.35-0ubuntu3.4_amd64.deb
+ f840e40344c5b1b8a08dd8ebe19b7b9a83025120 10730040 locales-all_2.35-0ubuntu3.4_amd64.deb
+ d24d3bd79fe32506089f32c3d6c2b0c90bc8214d 4245092 locales_2.35-0ubuntu3.4_all.deb
+ b82c285697f76b9da77178a37a4e255b7206c033 275728 nscd-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 7821e2accb6ee5e5f74dd536cf6ac317c9e6da6d 83018 nscd_2.35-0ubuntu3.4_amd64.deb
+Checksums-Sha256:
+ 2602439d8fbb11203bf3365ed8082ca30f83dd9cc40031adc942ca87f9b98f8b 21356 glibc-doc_2.35-0ubuntu3.4_all.deb
+ e1d9751a112ff0bee4bd7342139bed73c908f89bb6f61d35a3b6ebd4fb8cf59b 20716850 glibc-source_2.35-0ubuntu3.4_all.deb
+ b5ec3b9bbe90ad40eb313db45caa844136ba9499af725fbf87ae0d3ef61c7c4b 16587 glibc_2.35-0ubuntu3.4_amd64.buildinfo
+ 4994a1910aa2ad839ada94b8837ae1d0b2a2fc237a78d64efc1e03b83aec3b1e 2037599 glibc_2.35-0ubuntu3.4_amd64_translations.tar.gz
+ db0b17c6a9e8a4f5ce14621882d4ee2c8f8be9231a0dfd4d9cb934f5320014fa 2497020 libc-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ d467de91fea753f186854f0ea50b52568e4821fac60ca89f80e9aa47813ea3a1 705872 libc-bin_2.35-0ubuntu3.4_amd64.deb
+ 5922f3fba4893bfdab373ba0b89a691b8d0718c58833e3b9f9889ccde15e7924 30106 libc-dev-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 208fc392054ee8468007a4a03333109ca8a7c6e56d046181dcc90a1a1d798de0 20304 libc-dev-bin_2.35-0ubuntu3.4_amd64.deb
+ bda9cb16941c00aa57972df7f435be3b26ef70663471df2f71aeccfe583e0fad 45420 libc-devtools-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 69c4530e611316ac7d4642b8b67b333c05ff8881166cd78f878039d6571869ab 28948 libc-devtools_2.35-0ubuntu3.4_amd64.deb
+ 3ab8b2a84df9f5b60ec32c5600ebaed8dc0d87ab7d77bafd7800713a6f234b75 13850702 libc6-dbg_2.35-0ubuntu3.4_amd64.deb
+ 715860ad26c1c0c6d3c5b2dc4eabf4ca7eebf43da8f056a838bc0e5d2f7eb07a 1444416 libc6-dev-i386_2.35-0ubuntu3.4_amd64.deb
+ 40f8e8fe51993cf08e90d8b39a0920adc4b19b2d051c5941e1abf691a7fe58d7 1632376 libc6-dev-x32_2.35-0ubuntu3.4_amd64.deb
+ 118523798f42971d4740e220a40f338b7163e09f041449a2020f948aed110bae 2099930 libc6-dev_2.35-0ubuntu3.4_amd64.deb
+ 4ab2b09981eeaa08baf7e72e5851ec95c5b82c1507633cbbf838a2da20f5ce79 7074360 libc6-i386-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ ee354f9e3fc89301a77e43779a0ec60add4aa95ce5cec9a3487523ab66798b07 2837210 libc6-i386_2.35-0ubuntu3.4_amd64.deb
+ f08b760b8e79e25ed6fc9304d78042047aa14ad8913ae1dc13daa8b20792f03e 1668030 libc6-prof_2.35-0ubuntu3.4_amd64.deb
+ 5c33016d8869fa68a2e3b2ee4b9e3fce9922062ece6e1b31801cc28c0a3d12fb 7337808 libc6-x32-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ d5fb90441c52e4997b2a47d179725afec4de6958addc4cfc70c54c0c6ccb2041 2978106 libc6-x32_2.35-0ubuntu3.4_amd64.deb
+ 00e54c06bde8531d955b3fac7dc13f4bd69e5d03515f68a72db08f9cd4cc2c06 3234380 libc6_2.35-0ubuntu3.4_amd64.deb
+ 5d063a516ab1fd9c85c20190cbd77f6ead6c9edf53529d4755d468545ac7797f 10730040 locales-all_2.35-0ubuntu3.4_amd64.deb
+ 7c7be167b6a3f29fffc2a8df4a66b63647516ece775361ba1161a3879bd066df 4245092 locales_2.35-0ubuntu3.4_all.deb
+ 76a2565cdb90295de48166a2df54ccb54d5be1d6ae29295217b9788dd3b72d8f 275728 nscd-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 1be40cdc68da271ace35128ab10b08711556266b35c8a44ec9f5e3823976b5f6 83018 nscd_2.35-0ubuntu3.4_amd64.deb
+Files:
+ be72a20ad36c4a5fb425264f77310c52 21356 doc optional glibc-doc_2.35-0ubuntu3.4_all.deb
+ a124e923c0d83d55f5a7e29d8647124c 20716850 devel optional glibc-source_2.35-0ubuntu3.4_all.deb
+ ba3b93367cbe61ccc42f1ff71c0249ed 16587 libs required glibc_2.35-0ubuntu3.4_amd64.buildinfo
+ d1b8704aa7df9e5348ae9d9021d91d5a 2037599 raw-translations - glibc_2.35-0ubuntu3.4_amd64_translations.tar.gz
+ 9c3ab3d5e656bab9331db77d4edd6e65 2497020 debug optional libc-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ f1080d2bc14965f08dd1ed7b3843ebbf 705872 libs required libc-bin_2.35-0ubuntu3.4_amd64.deb
+ 916d6a9e34d699f6c933109c2a384378 30106 debug optional libc-dev-bin-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 931612e65982acdaf6424f3dc7e8992f 20304 libdevel optional libc-dev-bin_2.35-0ubuntu3.4_amd64.deb
+ 1ed5f6fcfea9f8eb694e0b205f50543a 45420 debug optional libc-devtools-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ e6d2a2cd6737b662e3666cdd49574dae 28948 devel optional libc-devtools_2.35-0ubuntu3.4_amd64.deb
+ 3bbd584a8f87aef7ee0f780780412b23 13850702 debug optional libc6-dbg_2.35-0ubuntu3.4_amd64.deb
+ 42f0bbee04589575f35c56990304a76f 1444416 libdevel optional libc6-dev-i386_2.35-0ubuntu3.4_amd64.deb
+ a3eb3b84daba9fab432bb26919159b90 1632376 libdevel optional libc6-dev-x32_2.35-0ubuntu3.4_amd64.deb
+ abb547893598d12725b59506f1783e66 2099930 libdevel optional libc6-dev_2.35-0ubuntu3.4_amd64.deb
+ 46f83205a34768858dac8556d13f98fd 7074360 debug optional libc6-i386-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 717d7ea01a0707338dfde9d22c56de28 2837210 libs optional libc6-i386_2.35-0ubuntu3.4_amd64.deb
+ 64024c1e08687efff14074a84eec9151 1668030 libs optional libc6-prof_2.35-0ubuntu3.4_amd64.deb
+ 7d866760b4225e65bcf62565d6053f02 7337808 debug optional libc6-x32-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ aa43343db7ff23f5f87471f95ed1dff1 2978106 libs optional libc6-x32_2.35-0ubuntu3.4_amd64.deb
+ e28677361898ec557b6dbc487c0cd781 3234380 libs optional libc6_2.35-0ubuntu3.4_amd64.deb
+ 515bc63af5d7006dd662930852d0d045 10730040 localization optional locales-all_2.35-0ubuntu3.4_amd64.deb
+ da05203c0d82bfd91b2018eb78ded9df 4245092 localization standard locales_2.35-0ubuntu3.4_all.deb
+ b2bed0eaef83beb750bfa3de5bcc0e2e 275728 debug optional nscd-dbgsym_2.35-0ubuntu3.4_amd64.ddeb
+ 6daf64fcf24c514f318f63f9d456e383 83018 admin optional nscd_2.35-0ubuntu3.4_amd64.deb
+Original-Maintainer: GNU Libc Maintainers <debian-glibc@lists.debian.org>
+Original-Vcs-Browser: https://salsa.debian.org/glibc-team/glibc
+Original-Vcs-Git: https://salsa.debian.org/glibc-team/glibc.git

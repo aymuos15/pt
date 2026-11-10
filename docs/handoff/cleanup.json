@@ -1,0 +1,484 @@
+{
+  "archived_tools": [
+    {
+      "bytes": 14926,
+      "former_name": "build-paired-scenario-evidence.py",
+      "preserved_path": "docs/handoff/historical-tools/build-paired-scenario-evidence.py",
+      "sha256": "1a0e773d2bf1d2ffb4e1bc94065c317560879cbbc983e4f1a4b6021c5900c916"
+    },
+    {
+      "bytes": 12057,
+      "former_name": "build-scenario-manifest-evidence.py",
+      "preserved_path": "docs/handoff/historical-tools/build-scenario-manifest-evidence.py",
+      "sha256": "fafb45366d3e589222a298c8ae238063f64ab4030c0c464970f747b9c1a02293"
+    },
+    {
+      "bytes": 14414,
+      "former_name": "check-declared-elf-bundle.py",
+      "preserved_path": "docs/handoff/historical-tools/check-declared-elf-bundle.py",
+      "sha256": "f38cb2c893c000e2b7748df7bfeb33a85188ec9c41741315e8e7a3d581308447"
+    },
+    {
+      "bytes": 6427,
+      "former_name": "check-flask-phase-oracle.py",
+      "preserved_path": "docs/handoff/historical-tools/check-flask-phase-oracle.py",
+      "sha256": "b46946c975859c2ee708bd762313105cb674bd7bd9e1f7290cb9748b6124791e"
+    },
+    {
+      "bytes": 3587,
+      "former_name": "check-reference-oracle.py",
+      "preserved_path": "docs/handoff/historical-tools/check-reference-oracle.py",
+      "sha256": "e47da86690498ffa054d8faedf5ed430fd32e7007e9ec2693b1d603f2d50a801"
+    }
+  ],
+  "authorization": "User explicitly requested no PT temporary data remain; preserve important information in Git.",
+  "base_directory": "/tmp/opencode",
+  "important_summaries": [
+    "handoff.md",
+    "docs/handoff/development-checkpoint.json",
+    "docs/handoff/host-glibc-checkpoint.json"
+  ],
+  "qualified": false,
+  "raw_evidence_retained": false,
+  "schema_version": 1,
+  "scope": "PT-specific entries directly beneath /tmp/opencode, plus five reviewed PT reproduction scripts moved into Git. Unrelated projects and system/package-manager caches are not in scope.",
+  "status": "planned_not_yet_deleted",
+  "temporary_entries": [
+    {
+      "kind": "directory",
+      "name": "pt-artifact-boundary-diagnostic-dlbdtizi"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-artifact-boundary-fixed-controls-d0fkxhyq"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-artifact-boundary-red-controls-0ogi9eay"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-artifact-final-verification-mvv4nrep"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-artifact-parallel-diagnostic-noifx9r0"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-bridge-wheels"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-candidate-sources-qj5dgr88"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-card-initial-be78tmir"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-config-cleanup-native-controls-6vjlbyfp"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-config-cleanup-protected-final-todqh6ul"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-config-cleanup-red-controls-nz04d6w6"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-config-cleanup-verified-final-lly6myda"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-coordinator-final-verification-rca437le"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-coordinator-report-failure-control-de0out9c"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-corpus-attrs-FZ3UW3"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-corpus-click-l4OVXX"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-corpus-rich-yYPnwm"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-elf-corrected-controls-cvd_xnuo"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-elf-native-controls-3wkthau1"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-elf-protected-final-790zfef_"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-junit-final-verification-9z9f9j35"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-junit-protected-final-rzazf7qr"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-junit-readonly-verification-lv_haw8u"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-declared-link-domain-diagnostic-b87wy1zb"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-flask-49943b5-19z5jieq"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-flask-offline-49943b5-wuvrrvht"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-flask-phase-reference-yk0x1bkf"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-flask-phase-tool-uf8bxbcd"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-host-glibc-artifact-preparation-t_ccxujt"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-host-glibc-payload-assessment-r8r50j3u"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-host-loader-metadata-assessment-k688wnss"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-identity-final-verification-5jeu3ttv"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-interpreter-elf-input-diagnostic-wqsrsyqf"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-isolated-probe-prefix-control-ncmm4r2y"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-junit-final-verification-xalhnzal"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-lifecycle-evidence-_6bxg63v"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-live-elf-native-controls-uljd3yz2"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-live-elf-protected-final-6efsritd"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-managed-replay-doc-smoke-jkwzh2s9"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-managed-replay-evidence-if12eujj"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-managed-replay-initial-jrghqqq5"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-manifest-declarations-ene74xg6"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-observer-corrected-integration-0k86c68f"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-observer-expanded-controls-xwa7yd3s"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-observer-final-verification-p2l68x2h"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-observer-real-controls-83gy7m5u"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-observer-wheel-q_qm687n"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-oracle-ecosystem-frozen-cnbdi85u"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-oracle-evidence-suarh6_o"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-oracle-v2-evidence-j3hyfqdn"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-pair-dev-_wl20_w6"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-lifecycle-evidence-bwb7py4c"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-doc-smoke-o2dxnsxz"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-evidence-24w0p3q1"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-initial-beebefuo"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-resource-doc-smoke-ww_8_uzn"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-resource-evidence-__1r53or"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-replay-resource-initial-pcqwpfqy"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-resource-evidence-oc_vbrjq"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-resource-initial-25fot1kv"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-scenario-evidence-cl3bevoq"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-scenario-history-z5mr8fkd"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-scenario-smoke-j7x5gyyp"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-paired-scenarios-doc-smoke-51y9jml8"
+    },
+    {
+      "kind": "file",
+      "name": "pt-phase-check.xml"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-private-base-core-le9410ya"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-private-base-core-q6z__33i"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-private-interpreter-bounded-dmjw5w0t"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-private-interpreter-uia07m2p"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-protocol-schema-controls-s299kn7n"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-protocol-verification-gd_rg6cl"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-py312"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-python-artifact-audit-jg77j34z"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-readonly-probe-setup-control-bxvtw4p7"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-reference-oracle-check-qvqd3qpl"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-reference-oracle-initial-bh9ir008"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-relative-link-closure-final-uk9ktq3n"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-card-doc-smoke-u29qoogb"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-card-initial-23lvop5j"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-card-doc-smoke-4dwlo5pf"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-card-evidence-n9z3zpff"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-doc-smoke-dakfk6dw"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-evidence-o38xi2yc"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-initial-xnipycb0"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-native-initial-26thbfzm"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-resource-native-initial-ix2pbuhc"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-replay-result-card-evidence-xymiezln"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-resource-accounting-evidence-a9_c_mew"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-resource-card-history-pqlyr9qc"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-resource-initial-950wkj6k"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-resource-replay-card-initial-smlnra4f"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-result-card-evidence-8smkkbq5"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-initial-vcwdamup"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-manifest-doc-smoke-oyn6r32r"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-manifest-evidence-qiv71abc"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-manifest-smoke-zfzje_hw"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-reader-history-pnlbhgn6"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-replay-doc-smoke-potjhu9s"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-scenario-replay-evidence-us0qasji"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-serial-core-initial-_pl9p69n"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-serial-core-materialize-dptvq6o5"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-serial-core-materialize-ky32u4hq"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-serial-ecosystem-1toa_w_e"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-serial-ecosystem-offline-3sesehzm"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-session-final-verification-xikqfoxt"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-snapshot-capability-diagnostic-9nfm6cuf"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-startup-retained-s0ukqibm"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-v2-schema-evidence-7jdabinh"
+    },
+    {
+      "kind": "directory",
+      "name": "pt-wire-build-k8q_6eyg"
+    }
+  ]
+}

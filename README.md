@@ -6,6 +6,10 @@ pytest's semantics. Correctness and independent measurement come before speed.
 
 ## Status
 
+For the paused development checkpoint and instructions that do not depend on old
+temporary files, read [handoff.md](handoff.md). Temporary evidence paths in older
+status notes are historical; the handoff records the user-requested cleanup.
+
 The project is in early development. A Linux-only Rust process supervisor and
 diagnostic `pt exec` command now exist. There is **no PT pytest backend, qualified
 support profile, complete benchmark harness, or measured performance claim yet**. The
