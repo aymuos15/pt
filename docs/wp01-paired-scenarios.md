@@ -7,6 +7,12 @@ campaign, not into shipping-mode latency or native resource measurements. No PT
 backend, semantic oracle, representative corpus qualification or speedup is supplied.
 `pt run` and the original work-package/release gates remain open.
 
+The subsequent [manifest-to-scenario binding](wp01-scenario-manifest.md) now
+associates the original campaign YAML with this evidence offline, retaining exact
+bytes, every planned outcome and unresolved qualifications. It does not change
+this producer/profile, attach a manifest retroactively as preregistration or turn
+scenario instrumentation into product latency.
+
 ## Freeze once, then validate each arm's actual observations
 
 [`paired_scenarios.py`](../bench/harness/paired_scenarios.py) uses a new closed

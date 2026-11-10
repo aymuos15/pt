@@ -6,6 +6,12 @@ Date: **2026-11-09**. Base: `9e29e20`. This follows the
 benchmark manifest, PT runner, semantic oracle or release. `pt run` remains
 unavailable and no test-runner speedup is established.
 
+The subsequent [manifest-to-scenario evidence binding](wp01-scenario-manifest.md)
+adds a distinct offline association with complete paired scenario outcomes. It
+preserves these declarations, all unresolved qualifications and the unchanged
+v1 manifest/schema; matching declarations never become shipping endpoint or
+semantic/reset/artifact/preregistration qualification.
+
 ## Structure is not a consistent or verified experiment
 
 [`manifest.py`](../bench/harness/manifest.py) still uses the unchanged

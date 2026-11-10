@@ -75,6 +75,8 @@ this does not qualify a runner or close the later work-package/release gates.
   effects, retained request inputs and historical reset evidence, not a semantic oracle.
 - [Paired scenario campaigns](docs/wp01-paired-scenarios.md): frozen shared input
   bytes, per-arm reset observations and complete failed/unknown/not-run ledgers.
+- [Manifest-to-scenario binding](docs/wp01-scenario-manifest.md): offline byte-bound
+  declarations and complete scenario outcomes, with unresolved qualification preserved.
 - [Development CLI](crates/pt-cli/README.md) and
   [process supervisor](crates/pt-process/README.md): partial WP04, not `pt run`.
 - [WP04 evidence and open gates](docs/wp04-status.md), including the bridge

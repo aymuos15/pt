@@ -117,6 +117,10 @@ The [paired scenario campaign](wp01-paired-scenarios.md) now freezes shared payl
 bytes before execution and retains each arm's actual reset/input observations with
 complete failure/unknown/not-run accounting. It remains a separate instrumented
 validation profile: no latency/resource estimates or qualification upgrade.
+The separate [manifest-to-scenario binding](wp01-scenario-manifest.md) now binds
+the original manifest bytes to those retained outcomes offline. Matching
+declarations do not resolve artifact, semantic, preregistration or reset qualifications;
+no manifest/template, existing evidence or dependency pins are rewritten.
 
 `uv sync` creates or updates the ignored `bench/harness/.venv`; it may download
 the requested interpreter and locked packages into uv-managed locations. It

@@ -164,6 +164,27 @@ relabelling are rejected. This adds no shipping latency endpoint, native resourc
 pass, semantic oracle or reset-equivalence qualification. See [layout, CLI exits,
 controls and reproduction](../../docs/wp01-paired-scenarios.md).
 
+`scenario_manifest.py bind --manifest <campaign.yaml> --run <paired-scenario>
+--output <new-binding.json>` now associates the unchanged campaign-manifest v1
+with retained scenario evidence **offline**. Its distinct closed
+[`scenario-manifest-v1.schema.json`](scenario-manifest-v1.schema.json) binds exact
+manifest bytes/declarations, recursive campaign/payload evidence and reader sources.
+Checks compare scenario/cache declarations, planned blocks/order seed, whole-session
+scope, cwds, dispatch budgets and **every** request argv/expected exit. Null manifest
+declarations, unknown scenario axes, differing requests and unobserved policies
+remain explicit. No source file, manifest status, subject or reset is changed.
+
+`scenario_manifest.py inspect --binding <binding.json> --manifest <campaign.yaml>
+--run <paired-scenario>` reconstructs the complete report; updated hashes alone
+cannot hide omitted/reordered/failed/unknown/not-run observations. All returned
+reset/input projections and publication flags are retained; lost returns are not
+recovered from files. The manifest's shipping endpoint, arbitrary reset/probe
+scripts, artifact pins, resource/analysis policies and preregistration are **not**
+qualified. Fourteen qualification fields stay null, statistics stay null and status
+stays blocked even when declarations match. This is not a latency/resource card,
+semantic oracle or default-enabled execution mode. See [field relations, exits,
+reproduction and adverse evidence](../../docs/wp01-scenario-manifest.md).
+
 The existing `result_card.py <retained-campaign> --output <new-card.json>` and
 `inspect_result_card.py <card.json> --run <retained-campaign>` now route paired
 whole-session resource evidence to
@@ -579,6 +600,7 @@ uv run --locked --project bench/harness --python 3.12.12 python -W error::Resour
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_replay_resource_card.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_replay.py -v
 uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_paired_scenarios.py -v
+uv run --locked --project bench/harness --python 3.12.12 python -W error::ResourceWarning -m unittest discover -s bench/harness/tests -p test_scenario_manifest.py -v
 ```
 
 For each arm, `--baseline-finalization-json` / `--candidate-finalization-json`
