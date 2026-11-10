@@ -1,0 +1,19 @@
+[package]
+name = "pt-identity"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Bounded declared-tree byte identity observations, not environment or snapshot qualification"
+
+[dependencies]
+nix = { workspace = true, features = ["fs", "dir"] }
+sha2.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+serde_json.workspace = true
+pt-process = { path = "../pt-process" }
+
+[lints]
+workspace = true

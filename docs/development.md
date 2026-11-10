@@ -103,6 +103,13 @@ cases, including actual unstarted/rejected/failed outcomes. It neither chooses a
 supported Python/bootstrap nor makes accounted normal exits a full/current test
 result; installed/host identity and immutable-generation prerequisites stay open.
 
+The [native declared-tree identity component](../crates/pt-identity/README.md)
+adds exhaustive no-follow byte/mode/link-text observations under one finite
+deadline. It hashes regular files in both passes, not just stat rechecks, and
+never repairs or ignores extras. Its optional private-prefix reproduction needs
+explicit archive-manifest/prefix inputs; full environment/startup closure and
+immutable/current generation assurance remain separate blocked gates.
+
 The standalone exploratory timer now emits a post-commit lifecycle receipt in
 addition to its immutable sample. Its bounded declared-file/absence checks do
 not qualify pytest work or generations. The paired driver now defaults to

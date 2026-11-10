@@ -179,6 +179,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pt-identity"
+version = "0.0.0"
+dependencies = [
+ "nix 0.30.1",
+ "pt-process",
+ "serde_json",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
 name = "pt-process"
 version = "0.0.0"
 dependencies = [

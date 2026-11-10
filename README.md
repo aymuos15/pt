@@ -22,6 +22,8 @@ owned bytes/publication after cleanup, with a pinned pytest-JUnit projection
 adapter; unknown/unsupported report completeness stays blocked. The
 [owned session lifecycle](crates/pt-session/README.md) now joins bounded private
 reading, actual process/cleanup and serial accounting, not a full result.
+The [declared-tree identity prerequisite](docs/wp06-status.md) checks expected
+bytes/modes/link text without claiming a complete environment or immutable source.
 The initial
 supervisor rejects terminal stdin until foreground job control is qualified.
 Most proposed product commands, including `pt run`, are not implemented yet.

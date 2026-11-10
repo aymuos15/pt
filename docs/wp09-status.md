@@ -243,3 +243,5 @@ all still-matching frozen native source hashes.
 Supported launch, coordinator request/final-result catalog, complete environment /
 immutable-generation assurance, generic coverage/exception completeness and
 independent release prerequisites stay open. Successful `pt run` is not enabled.
+The subsequent [WP06 tree-identity prerequisite](wp06-status.md) adds bounded
+endpoint byte/mode/link-text observations, not those environment/generation gates.
